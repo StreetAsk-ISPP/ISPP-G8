@@ -1,0 +1,25 @@
+name: 📚 Documentation
+description: Request documentation improvements
+title: "[DOCS]: "
+labels: ["documentation"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Documentation Request
+      description: What documentation needs to be added or improved?
+      placeholder: Describe what needs to be documented...
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this documentation?
+      options:
+        - 🔴 High
+        - 🟡 Medium
+        - 🟢 Low
+    validations:
+      required: true
