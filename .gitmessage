@@ -1,0 +1,18 @@
+# <type>: <title>
+#
+# <description>
+
+# --- COMMIT TYPES ---
+# feat:  New feature
+# fix:   Bug fix
+# docs:  Documentation changes
+#
+# Title: Brief description (max 50 characters)
+#
+# Description: Detailed explanation (optional)
+#   - Explain WHAT and WHY, not HOW
+#
+# Examples:
+#   feat: add login with Google
+#   fix: resolve null pointer in user service
+#   docs: update README with setup instructions
