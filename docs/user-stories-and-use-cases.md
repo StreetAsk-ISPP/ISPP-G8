@@ -11,6 +11,28 @@ The stories are organized into three priority levels based on the MoSCoW framewo
 
 ## Use cases
 
+1. As a person who wants to go to the beach, I want to ask people who are already there how the weather feels (wind, temperature, crowd) so that I can decide whether it is worth going or not.
+
+2. As a football player, I want to ask nearby users if they want to join a local football game so that I can easily complete my team.
+
+3. As someone who is new to a neighborhood, I want to ask locals about safety at night so that I can decide which route to take home.
+
+4. s a concert attendee, I want to ask people who are already inside if they allow water bottles so that I know whether to bring one or not.
+
+5. As a traveler who wants to share a car or taxi, I want to ask nearby people if they are going in my direction so that we can share the ride and save money.
+
+6. As a student, I want to ask classmates who are already in the classroom whether the teacher has arrived or the class is cancelled so that I can decide whether to go up or not.
+
+7. As a public transport user, I want to ask people at my stop if the bus or metro is running late so that I can decide whether to wait or look for an alternative.
+
+8. As a remote worker, I want to ask people who are already in a café if there are free tables and power outlets so that I can know if it is a good place to work.
+
+9. As a gym user, I want to ask people who are training there if it is very crowded or not so that I can decide whether to go now or later.
+
+10. As a board game enthusiast, I want to ask nearby people if there is any group playing right now so that I can join a game.
+
+
+
 ## User stories
 ### Critical stories for MVP - Must Have
 **US-01: User registration**
