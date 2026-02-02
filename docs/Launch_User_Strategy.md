@@ -4,13 +4,14 @@
 
 This document describes the profile of the very first real users of the application, the strategy to encourage them to adopt the platform and generate real-time content at launch, and the mechanisms that will be used to maintain communication with final users.
 
-The application is a location-based social platform where users can ask and answer questions linked to specific geographic areas. Each user is positioned on a map within a circular area based on their real-time location. Questions published in a given location are delivered to users who are physically present in that area, enabling the exchange of real-time, context-aware information.
+The application is a real-time social intelligence platform that primarily relies on ephemeral reviews and status updates from physically present users. To complement this, it integrates a powerful Q&A feature. This document outlines the strategy for encouraging users to adopt the platform and utilize both the status-sharing and question-answering functionalities to generate valuable, real-time content.
+
 
 ---
 
 ## 2. Definition of the First Real Users
 
-The application is designed to be useful for **any person seeking real-time information about a specific place**, regardless of age or profile. Therefore, the first real users are not limited to a single demographic group.
+The application is designed for **any person seeking real-time information about a specific place**. Users can either browse live status updates and reviews or ask specific questions to people on-site. Therefore, the first real users are not limited to a single demographic group.
 
 ### 2.1 Early Individual Users
 
@@ -52,7 +53,7 @@ To attract the first users, the platform will focus on:
 To stimulate user-generated content:
 
 - Free users will have a **limited number of questions per day**, encouraging thoughtful usage.
-- Users who actively answer questions will be rewarded with:
+- Users who actively contribute content (by answering questions or posting quality status updates) will be rewarded with:
   - Increased daily question limits.
   - Higher visibility or reputation within the app.
 - A **premium subscription** will allow users to ask more questions per day and gain additional visibility.
