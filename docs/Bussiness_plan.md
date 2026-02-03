@@ -334,8 +334,220 @@ The following elements are explicitly out of scope for the MVP:
 - Advanced event management.
 - Advanced reputation systems.
 
-### 9.2 Fases de desarrollo
-### 9.3 Expansión geográfica
+#### 9.1.2 Key assumptions for the MVP
+
+The development and validation of the MVP are based on the following fundamental assumptions:
+
+**User assumptions:**
+- Users are willing to share their real-time location in exchange for relevant information.
+- There is genuine demand for instant, verified information about places and events.
+- Users trust opinions from people who are physically present more than historical reviews.
+- The target audience (18–35 years, urban) has smartphones with GPS and mobile data enabled.
+
+**Technical assumptions:**
+- Mobile GPS accuracy is sufficient to validate presence within a defined area.
+- System response time (notifications, map loading) is acceptable for a smooth experience.
+- The infrastructure can handle the expected concurrency during the pilot without significant degradation.
+
+**Market assumptions:**
+- The selected pilot areas have sufficient density of venues and nighttime activity.
+- Venues and organizers see value in visibility without immediate payment.
+- There is willingness to try a new platform if it solves a real problem.
+
+**Associated risks:**
+If any of these assumptions prove false, we will need to pivot or adjust the model before scaling.
+
+#### 9.1.3 MVP Limitations
+
+The MVP has deliberate limitations that will be addressed in later phases:
+
+**Functional limitations:**
+- No points or badges system: users can only mark answers as useful or not.
+- No advanced search: users see questions on the map but cannot search by specific keywords.
+- No sharing to Instagram/Facebook or in-app friend invitations.
+- Only simple text and images allowed: no video, GIFs or stickers.
+- Notifications are basic: everyone receives the same alerts without interest-based personalization.
+
+**Geographic limitations:**
+- Only works in 1–2 neighborhoods of a city during the pilot.
+- Not intended for low-venue areas (small towns, rural zones).
+- The app is Spanish-only during the MVP.
+
+**Technical limitations:**
+- Infrastructure supports only a few hundred concurrent users, not thousands.
+- Requires constant internet connection: no offline mode.
+- Not optimized for battery or data saving.
+
+**Business limitations:**
+- Everything is free: no paid features and venues do not pay to appear.
+- Venues cannot see analytics about how many users view their answers or questions.
+- No API or third-party integrations available.
+
+These limitations are intentional to reduce complexity, accelerate time-to-launch, and validate the core value before investing in additional features.
+
+---
+
+### 9.2 Development Phases
+
+The MVP development follows a **15-week** structure (14 active development weeks + final delivery) divided into 5 phases aligned with the course methodology:
+
+#### Phase 1 – Devising Project (DP) | Weeks 1–4
+**Course objective:** Prepare and deliver the artifacts required by the course: business definition, mockups and initial documentation for DP evaluation.
+
+**Key activities:**
+- Market research and problem validation.
+- Define functional requirements based on MVP use cases.
+- Design mockups and prototypes for the PWA.
+- Prepare initial Business Plan and revenue model.
+- Select tech stack and organize the team.
+
+**Milestone:** Week 4 – Submission of 5% (DP evaluation).
+
+#### Phase 2 – Sprint 1 (S1) | Weeks 5–6
+**Course objective:** Deliver a minimal cloud-deployed prototype that meets interim submission requirements and supports live demos.
+
+**Key activities:**
+- Build core use cases (authentication and base flow).
+- Set up ALM environment.
+- Mandatory cloud deployment.
+- Design initial pilot plan.
+
+**Milestone:** Week 6 – Submission of 10% (S1 evaluation).
+
+#### Phase 3 – Sprint 2 (S2) | Weeks 7–9
+**Course objective:** Deliver a stable MVP v1 for pilot testing and collect evidence (logs, metrics, feedback) for S2 evaluation.
+
+**Key activities:**
+- Implement interaction features (answers, ratings).
+- Analyze pilot user feedback.
+- Participate in the Ethical Workshop (data ethics analysis).
+- Iterate based on real usage.
+
+**Milestone:** Week 9 – Submission of 15% (S2 / MVP v1 evaluation).
+
+#### Phase 4 – Sprint 3 (S3) | Weeks 10–11
+**Course objective:** Refine the MVP based on feedback, prepare presentation materials and justify any pivots to the evaluation committee.
+
+**Key activities:**
+- Pivot product/business as indicated by S2 data.
+- Implement automation (question expiration, moderation).
+- Create detailed Marketing Plan.
+- Improve PWA UX.
+
+**Milestone:** Week 11 – Submission of 30% (S3 / MVP v2 evaluation).
+
+#### Phase 5 – Project Presentation & Launch (PPL) | Weeks 12–14
+**Course objective:** Prepare the final demo, compile pilot metrics and evidence, and present/defend the project before the course tribunal.
+
+**Key activities:**
+- Execute marketing and market launch.
+- Consolidate final Business Plan with pilot metrics.
+- Monitor KPIs (DAU, retention, satisfaction).
+- Prepare the final presentation.
+
+**Milestone:** Week 14 – Submission of 40% (PPL / MVP v3 evaluation).
+
+#### Post-MVP (Week 15 onward)
+- Final delivery (WPL): Consolidate all documentation and close the project.
+- Expansion: scale the solution to new areas based on pilot results.
+
+---
+
+### 9.3 Geographic Expansion
+
+Geographic expansion follows a **controlled, data-driven** model that prioritizes interaction density over territorial coverage.
+
+#### Phase 0 – Local Pilot | Weeks 12–14 (within the MVP)
+**Objective:** Validate the model in a controlled environment and collect data for the final Week 14 submission.
+
+**Strategy:**
+- Select 1 target city with dense nightlife/activity (e.g., Madrid, Barcelona, Seville).
+- Focus on 1–2 districts with many bars and venues.
+- Intensive activation via street marketing, micro-influencer events, venue partnerships and short-term promotions.
+- Goal: reach critical mass of users and active questions in the target area.
+
+**Tactics to reach critical mass (50–80 users) during the last 3 weeks:**
+- Schedule intensive activations (QR-based venue events, influencer collaborations, temporary response incentives).
+- Run promotions (credits, contests) during weeks 12–14.
+- Coordinate with venues to drive direct in-venue traffic (staff promoting the app).
+
+**Success criteria to move to Phase 1 (aligned with Week 14 submission):**
+- 50–80 active users in the pilot zone (documented in final delivery).
+- 5–8 questions/day with response rate >50%.
+- Average response time <30 minutes.
+- 7-day retention >25%.
+
+#### Phase 1 – Local Expansion | 3–6 months post-MVP
+**Objective:** Replicate the model in similar cities, applying pilot learnings.
+
+**Strategy:**
+- Expand to 2–3 mid-large Spanish cities.
+- Use the validated playbook and incorporate improvements from the pilot.
+- Hire local ambassadors (students, influencers).
+- Launch sequentially (one city every 3–4 weeks) to focus resources.
+
+**Success criteria:**
+- Replicate pilot metrics in each city.
+- Maintain minimum question/answer density per zone.
+- Keep CAC stable or decreasing.
+
+#### Phase 2 – National Consolidation | 6–12 months post-MVP
+**Objective:** Position the product as a Spanish market leader.
+
+**Strategy:**
+- Expand to 8–10 major Spanish cities.
+- Diversify use cases beyond nightlife (restaurants, cultural events, tourism).
+- Introduce initial monetization (highlighted questions, venue visibility) only when the stack supports billing and analytics.
+- Create VIP/ambassador programs.
+- Partner with hospitality and tourism associations.
+
+**Success criteria:**
+- Active presence in 8–10 cities.
+- >10,000 monthly active users.
+- Operational break-even in some consolidated cities.
+
+#### Phase 3 – International Expansion | 12–24 months post-MVP
+**Objective:** Validate the model in international markets.
+
+**Market entry strategy:**
+- Select 2–3 target markets based on:
+   - Nightlife culture and activity.
+   - Smartphone penetration and geolocation app usage.
+   - Compatible privacy regulations.
+   - Examples: Portugal, Italy, France, United Kingdom.
+  
+**Required adaptations:**
+- Full localization (languages, cultural references).
+- Local influencer and venue partnerships.
+- Localized marketing strategies.
+- Local regulatory compliance (GDPR, data protection).
+
+**Entry model:**
+- Start with capitals (Lisbon, Rome, Paris, London).
+- Apply the same zone-pilot → local expansion model.
+- Evaluate each market before committing more resources.
+
+**International success criteria:**
+- Replicate core metrics in new markets.
+- Find product-market fit in 1–2 countries.
+- Reach >50,000 total active users.
+
+#### Phase 4 – Global Scaling | 24+ months post-MVP
+**Objective:** Become the reference European platform for real-time information.
+
+**Strategy:**
+- Expand to validated secondary markets.
+- Add advanced features (B2B premium, venue analytics, integrations).
+- Explore new verticals (transport, sports events, festivals).
+- Consider non-European expansion (LATAM, Asia) where appropriate.
+
+**Critical success factors:**
+- Maintain content quality and density in every city.
+- Avoid over-dispersal: enter new markets only with sufficient resources.
+- Build strong network effects locally before expanding.
+- Scale technical infrastructure to support millions of concurrent users.
+
+---
 
 ## Métricas & KPIs
 ### 10.1 Métricas de usuarios
@@ -356,3 +568,5 @@ The following elements are explicitly out of scope for the MVP:
 ### 13.1 Estructura de costes
 ### 13.2 Proyección de ingresos
 ### 13.3 Punto de equilibrio
+
+
