@@ -214,11 +214,43 @@ Very simple: they only need to register and can view/respond from mobile or web.
 
 ---
 
-## Tecnología & Operaciones
-### 8.1 Arquitectura tecnológica
-### 8.2 Desarrollo del producto
-### 8.3 Moderación y control de calidad
-### 8.4 Operaciones y soporte
+## Technology & Operations
+
+### 8.1 Technology Architecture
+
+The platform is built on modern cloud infrastructure designed to handle growth and ensure reliability:
+
+- **Location Verification**: Uses GPS technology to confirm that users providing answers are physically present at the location they're responding about.
+- **Fast and Reliable**: The system is built to handle many users at once without slowing down, even during busy events or peak hours.
+- **Real-Time Information**: Updates are delivered instantly to users so they see the most current feedback from venues.
+- **Secure Connections**: All communication between the mobile app and servers is protected and encrypted.
+
+### 8.2 Product Development
+
+We build the product in stages, validating our approach through iterative development:
+
+- **Lean Approach**: We start with core features that solve the main problem, avoiding unnecessary complexity that slows down development and launch.
+- **Continuous Validation**: We incorporate feedback and testing throughout development to understand what works and what needs improvement.
+- **Flexible Priorities**: We adjust our roadmap based on what creates the most value, staying responsive to new learnings and requirements.
+- **Quality Standards**: We follow established development practices including code reviews, testing, and documentation to ensure a high-quality product and smooth teamwork across the team.
+
+### 8.3 Moderation and Quality Control
+
+We keep the platform clean and trustworthy using both automated systems and people:
+
+- **Moderation Review**: Reported content and flagged items are reviewed to check if they violate guidelines.
+- **Clear Guidelines**: We have simple rules about what's allowed—no spam, false information, or abusive behavior.
+- **User Ratings**: Users build a reputation based on the quality of their answers, so people can trust good contributors.
+- **User Reports**: Anyone can report problems they see, and the community helps us maintain standards.
+
+### 8.4 Operations and Support
+
+Our operations team keeps the platform running smoothly and helps users when they need it:
+
+- **Always Available**: We monitor the system 24/7 to catch and fix problems quickly before they affect users.
+- **Protection and Safety**: Automated alerts warn us of any security or performance issues so we can respond immediately.
+- **Help When You Need It**: Users can get support directly in the app or through community channels.
+- **Continuous Improvement**: We track how the platform performs and use this data to make it better over time.
 
 ## Roadmap
 ### 9.1 MVP
@@ -549,24 +581,105 @@ Geographic expansion follows a **controlled, data-driven** model that prioritize
 
 ---
 
-## Métricas & KPIs
-### 10.1 Métricas de usuarios
-### 10.2 Métricas de negocio
-### 10.3 Métricas de crecimiento
+## Metrics & KPIs
 
-## Equipo
-### 11.1 Fundadores
-### 11.2 Roles clave
-### 11.3 Advisors
+### 10.1 User Metrics
 
-## Aspectos Legales y Riesgos
-### 12.1 Riesgos principales
-### 12.2 Estrategias de mitigación
-### 12.3 Cumplimiento legal y privacidad
+We track how users engage with the core Q&A system to understand if the product is solving real problems:
 
-## Proyecciones Financieras
-### 13.1 Estructura de costes
-### 13.2 Proyección de ingresos
-### 13.3 Punto de equilibrio
+- **Monthly Active Users (MAU)**: The number of different users who ask or answer at least one question each month. This shows if we're building a sustainable user base.
+- **Daily Active Users (DAU)**: How many users open the app and interact with questions each day. This tells us how often people use the platform regularly.
+- **Questions Asked**: Total number of location-based questions posted. This is a key metric showing how much people are using the core feature.
+- **Response Rate**: The percentage of questions that receive at least one answer within a certain time. A high percentage means people trust the platform and find value in it.
+- **Average Response Time**: How quickly someone at a location answers a question after it's posted. Faster responses mean better user experience and higher platform value.
+- **User Retention**: What percentage of users who ask or answer a question come back the next week and the following weeks. This shows if the app provides enough value to keep users engaged.
+- **Geographic Spread**: Where our active users are located across the city. This helps us understand which neighborhoods have strong adoption and where to focus growth efforts.
+- **User Type Distribution**: How many users are regular users versus those who create simple events. This helps us understand how the two user roles are being used.
 
+### 10.2 Business Metrics
 
+These numbers tell us if the business model is working and generating revenue:
+
+- **Paid Highlighted Questions**: Number of users paying to boost their questions for more visibility or to keep them on top. This shows if users see value in paid features.
+- **Revenue from Highlighted Questions**: How much money we make from users paying to boost questions.
+- **Active Business Accounts**: How many companies or event organizers are using the platform to create paid highlighted events.
+- **Revenue from Business Events**: How much money businesses spend on highlighted events each month.
+- **Customer Acquisition Cost**: How much we spend to acquire one new paid user or business account.
+- **Customer Lifetime Value**: How much revenue we expect from a typical business account over their entire relationship with the platform.
+- **Churn Rate**: What percentage of paid users stop paying each month. Lower is better, as it means retention of revenue.
+- **Average Transaction Value**: On average, how much users and businesses spend when they use paid features.
+
+### 10.3 Growth Metrics
+
+These numbers show how fast the platform is growing and scaling:
+
+- **Weekly Question Growth Rate**: How much the number of questions posted grows from week to week.
+- **Weekly Response Growth Rate**: How much the number of answers grows week to week. This indicates growing engagement.
+- **Viral Coefficient**: How many new users come from recommendations or invitations by existing users. A high number means the app spreads naturally.
+- **Geographic Adoption Rate**: What percentage of the target area (neighborhoods in the city) has at least one active user asking or answering questions.
+- **Feature Adoption**: How quickly new features like the basic verification system (likes/dislikes on answers) get used by the community.
+- **Event Creation Rate**: How many simple events (football games, meetups) are created by users each week, showing if this secondary feature is gaining traction.
+- **Readiness for Expansion**: Metrics for each new city showing when we have enough traction and user base to expand geographically.
+
+## Team
+
+### 11.1 Founders
+
+The founding team consists of professionals with experience in software development, design, and business operations. The team recognized a market opportunity in location-verified, real-time information and is committed to building a product that solves a clear problem. Members bring expertise in mobile and backend development, product design, and strategic planning. The team has worked collaboratively on previous projects and shares a strong vision for creating a platform that changes how people discover venues and get real-time feedback.
+
+### 11.2 Key Roles
+
+The team is organized into three functional areas with clear responsibilities:
+
+**Development**: Responsible for architecting and building the platform, including mobile applications, backend infrastructure, GPS verification systems, and real-time data handling. The development team follows software engineering best practices and ensures code quality and system reliability.
+
+**Design & Marketing**: Focuses on user experience design, product branding, and market positioning. This team shapes how users interact with the product and communicates the value proposition to both users and venues.
+
+**Documentation**: Maintains technical documentation, user guides, and operational procedures. This team ensures all project knowledge is properly recorded and accessible to team members and stakeholders.
+
+## Legal and Risk Aspects
+
+### 12.1 Main Risks
+
+**Location Data and Privacy**: The platform relies on GPS location data to verify user presence. Collecting and storing location information raises privacy concerns and requires compliance with data protection regulations. Unauthorized access or misuse of location data could damage user trust and create legal liability.
+
+**User-Generated Content Liability**: As a platform where users post questions and answers, the app may be held responsible for harmful, false, or illegal content posted by users. Content related to nightlife venues could include misleading information about safety, crowd conditions, or other sensitive topics.
+
+**Age Verification in Nightlife**: The target market includes nightlife venues, which typically restrict access to adults. The platform must ensure that minors cannot access or contribute content about venues with age restrictions, creating compliance challenges.
+
+**Competition and Market Adoption**: Established platforms with larger user bases and more resources may compete directly or evolve to offer similar features. Gaining critical mass of users in a specific geographic area is essential but uncertain.
+
+**GPS Spoofing and Fraud**: Users could potentially manipulate their location data to bypass the Proof of Presence verification, allowing them to post answers from locations where they are not actually present, undermining platform credibility.
+
+**Data Protection Compliance**: Operating across different jurisdictions introduces regulatory complexity. GDPR, CCPA, and other data protection laws impose strict requirements on how location and personal data are collected, stored, and used.
+
+### 12.2 Mitigation Strategies
+
+**Privacy by Design**: Location data is collected only when necessary and stored securely with encryption. Data is retained only as long as required and deleted automatically after content expires. Users have clear control over their location sharing and can opt-out of location collection.
+
+**Content Moderation Framework**: The platform implements user reporting mechanisms, reputation systems, and moderation review processes to identify and remove harmful content. Clear community guidelines and terms of service establish expectations for acceptable behavior.
+
+**Age Verification and Access Controls**: The platform implements age verification mechanisms for accessing nightlife-related content. Geographic fencing prevents minors from posting answers in restricted-access venues.
+
+**Robust Location Verification**: The platform uses multiple GPS verification methods and monitors for suspicious location patterns. Users with repeated location anomalies are flagged and investigated.
+
+**Legal Compliance Team**: Dedicated resources review platform operations against applicable laws in target jurisdictions. Privacy policies and terms of service are regularly updated and clearly communicated to users.
+
+**Data Minimization**: The platform collects only essential location and personal data. Data is anonymized and aggregated wherever possible for analytics and reporting.
+
+### 12.3 Legal Compliance and Privacy
+
+**Data Protection Regulations**: The platform adheres to GDPR, CCPA, and other applicable data protection laws. Users are informed about what data is collected, how it is used, and their rights regarding their data. Privacy policies clearly explain data handling practices.
+
+**Terms of Service**: Clear terms establish user responsibilities, prohibited content, and the platform's right to remove content or terminate accounts that violate community standards.
+
+**Venue Agreements**: Partnerships with venues include terms clarifying data sharing, use of user feedback, and venue responsibilities regarding age restrictions.
+
+**Liability Framework**: The platform operates as a neutral intermediary for user-generated content. While the platform moderates content, it cannot be held liable for all user contributions under applicable safe harbor provisions, provided it acts responsibly to address reported violations.
+
+**Transparent Data Practices**: Users can access, download, or delete their personal data. Location data is not shared with third parties without explicit consent, except where required by law.
+
+## Financial Projections
+### 13.1 Cost Structure
+### 13.2 Revenue Projection
+### 13.3 Break-even Point
