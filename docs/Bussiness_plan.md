@@ -134,6 +134,118 @@ This phased approach ensures monetization does not compromise early adoption and
 
 ## Roadmap
 ### 9.1 MVP
+#### 9.1.1 MVP Use Cases
+
+The Minimum Viable Product (MVP) is defined with the goal of validating the core value of the application: allowing users to post questions linked to a specific location and receive real-time answers from people who are physically present in that area.
+
+The MVP deliberately excludes any functionality related to monetization, business profiles, subscriptions, advanced events, or social features, in order to reduce complexity and encourage early adoption of the product.
+
+##### Actors
+
+- **User**: a registered individual who uses the application to consult or provide real-time information.
+
+In the MVP, no distinction is made between different types of users.
+
+---
+
+##### UC-01 – View active questions on the map
+
+**Actor:** User
+
+The user can visualize active questions associated with different geographic points or areas on a map.
+
+**Outcome:**
+The user gains an overview of what is being asked at each location at that moment.
+
+---
+
+##### UC-02 – Post a question in a geographic area
+
+**Actor:** User
+
+The user selects an area on the map and posts a question associated with that geographic zone.
+
+**Precondition:**
+The user is authenticated in the application.
+
+**Outcome:**
+The question remains visible for a limited period of time and a temporary discussion thread is created.
+
+---
+
+##### UC-03 – Receive questions based on proximity
+
+**Actor:** User
+
+The user receives notifications of questions when they are physically located within the geographic area defined by a question.
+
+**Precondition:**
+The user is located within the geographic area of the question.
+
+**Outcome:**
+The user can access the question thread and participate by answering.
+
+
+---
+
+##### UC-04 – Answer a question
+
+**Actor:** User
+
+The user can answer an active question only if they are physically located within the geographic area associated with the question.
+
+**Precondition:**
+The user is within the area defined for the question.
+
+**Outcome:**
+The answer is published in the question thread and becomes visible to other users.
+
+
+---
+
+##### UC-05 – View answers to a question
+
+**Actor:** User
+
+The user accesses a question thread and views the existing answers.
+
+**Outcome:**
+The user obtains real-time information about the state of the location.
+
+---
+
+##### UC-06 – Rate answers
+
+**Actor:** User
+
+The user can rate answers provided by other users (for example, useful or not useful).
+
+**Outcome:**
+Higher-rated answers gain increased visibility within the thread.
+
+---
+
+##### UC-07 – Automatic expiration of questions
+
+**Actor:** System
+
+The system automatically deactivates questions once their lifetime has elapsed.
+
+**Outcome:**
+Only relevant and up-to-date questions and answers are displayed.
+
+---
+
+##### MVP Scope
+
+The following elements are explicitly out of scope for the MVP:
+
+- Payments and monetization.
+- Subscriptions and premium plans.
+- Business or organizer profiles.
+- Advanced event management.
+- Advanced reputation systems.
+
 ### 9.2 Fases de desarrollo
 ### 9.3 Expansión geográfica
 
