@@ -33,11 +33,93 @@ The project mainly targets the urban leisure and hospitality sector, starting wi
 ### 4.2 Direct and Indirect Competitors 
 Direct competitors include localized nightlife apps (such as Nightlife +) and discovery platforms like Resident Advisor or Dice, but they lack live social feedback. Indirect competitors encompass social media giants (Instagram, TikTok) and established review sites (Google Maps, TripAdvisor, Yelp). ### 4.3 Competitive Advantages Our main advantage is the Hyper-Short Feedback Loop. By making reviews expire, we own the "now" niche. Additionally, our Verification Layer (GPS-fencing) builds a high-trust community that established platforms cannot replicate without changing their core structure. This creates a significant barrier to entry for competitors who rely on permanent data.
 
-## Modelo de Negocio & Monetización
-### 6.1 Modelo de negocio
-### 6.2 Fuentes de ingresos
-### 6.3 Estrategia de pricing
-### 6.4 Fases de monetización
+## Business Model & Monetization
+
+### 6.1 Business Model
+
+The application is built around a **real-time, location-based question and answer platform**, where the core value lies in the **credibility and immediacy of the information**. Credibility is ensured by restricting responses to users who are physically present within the geographical area defined by each question.
+
+Initially, the product follows a **B2C-first, free-access model**, focused on maximizing adoption, participation, and the generation of high-quality, location-verified content. Any user can ask questions tied to a specific point or area on the map, and only users currently within that area can respond in real time. Each question creates a temporary discussion thread that expires automatically.
+
+The business model is designed to evolve towards a **freemium and B2B hybrid**, where monetization is layered on top of a validated core product. Businesses and organizers can later use the platform as a contextual communication and visibility channel, but these features are intentionally secondary and not part of the initial MVP.
+
+This staged approach allows the project to first validate the technical and functional value of the geolocated Q&A system before introducing monetization, reducing product and market risk.
+
+---
+
+### 6.2 Revenue Streams
+
+Revenue generation is planned to be incremental and strictly tied to **visibility, reach, or prioritization**, without restricting access to the core functionality.
+
+1. **Paid Highlighted Questions (B2C)**  
+   Users may pay to enhance a question by:
+   - Reaching a larger number of users within the selected area.
+   - Increasing notification priority.
+   - Extending the visibility duration of the question.
+
+   This model is based on microtransactions driven by specific, time-sensitive information needs.
+
+2. **Highlighted Events and Posts for Businesses (B2B)**  
+   Companies and organizers can pay to:
+   - Promote events or activities on the map.
+   - Increase visibility for specific locations or time windows.
+   - Communicate contextual information to nearby users.
+
+3. **Usage-Based Limitations**  
+   Limits may be applied to:
+   - Number of active questions.
+   - Number of events created.
+   - Maximum geographic reach.
+
+   Paid options allow users or businesses to bypass these limits when needed.
+
+4. **Future Revenue Extensions**  
+   In later phases, additional revenue streams may include:
+   - Premium subscriptions.
+   - Access to aggregated, anonymized insights for businesses.
+   - Reputation-based advantages tied to user contribution quality.
+
+---
+
+### 6.3 Pricing Strategy
+
+The pricing strategy is guided by three core principles: **low entry barrier**, **flexibility**, and **clear value alignment**.
+
+- **End Users (B2C):**
+  - Free access to the core question-and-answer functionality.
+  - Optional pay-per-use enhancements for visibility or reach.
+  - No mandatory subscriptions during early phases.
+
+- **Businesses and Organizers (B2B):**
+  - Pay-per-event or pay-per-highlight model.
+  - Future tiered plans based on usage volume and visibility needs.
+  - Pricing adapted to the temporary and local nature of events.
+
+This strategy minimizes friction for new users while enabling monetization only when a clear and immediate benefit is perceived.
+
+---
+
+### 6.4 Monetization Phases
+
+Monetization is introduced progressively, in line with product maturity and validated user behavior.
+
+**Phase 1 – MVP (No Monetization)**  
+- Core functionality only: geolocated questions and real-time answers.
+- Focus on validating usability, engagement, and response quality.
+- Collection of key metrics such as response time, answer rate, and geographic density.
+
+**Phase 2 – Initial Monetization**  
+- Introduction of paid highlighted questions.
+- Paid event visibility for businesses and organizers.
+- Soft limits based on account type.
+
+**Phase 3 – Advanced Monetization and Scaling**  
+- Optional premium plans for power users.
+- Advanced tools and analytics for businesses.
+- Geographic expansion and new use cases.
+
+This phased approach ensures monetization does not compromise early adoption and is always grounded in validated user value.
+
 
 ## Go-To-Market Strategyz
 ### 7.1 Estrategia de adquisición de usuarios
