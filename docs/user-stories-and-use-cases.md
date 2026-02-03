@@ -11,6 +11,145 @@ The stories are organized into three priority levels based on the MoSCoW framewo
 
 ## Use Cases
 
+**UC-01: Location-Based Question Broadcast**
+- **Goal:** To allow users to crowdsource real-time information from a specific geographic area.
+
+- **Primary Actor:** Registered User.
+
+- **Preconditions:** User has GPS enabled and is logged in.
+
+- **Main Success Scenario:**
+
+1. User selects the "Ask" tool on the map.
+
+2. User inputs the question and defines the interest radius (e.g., 500m).
+
+3. System identifies all active users within that radius.
+
+4. System sends a push notification to those users.
+
+5. The question appears as a temporary pin on the map.
+
+- **Related Stories:** US-04, US-08, US-09.
+
+**UC-02: Peer-to-Peer Knowledge Validation**
+- **Goal:** To ensure the most accurate information rises to the top through community voting.
+
+- **Primary Actor:** Registered User / Contributor.
+
+- **Preconditions:** A question has been asked and at least one answer exists.
+
+- **Main Success Scenario:**
+
+1. User views a question thread.
+
+2. User selects an answer and submits a "Like" or "Dislike."
+
+3. System updates the answer's trust score in real-time.
+
+4. If an answer hits a high threshold of likes, the system highlights it as the "Top Answer."
+
+**Related Stories:** US-06, US-10, US-22.
+
+**UC-03: Algorithmic Event Detection (Hotspots)**
+- **Goal:** To automatically identify unorganized events based on high user activity.
+
+- **Primary Actor:** System (Automated).
+
+- **Preconditions:** Multiple users are asking questions in the same vicinity.
+
+- **Main Success Scenario:**
+
+1. System monitors the density of new questions in a specific area.
+
+2. If the count exceeds the threshold (e.g., 5 questions in 10 minutes), the system triggers a "Hotspot."
+
+3. System generates a unique "Active Area" icon on the map for all nearby users.
+
+4. Users can click the icon to see the cluster of questions and answers.
+
+- **Related Stories:** US-16.
+
+**UC-04: Sponsored Event Promotion**
+- **Goal:** To allow businesses to gain higher visibility for their events.
+
+- **Primary Actor:** Business User.
+
+- **Preconditions:** Account is verified as a Business; user has a "Sponsorship" balance.
+
+- **Main Success Scenario:**
+
+1. Business user creates an event.
+
+2. User selects the "Promote" option.
+
+3. System applies a distinct visual style (e.g., a glowing gold pin) to the event.
+
+4. System places the event at the top of the "Nearby Events" list for all users.
+
+- **Related Stories:** US-24, US-25, US-35.
+
+
+**UC-05: Community Reward Redemption**
+- **Goal:** To exchange accumulated "Contribution Coins" for digital or physical perks.
+
+- **Primary Actor:** Registered User.
+
+- **Preconditions:** User has a positive coin balance.
+
+- **Main Success Scenario:**
+
+1. User navigates to the "Rewards Store."
+
+2. User selects a reward (e.g., a "Local Expert" badge).
+
+3. System verifies if the user has sufficient coins.
+
+4. System deducts the coins and updates the user's profile statistics.
+
+- **Related Stories:** US-23, US-31, US-32.
+
+
+- **UC-06:** Interactive Event Chat
+
+**Goal:** To provide a real-time communication channel for people attending the same event.
+
+- **Primary Actor:** System.
+
+- **Preconditions:** Existing event that has people going.
+
+- **Main Success Scenario:**
+
+1. System creates a chat for the event.
+
+2. Atendees are able to talk to eachother in the chat.
+
+3. System deletes the chat after the event has ended.
+
+**Related Story:** US-14.
+
+
+**UC-07: Content Moderation & Banning**
+
+- **Goal:** To allow admins to clean the map of spam or offensive content.
+
+- **Primary Actor:** Admin.
+
+- **Preconditions:** Offensive content has been produced and noticed.
+
+- **Main Success Scenario:**
+
+1. User reports content
+
+2. Admin identifies user and/or question/event.
+
+3. Admin checks if the content is offensive.
+
+3. Admin bans user and deletes the question or event.
+
+- **Related Story:** US-27, US-34, US-36.
+
+
 ## User Stories
 ### Critical Stories for MVP - Must Have
 **US-01: User registration**
