@@ -38,10 +38,10 @@ The stories are organized into three priority levels based on the MoSCoW framewo
 - **I want** to answer questions from other users,
 - **So that** I can help the community and earn rewards.
 
-**US-06: Vote answers (like/dislike)**
+**US-06: Rate answers**
 - **As** a user,
-- **I want** to be able to vote on other users' answers (for example with like or dislike),
-- **So that** the most reliable and useful answers are more visible and I get the information I was looking for.
+- **I want** to be able to rate other users' answers using a star rating system (1 to 5 stars),
+- **So that** the most reliable and useful answers are more visible and I get the information I was looking for, with a more nuanced evaluation than just like or dislike.
 
 **US-07: View active questions near me**
 - **As** a user who is in an area,
