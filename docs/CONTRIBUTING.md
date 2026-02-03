@@ -205,6 +205,36 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
+### Alternative: Cherry-pick Individual Commits to main
+
+If there are changes in `trunk` that are not yet ready for production according to their authors, you can use `cherry-pick` to push only your finished commits to `main` without bringing everything from `trunk`.
+
+**When to use this:**
+- Your change is complete and tested
+- Other changes in `trunk` are not ready for `main`
+- You need to deploy your change independently
+
+**Steps:**
+
+1. Ensure your change is merged to `trunk`
+2. Switch to `main` and sync:
+```bash
+git checkout main
+git reset --hard origin/main
+```
+
+3. Apply only your commit:
+```bash
+git cherry-pick <your-commit-hash>
+```
+
+4. Push to `main`:
+```bash
+git push origin main
+```
+
+**Note:** This should be used selectively. The standard workflow is to merge `trunk` completely to `main` when it's stable and ready.
+
 ## Requirements for Features
 
 All new features must:
