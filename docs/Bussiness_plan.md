@@ -120,11 +120,99 @@ Monetization is introduced progressively, in line with product maturity and vali
 
 This phased approach ensures monetization does not compromise early adoption and is always grounded in validated user value.
 
+---
 
-## Go-To-Market Strategyz
-### 7.1 Estrategia de adquisición de usuarios
-### 7.2 Estrategia de captación de locales/eventos
-### 7.3 Estrategia de crecimiento
+## Go-To-Market Strategy
+
+### 7.1 User acquisition strategy
+
+Objective: Acquire an initial base of active users who generate real-time questions and answers, demonstrating the product's value in everyday situations.
+
+- **Initial segment:** young urban users (18–35), locals and tourists in leisure areas, students, and spontaneous event attendees.
+- **Focused zone launch:** select 1–2 districts per city to concentrate activity and create a local network effect.
+- **Acquisition channels:**
+   - Street marketing: posters, flyers, and promotions in bars within the selected areas.
+   - Collaborations with local micro-influencers and creators who demonstrate real use cases (e.g., answering a question in the app in 2 minutes).
+   - Instagram/TikTok/Facebook ads targeted only to people physically in the launch areas.
+   - Promotional credit (temporary): 1 free highlighted question for every 2 friends who sign up and respond.
+   - Participation in local communities (Facebook groups, Telegram channels, student forums): publish practical guides, real use cases and quick answers that show the app's value.
+- **Early onboarding and retention:** fast sign-up, a short tutorial showing how to post a question in 30s, push notifications for answers, and initial rewards for answering (temporary badges or extended limits).
+- **Key metrics:** daily active users, questions per user, response rate, average time to first response, 7‑ and 30‑day retention.
+
+### 7.2 Venue & organizer acquisition
+
+**Objective:** Get bars, venues and event organizers to adopt the app.
+
+**What we offer:**
+- Appear on the map when people look for nearby information.
+- See what users ask about their venue in real time.
+- Reply officially to build trust.
+- Promote events to nearby users.
+
+**How we acquire them:**
+- Door-to-door visits to venues in pilot areas.
+- Short 5–10 minute demos.
+- Provide materials (QR codes, quick-start guides).
+- Partnerships with hospitality associations.
+- Pilots with multiple venues in the same area.
+
+**Incentives:**
+- 1–2 month free trial.
+- Discounts for early adopters.
+- Quick training sessions on how to use the app.
+
+**Technical requirements:**
+Very simple: they only need to register and can view/respond from mobile or web. No complex integration required.
+
+**Metrics we measure:**
+- Number of registered venues.
+- Number of official responses.
+- Number converting to paid plans.
+- Continued usage and satisfaction.
+
+### 7.3 Growth (scaling) strategy
+
+**Objective:** Expand to more cities while maintaining quality.
+
+**How we grow in phases:**
+
+**Phase 0 – Pilot:**
+- Test in 1 city, 2 areas.
+- Identify what works and what doesn't.
+- Adjust the strategy.
+
+**Phase 1 – Local scale:**
+- Expand to 3–5 similar cities.
+- Use a playbook with our learnings (what marketing works, which influencers to contact, etc.).
+
+**Phase 2 – Sustainable growth:**
+- Open new cities based on real data.
+- Only launch where there is sufficient question/answer density.
+
+**How we sustain growth:**
+- Create a repeatable playbook for each new city.
+- Hire local ambassadors (students, influencers) to keep communities active.
+- Reward top contributors to retain activity and attract more users.
+- Detect where people attempt to use the app to identify expansion opportunities.
+
+**How we maintain quality:**
+- Like/dislike system to surface good answers.
+- Limits to prevent spam.
+- Questions expire automatically after a few hours.
+- Light moderation.
+
+**International expansion:**
+- Translate the app to other languages.
+- Adapt examples to local cultures.
+- Partner with local companies for payments and legal compliance.
+
+**Metrics we measure:**
+- Number of active cities.
+- Question density per area.
+- Cost to activate each city.
+- Return on investment when monetization is enabled.
+
+---
 
 ## Tecnología & Operaciones
 ### 8.1 Arquitectura tecnológica
