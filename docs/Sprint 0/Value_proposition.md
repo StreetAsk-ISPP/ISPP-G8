@@ -61,19 +61,6 @@ There is a significant information gap between the moment a user leaves their ho
 * **Unfiltered Transparency & Radical Trust**
     By bypassing curated business profiles and staged social media marketing, we offer a decentralized source of truth. Our platform prioritizes raw, crowdsourced information over polished promotional content, creating a high-trust environment defined by the community.
 
-### 3.3 Core MVP Features (The Enablers)
-
-* **Geo-Fenced Q&A (The "Pulse" Request):**
-    Users broadcast questions to a specific venue. Our routing engine delivers the notification primarily to "Active Eyes"—users physically located within the venue's radius—ensuring responses are backed by real-time presence.
-
-* **Anticipated Intelligence ("En Route" Responses):**
-    The platform allows users who have confirmed attendance or are currently in transit to share relevant information about imminent events (e.g., "I'm at the door and they open in 5 minutes"). This adds a layer of **short-term prediction** essential for reducing uncertainty.
-
-* **Verified Business Insights (The "Official Voice"):**
-    Verified venues can provide official updates through a dedicated dashboard, reporting "Real-Time Capacity" or "Sudden Schedule Changes," adding a layer of professional validation to the user buzz.
-
----
-
 ## 4. Market Differentiation
 
 We don't compete on "where to go" (Discovery), but on "when to go" (Execution).
