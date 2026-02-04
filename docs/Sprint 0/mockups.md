@@ -78,47 +78,68 @@ This document contains the visual prototypes for the user interface of our appli
 ![](images/mockups/US-23_View_event_details.jpg)
 
 ## **US-24: List of nearby events**
+![](images/mockups/US-24_List_of_nearby_events.jpg)
 
 ## **US-25: Map toggle**
+![](images/mockups/US-25_Map_toggle.jpg)
 
 ## **US-26: Event search**
+![](images/mockups/US-26_Event_search.jpg)
 
 ## **US-27: Post question about event**
+![](images/mockups/US-27_Post_question_about_event.jpg)
 
 ## **US-28: Earn coins for verified answer**
+![](images/mockups/US-28_Earn_coins_for_verified_answer.jpg)
 
 ## **US-29: View coin balance**
+![](images/mockups/US-29_View_coin_balance.jpg)
 
 ## **US-30: Business account registration**
+![](images/mockups/US-30_Business_account_registration.jpg)
 
 ## **US-31: Create sponsored event**
+![](images/mockups/US-31_Create_sponsored_event.jpg)
 
 ## **US-32: Admin panel**
+![](images/mockups/US-32_Admin_panel.jpg)
 
 ## **US-33: Moderate inappropriate content**
+![](images/mockups/US-33_Moderate_inappropriate_content.jpg)
 
 ## **US-34: Verify business accounts**
+![](images/mockups/US-34_Verify_business_accounts.jpg)
 
 ## **US-35: Filter events by category**
+![](images/mockups/US-35_Filter_events_by_category.jpg)
 
 ## **US-36: Notification of nearby events**
+![](images/mockups/US-36_Notification_of_nearby_events.jpg)
 
 ## **US-37: Basic rewards store**
+![](images/mockups/US-37_Basic_rewards_store.jpg)
 
 ## **US-38: Rewards history**
+![](images/mockups/US-38_Rewards_history.jpg)
 
 ## **US-39: Mark attendance to event**
+![](images/mockups/US-39_Mark_attendance_to_event.jpg)
 
 ## **US-40: Report event or answer**
+![](images/mockups/US-40_Report_event_or_answer.jpg)
 
 ## **US-41: Highlight event with budget**
+![](images/mockups/US-41_Highlight_event_with_budget.jpg)
 
 ## **US-42: User management**
-
+![](images/mockups/US-42_User_management.jpg)
 ### Desirable Stories Post-MVP - Could Have
 
 ## **US-43: Personal calendar**
+![](images/mockups/US-43_Personal_calendar.jpg)
 
 ## **US-44: Recurring events**
+![](images/mockups/US-44_Recurring_events.jpg)
 
 ## **US-45: Business dashboard**
+![](images/mockups/US-45_Business_dashboard.jpg)
