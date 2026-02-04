@@ -1,36 +1,48 @@
-# Changelog - Presentación y Guión Sprint 0
+# Changelog – Presentation and Script Sprint 0
 
-Este documento registra todos los cambios realizados sobre la presentación y el guión del proyecto.
+This document records all the changes made to the project’s presentation and script.
 
-## 📎 Enlaces de Trabajo
+## 📎 Work Links
 
-- [Presentación de Google](https://docs.google.com/presentation/d/1GPSwt1nCBwlYMyInB4S8Cge6Vwn24Q5yFGLkJKAuav8/edit?usp=sharing)
-- [Borrador de Guión](https://docs.google.com/document/d/1YcsX4TvkYAfL6Eu6Lb-29_csrsuWvCqVRkZTdcwv7Nw/edit?usp=sharing)
+- [Google Presentation](https://docs.google.com/presentation/d/1GPSwt1nCBwlYMyInB4S8Cge6Vwn24Q5yFGLkJKAuav8/edit?usp=sharing)
+- [Script Draft](https://docs.google.com/document/d/1YcsX4TvkYAfL6Eu6Lb-29_csrsuWvCqVRkZTdcwv7Nw/edit?usp=sharing)
 
-## 📝 Registro de Cambios
+## 📝 Change Log
 
-### 03/02/2026
-**Autor**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
+### 04/02/2026  
+**Author**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
 
-Creación de las 4 primeras diapositivas de la presentación. Estas diapositivas cubren la introducción del primer presentador e incluyen:
-- Descripción del problema que resuelve la aplicación
-- Comparativa del uso de nuestra app frente a soluciones actuales
-- Presentación de la empresa y el logo corporativo
-- Explicación de nuestra solución y propuesta de valor
+Modification of the presentation based on the feedback received from teams 1 and 2 and the materials they provided (mockups, business model, etc.).
 
-### 02/02/2026
-**Autor**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
+### 04/02/2026  
+**Author**: Darío Rodríguez Sastre ([darrodsas](https://github.com/darrodsas))
 
-Creación de la estructura inicial de la presentación para el Sprint 0. La presentación está organizada para mostrar:
-- El propósito y funcionalidad de la aplicación
-- Contenido a incorporar de los equipos 1 (Business plan & pilot users) y 2 (Product mock-ups)
+Update and expansion of the Sprint 0 presentation, incorporating slides focused on the product and user experience. The changes include:
+- Definition and explanation of the user flow within the application
+- Inclusion of a selection of the best mockups developed by the design team
+- Development of the trust and gamification section as key elements of the value proposition
+- Creation of the slide corresponding to the business model of the application
 
-### 01/02/2026
-**Autor**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
+### 03/02/2026  
+**Author**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
 
-Creación del primer borrador del guión para la presentación. El guión está estructurado considerando:
-- La división del trabajo en 3 equipos: Business plan & pilot users, Product mock-ups y Presentación
-- Duración total de 20 minutos
-- Idea general de la aplicación como base del discurso
+Creation of the first 4 slides of the presentation. These slides cover the introduction of the first presenter and include:
+- Description of the problem solved by the application
+- Comparison between the use of our app and current solutions
+- Presentation of the company and the corporate logo
+- Explanation of our solution and value proposition
 
+### 02/02/2026  
+**Author**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
 
+Creation of the initial structure of the Sprint 0 presentation. The presentation is organized to showcase:
+- The purpose and functionality of the application
+- Content to be incorporated from teams 1 (Business plan & pilot users) and 2 (Product mock-ups)
+
+### 01/02/2026  
+**Author**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
+
+Creation of the first draft of the presentation script. The script is structured considering:
+- The division of work into 3 teams: Business plan & pilot users, Product mock-ups, and Presentation
+- Total duration of 20 minutes
+- The general idea of the application as the basis of the discourse
