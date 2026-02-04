@@ -9,6 +9,11 @@ Este documento registra todos los cambios realizados sobre la presentación y el
 
 ## 📝 Registro de Cambios
 
+### 04/02/2026
+**Autor**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
+
+Modificación de la presentación de la presentación siguiendo lo que nos han dicho los equipos 1 y 2 y lo que nos han proporcionado (Mockups,modelo de negocio, etc.).
+
 ### 03/02/2026
 **Autor**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
 
