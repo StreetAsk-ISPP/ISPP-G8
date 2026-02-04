@@ -1,226 +1,383 @@
-# User stories and use cases
-This document presents the user stories and real-world use cases identified for the application.  
+# User Stories and Use Cases
+This document presents the user stories and real-world use cases identified for the application.
 Additionally, it describes the prioritization methodology applied to these requirements, based on an adapted MoSCoW framework for defining the scope of the minimum viable product (MVP).
 
-## Prioritization methodology
+## Prioritization Methodology
 The stories are organized into three priority levels based on the MoSCoW framework adapted for MVP:
 
 1. **P0 (Must Have)**: Critical functionality without which the MVP is not viable
 2. **P1 (Should Have)**: Important functionality that adds significant value to the MVP
 3. **P2 (Could Have)**: Desirable functionality for post-MVP versions
 
-## Use cases
+## Use Cases
 
-1. As a person who wants to go to the beach, I want to ask people who are already there how the weather feels (wind, temperature, crowd) so that I can decide whether it is worth going or not.
+**UC-01: Location-Based Question Broadcast**
+- **Goal:** To allow users to crowdsource real-time information from a specific geographic area.
 
-2. As a football player, I want to ask nearby users if they want to join a local football game so that I can easily complete my team.
+- **Primary Actor:** Registered User.
 
-3. As someone who is new to a neighborhood, I want to ask locals about safety at night so that I can decide which route to take home.
+- **Preconditions:** User has GPS enabled and is logged in.
 
-4. s a concert attendee, I want to ask people who are already inside if they allow water bottles so that I know whether to bring one or not.
+- **Main Success Scenario:**
 
-5. As a traveler who wants to share a car or taxi, I want to ask nearby people if they are going in my direction so that we can share the ride and save money.
+1. User selects the "Ask" tool on the map.
 
-6. As a student, I want to ask classmates who are already in the classroom whether the teacher has arrived or the class is cancelled so that I can decide whether to go up or not.
+2. User inputs the question and defines the interest radius (e.g., 500m).
 
-7. As a public transport user, I want to ask people at my stop if the bus or metro is running late so that I can decide whether to wait or look for an alternative.
+3. System identifies all active users within that radius.
 
-8. As a remote worker, I want to ask people who are already in a café if there are free tables and power outlets so that I can know if it is a good place to work.
+4. System sends a push notification to those users.
 
-9. As a gym user, I want to ask people who are training there if it is very crowded or not so that I can decide whether to go now or later.
+5. The question appears as a temporary pin on the map.
 
-10. As a board game enthusiast, I want to ask nearby people if there is any group playing right now so that I can join a game.
+- **Related Stories:** US-04, US-08, US-09.
+
+**UC-02: Peer-to-Peer Knowledge Validation**
+- **Goal:** To ensure the most accurate information rises to the top through community voting.
+
+- **Primary Actor:** Registered User / Contributor.
+
+- **Preconditions:** A question has been asked and at least one answer exists.
+
+- **Main Success Scenario:**
+
+1. User views a question thread.
+
+2. User selects an answer and submits a "Like" or "Dislike."
+
+3. System updates the answer's trust score in real-time.
+
+4. If an answer hits a high threshold of likes, the system highlights it as the "Top Answer."
+
+**Related Stories:** US-06, US-10, US-22.
+
+**UC-03: Algorithmic Event Detection (Hotspots)**
+- **Goal:** To automatically identify unorganized events based on high user activity.
+
+- **Primary Actor:** System (Automated).
+
+- **Preconditions:** Multiple users are asking questions in the same vicinity.
+
+- **Main Success Scenario:**
+
+1. System monitors the density of new questions in a specific area.
+
+2. If the count exceeds the threshold (e.g., 5 questions in 10 minutes), the system triggers a "Hotspot."
+
+3. System generates a unique "Active Area" icon on the map for all nearby users.
+
+4. Users can click the icon to see the cluster of questions and answers.
+
+- **Related Stories:** US-16.
+
+**UC-04: Sponsored Event Promotion**
+- **Goal:** To allow businesses to gain higher visibility for their events.
+
+- **Primary Actor:** Business User.
+
+- **Preconditions:** Account is verified as a Business; user has a "Sponsorship" balance.
+
+- **Main Success Scenario:**
+
+1. Business user creates an event.
+
+2. User selects the "Promote" option.
+
+3. System applies a distinct visual style (e.g., a glowing gold pin) to the event.
+
+4. System places the event at the top of the "Nearby Events" list for all users.
+
+- **Related Stories:** US-24, US-25, US-35.
 
 
+**UC-05: Community Reward Redemption**
+- **Goal:** To exchange accumulated "Contribution Coins" for digital or physical perks.
 
-## User stories
-### Critical stories for MVP - Must Have
+- **Primary Actor:** Registered User.
+
+- **Preconditions:** User has a positive coin balance.
+
+- **Main Success Scenario:**
+
+1. User navigates to the "Rewards Store."
+
+2. User selects a reward (e.g., a "Local Expert" badge).
+
+3. System verifies if the user has sufficient coins.
+
+4. System deducts the coins and updates the user's profile statistics.
+
+- **Related Stories:** US-23, US-31, US-32.
+
+
+- **UC-06:** Interactive Event Chat
+
+**Goal:** To provide a real-time communication channel for people attending the same event.
+
+- **Primary Actor:** System.
+
+- **Preconditions:** Existing event that has people going.
+
+- **Main Success Scenario:**
+
+1. System creates a chat for the event.
+
+2. Atendees are able to talk to eachother in the chat.
+
+3. System deletes the chat after the event has ended.
+
+**Related Story:** US-14.
+
+
+**UC-07: Content Moderation & Banning**
+
+- **Goal:** To allow admins to clean the map of spam or offensive content.
+
+- **Primary Actor:** Admin.
+
+- **Preconditions:** Offensive content has been produced and noticed.
+
+- **Main Success Scenario:**
+
+1. User reports content
+
+2. Admin identifies user and/or question/event.
+
+3. Admin checks if the content is offensive.
+
+3. Admin bans user and deletes the question or event.
+
+- **Related Story:** US-27, US-34, US-36.
+
+
+## User Stories
+### Critical Stories for MVP - Must Have
 **US-01: User registration**
 - **As** a new visitor,
 - **I want** to register with email and password,
 - **So that** I can access the application and create events.
 
-**US-02: Login**
+**US-02: Choose subscription plan**
+- **As** a registered user,
+- **I want** to choose one of the three subscription plans (Free, Pro and SuperPro),
+- **So that** I can access the benefits of my desired plan.
+
+**US-03: Login**
 - **As** a registered user,
 - **I want** to log in with my credentials,
 - **So that** I can access my profile and personalized features.
 
-**US-03: Basic user profile**
+**US-04: Edit profile**
+- **As** a registered user,
+- **I want** to edit my profile,
+- **So that** i can keep my profile up to date.
+
+**US-05: Delete account**
+- **As** a registered user,
+- **I want** to delete my account,
+- **So that** I don't have an open account which will not be used.
+
+**US-06: Basic user profile**
 - **As** a registered user,
 - **I want** to view my profile and basic statistics,
 - **So that** I can track my activity.
 
-**US-04: Create basic event**
+**US-07: See Transactions**
 - **As** a registered user,
-- **I want** to create an event with title, description, location, and date/time,
-- **So that** I can share relevant information with other nearby users.
+- **I want** to view a list of my past transactions,
+- **So that** I can track and manage my spendings.
 
-**US-05: Edit my events**
-- **As** an event creator,
-- **I want** to edit the information of my published events,
-- **So that** I can correct errors or update relevant details.
+**US-08: Create question**
+- **As** a registered user,
+- **I want** to create a question by selecting a point or area on the map and defining a radius,
+- **So that** only people near that area receive the question and can answer.
 
-**US-06: Delete my events**
-- **As** an event creator,
-- **I want** to delete events I have created,
-- **So that** I can remove obsolete information or cancellations.
-
-**US-07: Event chat**
-- **As** an event attendee,
-- **I want** to chat with other attendees,
-- **So that** I can coordinate details or meet people before the event.
-
-**US-08: View event map**
-- **As** a user,
-- **I want** to see an interactive map with nearby events represented by visual icons,
-- **So that** I can quickly discover what's happening around me.
-
-**US-09: View event details**
-- **As** a user,
-- **I want** to click on an event from the map or list to see all its details,
-- **So that** I can get complete information before deciding to attend.
-
-**US-10: List of nearby events**
-- **As** a user,
-- **I want** to see a list of events sorted by proximity or date,
-- **So that** I have an alternative to the map when I prefer detailed information.
-
-**US-11: View number of attendees**
-- **As** a user viewing an event,
-- **I want** to see how many people have confirmed attendance,
-- **So that** I can assess the popularity of the event.
-
-**US-12: Event search**
-- **As** a user,
-- **I want** to search for events by keyword, location, or date,
-- **So that** I can find specific events without having to browse the map.
-
-**US-13: Post question about event**
-- **As** a user interested in an event,
-- **I want** to post a question related to the event,
-- **So that** I can get additional information from other attendees or creators.
-
-**US-14: Answer questions**
+**US-09: Answer questions**
 - **As** a user with useful information,
 - **I want** to answer questions from other users,
 - **So that** I can help the community and earn rewards.
 
-**US-15: Mark answer as correct**
-- **As** the question creator,
-- **I want** to mark an answer as correct/verified,
-- **So that** I can indicate that I got the information I was looking for.
+**US-10: Rate answers**
+- **As** a user,
+- **I want** to be able to rate other users' answers using a star rating system (1 to 5 stars),
+- **So that** the most reliable and useful answers are more visible and I get the information I was looking for, with a more nuanced evaluation than just like or dislike.
 
-**US-16: Earn coins for verified answer**
+**US-11: View active questions near me**
+- **As** a user who is in an area,
+- **I want** to see the active questions within a radius around my current location,
+- **So that** I can answer in real time what people want to know in that area.
+
+**US-12: Notification or update of questions in my area**
+- **As** a user who is in an area,
+- **I want** to be notified or see updates when a new question is created near me,
+- **So that** I can decide if I want to answer it at that moment.
+
+**US-13: Question expiration**
+- **As** the creator of a question,
+- **I want** my question to automatically expire after a defined time,
+- **So that** the information seen on the map remains relevant and up to date.
+
+**US-14: View question details and thread**
+- **As** a user,
+- **I want** to open a question and see all associated answers in a thread format,
+- **So that** I can follow the specific conversation about that topic in that area.
+
+
+### Important Stories for MVP - Should Have
+
+**US-15: Create my events**
+- **As** registered user,
+- **I want** publish an event,
+- **So that** I can correct errors or update relevant details.
+
+**US-16: Edit my events**
+- **As** an event creator,
+- **I want** to edit the information of my published events,
+- **So that** I can correct errors or update relevant details.
+
+**US-17: See my events**
+- **As** an event creator,
+- **I want** to have access to a list with all my events,
+- **So that** I have better access to them in order to edit, erase...
+
+**US-18: Delete my events**
+- **As** an event creator,
+- **I want** to delete events I have created,
+- **So that** I can remove obsolete information or cancellations.
+
+**US-19: See Asistance**
+- **As** registered user,
+- **I want** to see a list of events I selected as "Asisting",
+- **So that** I can organize myself better.
+
+**US-20: Event chat**
+- **As** an event attendee,
+- **I want** to chat with other attendees,
+- **So that** I can coordinate details or meet people before the event.
+
+**US-21: View event map**
+- **As** a user,
+- **I want** to see an interactive map with nearby events represented by visual icons,
+- **So that** I can quickly discover what's happening around me.
+
+**US-22: Auto-create event from question density**
+- **As** a user viewing the map,
+- **I want** the system to automatically detect when multiple questions are created in the same area within a short time,
+- **So that** a event marker is created automatically and other users can discover that something interesting is happening there.
+
+**US-23: View event details**
+- **As** a user,
+- **I want** to click on an event from the map or list to see all its details (Time, place, number of attendees),
+- **So that** I can get complete information before deciding to attend.
+
+**US-24: List of nearby events**
+- **As** a user,
+- **I want** to see a list of events sorted by proximity or date,
+- **So that** I have an alternative to the map when I prefer detailed information.
+
+**US-25: Map toggle**
+- **As** a user,
+- **I want** to have a toggle that will show events (in blue) or questions(on red),
+- **So that** It is easier for me to browse through the map.
+
+**US-26: Event search**
+- **As** a user,
+- **I want** to search for events by keyword, location, or date,
+- **So that** I can find specific events without having to browse the map.
+
+**US-27: Post question about event**
+- **As** a user interested in an event,
+- **I want** to post a question related to the event,
+- **So that** I can get additional information from other attendees or creators.
+
+**US-28: Earn coins for verified answer**
 - **As** a user who answers questions,
 - **I want** to receive coins when my answer is marked as correct,
 - **So that** I feel rewarded for contributing value to the community.
 
-**US-17: View coin balance**
+**US-29: View coin balance**
 - **As** a registered user,
 - **I want** to see my current coin balance in my profile,
 - **So that** I know how many rewards I have accumulated.
 
-**US-18: Business account registration**
+**US-30: Business account registration**
 - **As** an event organizing company,
 - **I want** to register with a verified business account,
 - **So that** I can publish official events with greater visibility.
 
-**US-19: Create sponsored event**
+**US-31: Create sponsored event**
 - **As** a verified company,
 - **I want** to create events with a "sponsored" or "official" label,
 - **So that** I can promote my events with higher priority on the map and lists.
 
-**US-20: Admin panel**
+**US-32: Admin panel**
 - **As** a system administrator,
 - **I want** to access a control panel with key metrics,
 - **So that** I can monitor application information (active users, events created, verified answers...).
 
-**US-21: Moderate inappropriate content**
+**US-33: Moderate inappropriate content**
 - **As** an administrator,
 - **I want** to delete events or answers that violate the rules,
 - **So that** I can maintain the quality and safety of the platform.
 
-**US-22: Verify business accounts**
+**US-34: Verify business accounts**
 - **As** an administrator,
 - **I want** to approve or reject business verification requests,
 - **So that** only legitimate companies get sponsorship privileges.
 
-### Important stories for MVP - Should Have
-**US-23: Filter events by category**
+**US-35: Filter events by category**
 - **As** a user,
 - **I want** to filter events by categories (music, sports, gastronomy, emergencies, etc.),
 - **So that** I can quickly find events of interest.
 
-**US-24: Notification of nearby events**
+**US-36: Notification of nearby events**
 - **As** a user,
 - **I want** to receive notifications when an event is created very close to my location,
 - **So that** I am informed in real time about what's happening around me.
 
-**US-25: Basic rewards store**
+**US-37: Basic rewards store**
 - **As** a user with accumulated coins,
 - **I want** to redeem my coins for rewards within the app (badges, highlights, priority in listings),
 - **So that** I can make use of the coins I have earned.
 
-**US-26: Rewards history**
+**US-38: Rewards history**
 - **As** a user,
 - **I want** to see a history of coins earned and redeemed,
 - **So that** I can track my activity and rewards.
 
-**US-27: Level system**
-- **As** an active user,
-- **I want** to level up based on my participation (events created, verified answers),
-- **So that** I can gain recognition and unlock additional benefits.
-
-**US-28: Mark attendance to event**
+**US-39: Mark attendance to event**
 - **As** an interested user,
 - **I want** to mark that I will attend an event,
 - **So that** others can see the level of interest and confirm my participation.
 
-**US-29: Report event or answer**
+**US-40: Report event or answer**
 - **As** a user,
 - **I want** to report inappropriate content or spam,
 - **So that** I can help maintain the quality of the platform.
 
-**US-30: Business dashboard**
-- **As** a verified company,
-- **I want** to access a dashboard with statistics of my events (views, attendees, interactions),
-- **So that** I can measure the impact of my sponsored events.
 
-**US-31: Highlight event with budget**
+**US-41: Highlight event with budget**
 - **As** a company,
 - **I want** to pay to highlight my event for a limited time,
 - **So that** I can increase the visibility and reach of my event.
 
-**US-32: User management**
+**US-42: User management**
 - **As** an administrator,
 - **I want** to suspend or ban users who repeatedly violate the rules,
 - **So that** I can protect the community from abusive behavior.
 
-### Desirable stories post-MVP - Could Have
-**US-33: Share event on social media**
-- **As** a user,
-- **I want** to share events on my social networks,
-- **So that** I can invite friends outside the platform.
-
-**US-34: Friends/followers system**
-- **As** a user,
-- **I want** to follow other active users,
-- **So that** I can see their events and activity more easily.
-
-**US-35: Personal calendar**
+### Desirable Stories Post-MVP - Could Have
+**US-43: Personal calendar**
 - **As** a user,
 - **I want** to sync future events with my personal calendar,
 - **So that** I can manage my schedule.
 
-**US-36: Recurring events**
+**US-44: Recurring events**
 - **As** an event organizer,
-- **I want** to create recurring events (weekly, monthly, daily...),- **I want** to create recurring events (weekly, monthly, daily...),
-- **So that** I don't have to manually create the same event multiple times.to manually create the same event multiple times.
+- **I want** to create recurring events (weekly, monthly, daily...),
+- **So that** I don't have to manually create the same event multiple times.
 
-**US-37: Support answers**
-- **As** a user,
-- **I want** to vote for other users' answers,- **I want** to vote for other users' answers,
-- **So that** I can support correct answers to a question.t correct answers to a question.
-
-
-
+**US-45: Business dashboard**
+- **As** a verified company,
+- **I want** to access a dashboard with statistics of my events (views, attendees, interactions),
+- **So that** I can measure the impact of my sponsored events.
