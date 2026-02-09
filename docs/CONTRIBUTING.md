@@ -82,25 +82,33 @@ Example: Fix a critical production issue
 - Push your changes regularly
 - Keep your branch up to date with `trunk`
 
-### 3. Merging to trunk (Pre-production)
+### 3. Pull Request to trunk (Pre-production)
 
 When your feature/documentation is ready:
 
 1. Push your branch
-2. Wait for review and CI/CD checks
-3. Merge to `trunk`
+2. Open a Pull Request from your branch to `trunk`
+3. Set one reviewer: Javi, Miguel, Santia, or Guillermo
+4. Wait for review and CI/CD checks
+5. The reviewer merges the PR and deletes the branch
+
+**Visual example:**
+```
+feature/my-task  ──PR──>  trunk  ──(admins when ready)──>  main
+                 reviewer: Javi | Miguel | Santia | Guillermo
+```
 
 **Branch Cleanup:**
-- `feature/*` branches are **deleted** after merge to `trunk`
-- `document/*` branches are **deleted** after merge to `trunk`
+- `feature/*` branches are **deleted** after merge to `trunk` by admins
+- `document/*` branches are **deleted** after merge to `trunk` by admins
 - `bugfix` branch is **permanent** for hotfixes
 
 ### 4. Merging to main (Production)
 
 When the feature/documentation is complete and tested on `trunk`:
 
-1. Verify all tests and functionality
-2. Merge to `main`
+1. Administrators decide when to promote `trunk`
+2. Administrators merge `trunk` to `main`
 3. Tag the release if needed
 
 ## Branch Structure
@@ -159,45 +167,25 @@ name, email, and profile picture. Users can edit their profile information
 from this page.
 ```
 
-### 4. Run tests
-
-Before pushing, make sure all tests pass (required for features):
-
-```bash
-npm test
-# or
-python -m pytest
-# or your test command
-```
-
-### 5. Push your branch
+### 4. Push your branch
 ```bash
 git push origin feature/add-user-profile
 ```
 
-### 6. Merge to trunk
+### 5. Open PR to trunk
 
 After verification:
 
-```bash
-git checkout trunk
-git pull origin trunk
-git merge feature/add-user-profile
-git push origin trunk
-```
+1. Open a Pull Request from `feature/add-user-profile` to `trunk`
+2. Add one reviewer: Javi, Miguel, Santia, or Guillermo
+3. Wait for approval and CI/CD checks
+4. The reviewer merges the PR and deletes the branch
 
-The feature branch will be deleted automatically (or you can delete it manually).
-
-### 7. Merge to main (when ready)
+### 6. Merge to main (when ready)
 
 When the feature is fully tested and complete:
 
-```bash
-git checkout main
-git pull origin main
-git merge trunk -m "feat: add user profile. Closes #<issue_number>"
-git push origin main
-```
+Administrators will decide when to merge `trunk` to `main`.
 
 Tag the release if needed:
 ```bash
@@ -205,6 +193,7 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
+<<<<<<< HEAD
 ### Alternative: Cherry-pick Individual Commits to main
 
 If there are changes in `trunk` that are not yet ready for production according to their authors, you can use `cherry-pick` to push only your finished commits to `main` without bringing everything from `trunk`.
@@ -260,6 +249,8 @@ python -m pytest tests/test_feature.py
 
 If tests fail, fix the issues and commit again. Do NOT push failing tests.
 
+=======
+>>>>>>> e2cf1711420deb6704bbb03c8e81d3b5fd668899
 **Don't use `-m` flag**, let the template guide you:
 
 ```bash
