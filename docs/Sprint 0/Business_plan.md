@@ -32,7 +32,7 @@ The app is a real-time social intelligence platform that acts as a live pulse of
 
 ### 3.2 Key Features
 
-The main features include a Live Heatmap showing real-time activity levels, Presence-Gated Reviews that unlock only when the user is on-site, and Ephemeral Status Updates that disappear after four hours to keep data fresh. Additionally, it has Smart Filters (music type, crowd age, wait times) and a Venue Portal for business owners to send instant "Flash Deals" to nearby users.
+The main features include a Live Heatmap showing real-time activity levels, Presence-Gated Reviews that unlock only when the user is on-site, and Ephemeral Status Updates that disappear after four hours to keep data fresh.
 
 ### 3.3 Value Proposition
 
@@ -249,11 +249,11 @@ This alignment guarantees that revenue is not extracted prematurely, but instead
 
 The application is built around a **real-time, location-based question and answer platform**, where the core value lies in the **credibility and immediacy of the information**. Credibility is ensured by restricting responses to users who are physically present within the geographical area defined by each question.
 
-Initially, the product follows a **B2C-first, free-access model**, focused on maximizing adoption, participation, and the generation of high-quality, location-verified content. Any user can ask questions tied to a specific point or area on the map, and only users currently within that area can respond in real time. Each question creates a temporary discussion thread that expires automatically.
+In its **MVP phase**, the product follows a **fully free-access B2C model**, focused on maximizing adoption, participation, and the creation of high-quality, location-verified content. Any user can ask questions tied to a specific point or area on the map, and only users currently within that area can respond in real time. Each question generates a temporary discussion thread that expires automatically.
 
-The business model is designed to evolve towards a **freemium and B2B hybrid**, where monetization is layered on top of a validated core product. Businesses and organizers can later use the platform as a contextual communication and visibility channel, but these features are intentionally secondary and not part of the initial MVP.
+Once the core product and usage patterns are validated, the business model is designed to evolve toward a **subscription-based model**, potentially combined with B2B use cases. Premium features may be introduced for advanced users, businesses, or organizers who wish to leverage the platform as a contextual communication, engagement, or visibility channel. These monetization features are intentionally excluded from the initial MVP.
 
-This staged approach allows the project to first validate the technical and functional value of the geolocated Q&A system before introducing monetization, reducing product and market risk.
+This staged approach prioritizes product validation and user value in the early phase, while allowing for scalable and sustainable monetization through subscriptions at a later stage, thereby reducing both product and market risk.
 
 ---
 
@@ -261,33 +261,30 @@ This staged approach allows the project to first validate the technical and func
 
 Revenue generation is planned to be incremental and strictly tied to **visibility, reach, or prioritization**, without restricting access to the core functionality.
 
-1. **Paid Highlighted Questions (B2C)**  
-   Users may pay to enhance a question by:
-   - Reaching a larger number of users within the selected area.
-   - Increasing notification priority.
-   - Extending the visibility duration of the question.
+## 5.2 Revenue Streams
 
-   This model is based on microtransactions driven by specific, time-sensitive information needs.
+Revenue generation is planned to be gradual and primarily based on **premium user accounts**, while keeping the core functionality of the platform accessible to all users.
 
-2. **Highlighted Events and Posts for Businesses (B2B)**  
-   Companies and organizers can pay to:
-   - Promote events or activities on the map.
-   - Increase visibility for specific locations or time windows.
+1. **Premium User Subscriptions (B2C)**  
+   Users may subscribe to a premium account that offers enhanced features such as:
+   - Increased visibility for their questions and contributions.
+   - Priority notifications within selected geographic areas.
+   - Extended lifetime of questions and discussion threads.
+   - Advanced filters or insights related to local activity.
+
+   The subscription model targets users with frequent, time-sensitive, or professional information needs, while preserving equal access to basic participation for free users.
+
+2. **Premium Accounts for Businesses and Organizers (B2B)**  
+   Businesses, event organizers, or institutions may subscribe to premium accounts that allow them to:
+   - Publish highlighted events or location-based posts on the map.
    - Communicate contextual information to nearby users.
+   - Manage visibility across specific locations or time windows.
 
-3. **Usage-Based Limitations**  
-   Limits may be applied to:
-   - Number of active questions.
-   - Number of events created.
-   - Maximum geographic reach.
-
-   Paid options allow users or businesses to bypass these limits when needed.
-
-4. **Future Revenue Extensions**  
+3. **Future Revenue Extensions**  
    In later phases, additional revenue streams may include:
-   - Premium subscriptions.
-   - Access to aggregated, anonymized insights for businesses.
-   - Reputation-based advantages tied to user contribution quality.
+   - Tiered subscription plans with advanced analytics or automation tools.
+   - Access to aggregated, anonymized insights for professional users.
+   - Reputation-based premium features tied to long-term contribution quality.
 
 ---
 
