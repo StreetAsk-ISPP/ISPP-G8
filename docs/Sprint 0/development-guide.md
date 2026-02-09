@@ -1,7 +1,7 @@
 # Initial Development Guide (Proposal)
 
 ## Introduction
-This guide defines the proposed structure and baseline guidelines for the project: a geolocation-based social platform to share real-time event information.
+This guide defines the proposed structure and baseline guidelines for the MVP: a geolocated Q and A platform where questions are mini forum threads and business accounts create events.
 
 ---
 
@@ -17,14 +17,14 @@ This guide defines the proposed structure and baseline guidelines for the projec
 **Logic layer (Backend)**
 - RESTful API
 - Authentication and authorization (JWT)
-- Business logic (events, questions, subscriptions, rewards)
+- Business logic (events, questions, attendance, voting)
 - Geolocation services
-- WebSockets (live chat and notifications)
+- Notifications delivery
 
 **Data layer**
 - Relational database with geospatial support
 - Cache system for performance
-- File storage (images, media)
+- File storage (only if needed later)
 - External services (maps, push notifications)
 
 ---
@@ -131,7 +131,13 @@ POST   /api/auth/logout
 ```
 GET    /api/users/me
 PUT    /api/users/me
-GET    /api/users/:id
+DELETE /api/users/me
+```
+
+**Business onboarding**
+```
+POST   /api/business/register
+GET    /api/business/status
 ```
 
 **Events**
@@ -143,6 +149,7 @@ PUT    /api/events/:id
 DELETE /api/events/:id
 GET    /api/events/nearby
 POST   /api/events/:id/attend
+DELETE /api/events/:id/attend
 ```
 
 **Questions**
@@ -151,19 +158,16 @@ GET    /api/questions
 POST   /api/questions
 GET    /api/questions/:id
 GET    /api/questions/nearby
+GET    /api/events/:id/questions
+POST   /api/events/:id/questions
 ```
 
 **Answers**
 ```
 GET    /api/questions/:id/answers
 POST   /api/questions/:id/answers
-PUT    /api/answers/:id/verify
-```
-
-**Chat**
-```
-GET    /api/events/:id/chat/messages
-POST   /api/events/:id/chat/messages
+POST   /api/answers/:id/vote
+POST   /api/answers/:id/replies
 ```
 
 **Notifications**
@@ -178,7 +182,7 @@ PUT    /api/notifications/:id/read
 ```json
 {
   "success": true,
-  "data": { /* objeto o array */ }
+  "data": {}
 }
 ```
 
@@ -188,7 +192,7 @@ PUT    /api/notifications/:id/read
   "success": false,
   "error": {
     "code": "ERROR_CODE",
-    "message": "Descripción del error"
+    "message": "Error message"
   }
 }
 ```
@@ -196,34 +200,42 @@ PUT    /api/notifications/:id/read
 
 ## 5. Key functionality
 
+### 5.0 App flow and MVP scope
+- First screen: Login, with Sign up access
+- Business sign up requires extra data plus NIF and admin validation
+- The map is the core screen
+- Events are always visible on the map
+- Questions can be toggled on or off
+  - Mode 1: Events only
+  - Mode 2: Events plus questions
+
 ### 5.1 Geolocation
 - Store locations as GPS coordinates (latitude, longitude)
 - Use PostGIS for spatial queries
 - Implement radius search (nearby events)
 - Calculate distances between points
 
-### 5.2 Accounts and plans
-- Company accounts are paid-only through a monthly fee
-- Only company accounts can create events
-- User accounts have two plans: free (with ads) and premium (without ads)
-- Premium users can set question duration; free users have a fixed duration of 2 hours
+### 5.2 Accounts and permissions
+- Normal users can create map questions, answer questions, vote answers, view events, confirm attendance, and ask inside events
+- Normal users cannot create events
+- Business accounts can create and edit events, view questions inside owned events, and respond as verified
 
-### 5.3 Event and Q&A model
-- Inside each event, questions work in a Reddit-like model
-- Users ask questions and other users respond within each question
-- User questions on the map appear less highlighted than company events
+### 5.3 Question and answer model
+- Each question is a mini forum, not a chat
+- Answers are ordered by vote score, with the best answers first
+- Replies can be threaded under an answer
+- The same model applies to map questions and event questions
 
-### 5.4 Coin system
-- Record all transactions
-- Grant coins for verified positive answers
-- Coins are redeemed for in-app rewards only (no physical money)
-- Examples of rewards: one month of premium, tickets for event rewards
-- Maintain a balance history
+### 5.4 Events and attendance
+- Events include title, description, location, date, and time
+- Users can confirm attendance and cancel by tapping again
+- Attendee count updates on each change
+- Event questions disappear when the event ends
 
-### 5.5 WebSocket for real time
-- Live event chat
-- Instant notifications
-- Counter updates (attendees, messages)
+### 5.5 Notifications
+- Notify when an event is nearby
+- Notify when a question is nearby
+- Notify when someone replies to your question
 
 ## 6. Security
 - JWT authentication
@@ -269,7 +281,7 @@ PUT    /api/notifications/:id/read
 - E2E: Playwright or Cypress
 
 ### 8.3 Coverage
-- Target: >70% code coverage
+- Target: >50% code coverage
 - Prioritize tests for critical business logic
 
 ---
@@ -277,7 +289,7 @@ PUT    /api/notifications/:id/read
 ## 9. Deployment
 
 ### 9.1 Environments
-- **Development**: Local with Docker
+- **Development**: Local 
 - **Pre-production**: `trunk` branch
 - **Production**: `main` branch
 
