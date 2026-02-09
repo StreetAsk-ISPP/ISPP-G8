@@ -193,6 +193,64 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
+<<<<<<< HEAD
+### Alternative: Cherry-pick Individual Commits to main
+
+If there are changes in `trunk` that are not yet ready for production according to their authors, you can use `cherry-pick` to push only your finished commits to `main` without bringing everything from `trunk`.
+
+**When to use this:**
+- Your change is complete and tested
+- Other changes in `trunk` are not ready for `main`
+- You need to deploy your change independently
+
+**Steps:**
+
+1. Ensure your change is merged to `trunk`
+2. Switch to `main` and sync:
+```bash
+git checkout main
+git reset --hard origin/main
+```
+
+3. Apply only your commit:
+```bash
+git cherry-pick <your-commit-hash>
+```
+
+4. Push to `main`:
+```bash
+git push origin main
+```
+
+**Note:** This should be used selectively. The standard workflow is to merge `trunk` completely to `main` when it's stable and ready.
+
+## Requirements for Features
+
+All new features must:
+
+1. **Include unit tests** - Write tests covering the new functionality
+2. **Pass all tests** - All tests must pass before pushing changes
+3. **Follow the commit format** - Use the conventional commit template
+4. **Be tested locally** - Verify functionality works before merging
+
+## Testing Before Push
+
+```bash
+# Run all tests
+npm test
+# or
+python -m pytest
+
+# Run specific test file
+npm test -- feature.test.js
+# or
+python -m pytest tests/test_feature.py
+```
+
+If tests fail, fix the issues and commit again. Do NOT push failing tests.
+
+=======
+>>>>>>> e2cf1711420deb6704bbb03c8e81d3b5fd668899
 **Don't use `-m` flag**, let the template guide you:
 
 ```bash
