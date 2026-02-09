@@ -1,87 +1,88 @@
-# Guía inicial para el desarrollo (Propuesta)
+# Initial Development Guide (Proposal)
 
-## Introducción
-Esta guía establece la propuesta de estructura y directrices básicas para el desarrollo del proyecto: una plataforma social basada en geolocalización para compartir información de eventos en tiempo real.
-
----
-
-## 1. Arquitectura del sistema
-
-### 1.1 Arquitectura general (3 Capas)
-
-**Capa de Presentación (Frontend)**
-- Aplicación Web
-- Aplicación Móvil (opcional para MVP)
-- Interfaz de usuario con mapas interactivos
-
-**Capa de Lógica (Backend)**
-- API RESTful
-- Autenticación y autorización (JWT)
-- Lógica de negocio (eventos, preguntas, monedas)
-- Servicios de geolocalización
-- WebSockets (chat y notificaciones en tiempo real)
-
-**Capa de Datos**
-- Base de datos relacional con soporte geoespacial
-- Sistema de caché para rendimiento
-- Almacenamiento de archivos (imágenes, multimedia)
-- Servicios externos (mapas, notificaciones push)
+## Introduction
+This guide defines the proposed structure and baseline guidelines for the MVP: a geolocated Q and A platform where questions are mini forum threads and business accounts create events.
 
 ---
 
-## 2. Stack tecnológico recomendado
+## 1. System architecture
+
+### 1.1 General architecture (3 tiers)
+
+**Presentation layer (Frontend)**
+- Web application
+- Mobile application (optional for MVP)
+- UI with interactive maps
+
+**Logic layer (Backend)**
+- RESTful API
+- Authentication and authorization (JWT)
+- Business logic (events, questions, attendance, voting)
+- Geolocation services
+- Notifications delivery
+
+**Data layer**
+- Relational database with geospatial support
+- Cache system for performance
+- File storage (only if needed later)
+- External services (maps, push notifications)
+
+---
+
+## 2. Recommended technology stack
 
 ### 2.1 Backend
-**Opciones principales:**
-- **Node.js** con Express/Fastify + TypeScript
-- **Python** con FastAPI/Django
-- **Java** con Spring Boot
+**Main options:**
+- **Node.js** with Express/Fastify + TypeScript
+- **Python** with FastAPI/Django
+- **Java** with Spring Boot
 
-**ORM/Base de Datos:**
-- PostgreSQL + PostGIS (para geolocalización)
-- Prisma, TypeORM o SQLAlchemy como ORM
+**ORM/Database:**
+- PostgreSQL + PostGIS (for geolocation)
+- Prisma, TypeORM, or SQLAlchemy as ORM
 
-**Autenticación:**
+**Authentication:**
 - JWT (JSON Web Tokens)
-- Bcrypt para hash de contraseñas
+- Bcrypt for password hashing
 
 ### 2.2 Frontend
 **Web:**
-- React o Vue.js con TypeScript
-- Tailwind CSS para estilos
-- React Leaflet o Google Maps para mapas
+- React or Vue.js with TypeScript
+- Tailwind CSS for styling
+- React Leaflet or Google Maps for maps
 
-**Móvil (opcional):**
-- React Native o Flutter
+**Mobile (optional):**
+- React Native or Flutter
+- Android Studio (for native Android development)
 
-### 2.3 Infraestructura
-- **Caché**: Redis
-- **Almacenamiento**: AWS S3, Google Cloud Storage o similar
-- **Contenedores**: Docker
+### 2.3 Infrastructure
+- **Cache**: Redis
+- **Storage**: AWS S3, Google Cloud Storage, or similar
+- **Containers**: Docker
 - **CI/CD**: GitHub Actions
-- **Hosting**: AWS, Google Cloud, Railway o Vercel
+- **Hosting**: AWS, Google Cloud, Railway, or Vercel
 
 ---
 
-## 3. Estructura del Proyecto
+## 3. Project structure
 
 ### 3.1 Backend
 
 ```
 backend/
 ├── src/
-│   ├── config/              # Configuración (DB, JWT, env)
-│   ├── entities/            # Modelos de dominio
-│   ├── controllers/         # Controladores HTTP
-│   ├── services/            # Lógica de negocio
-│   ├── repositories/        # Acceso a datos
-│   ├── middlewares/         # Auth, validación, errores
-│   ├── routes/              # Definición de rutas
+│   ├── config/              # Configuration (DB, JWT, env)
+│   ├── entities/            # Domain models
+│   ├── controllers/         # HTTP controllers
+│   ├── services/            # Business logic
+│   ├── repositories/        # Data access
+│   ├── middlewares/         # Auth, validation, errors
+│   ├── routes/              # Route definitions
 │   ├── dto/                 # Data Transfer Objects
-│   ├── utils/               # Funciones auxiliares
-│   └── websockets/          # Handlers de WebSocket
+│   ├── utils/               # Helpers
+│   └── websockets/          # WebSocket handlers
 ├── tests/
-├── prisma/                  # Esquema y migraciones
+├── prisma/                  # Schema and migrations
 ├── .env.example
 ├── package.json
 └── Dockerfile
@@ -92,17 +93,17 @@ backend/
 ```
 frontend/
 ├── src/
-│   ├── components/          # Componentes reutilizables
-│   │   ├── ui/             # Componentes base
-│   │   ├── map/            # Componentes de mapa
-│   │   └── events/         # Componentes de eventos
-│   ├── pages/              # Páginas
+│   ├── components/          # Reusable components
+│   │   ├── ui/             # Base components
+│   │   ├── map/            # Map components
+│   │   └── events/         # Event components
+│   ├── pages/              # Pages
 │   ├── hooks/              # Custom hooks
-│   ├── services/           # Llamadas a la API
-│   ├── store/              # Estado global
-│   ├── types/              # Tipos TypeScript
-│   ├── utils/              # Utilidades
-│   └── assets/             # Imágenes e iconos
+│   ├── services/           # API calls
+│   ├── store/              # Global state
+│   ├── types/              # TypeScript types
+│   ├── utils/              # Utilities
+│   └── assets/             # Images and icons
 ├── public/
 ├── .env.example
 └── package.json
@@ -110,30 +111,36 @@ frontend/
 
 ---
 
-## 4. API RESTful - Endpoints principales
+## 4. REST API - Main endpoints
 
-### Estructura de URLs
+### URL structure
 ```
 Base: /api/v1
 ```
 
-### Endpoints Básicos
+### Core endpoints
 
-**Autenticación**
+**Authentication**
 ```
 POST   /api/auth/register
 POST   /api/auth/login
 POST   /api/auth/logout
 ```
 
-**Usuarios**
+**Users**
 ```
 GET    /api/users/me
 PUT    /api/users/me
-GET    /api/users/:id
+DELETE /api/users/me
 ```
 
-**Eventos**
+**Business onboarding**
+```
+POST   /api/business/register
+GET    /api/business/status
+```
+
+**Events**
 ```
 GET    /api/events
 POST   /api/events
@@ -142,42 +149,40 @@ PUT    /api/events/:id
 DELETE /api/events/:id
 GET    /api/events/nearby
 POST   /api/events/:id/attend
+DELETE /api/events/:id/attend
 ```
 
-**Preguntas**
+**Questions**
 ```
 GET    /api/questions
 POST   /api/questions
 GET    /api/questions/:id
 GET    /api/questions/nearby
+GET    /api/events/:id/questions
+POST   /api/events/:id/questions
 ```
 
-**Respuestas**
+**Answers**
 ```
 GET    /api/questions/:id/answers
 POST   /api/questions/:id/answers
-PUT    /api/answers/:id/verify
+POST   /api/answers/:id/vote
+POST   /api/answers/:id/replies
 ```
 
-**Chat**
-```
-GET    /api/events/:id/chat/messages
-POST   /api/events/:id/chat/messages
-```
-
-**Notificaciones**
+**Notifications**
 ```
 GET    /api/notifications
 PUT    /api/notifications/:id/read
 ```
 
-### Formato de Respuestas
+### Response format
 
-**Éxito:**
+**Success:**
 ```json
 {
   "success": true,
-  "data": { /* objeto o array */ }
+  "data": {}
 }
 ```
 
@@ -187,94 +192,116 @@ PUT    /api/notifications/:id/read
   "success": false,
   "error": {
     "code": "ERROR_CODE",
-    "message": "Descripción del error"
+    "message": "Error message"
   }
 }
 ```
 
 
-## 5. Funcionalidades clave
+## 5. Key functionality
 
-### 5.1 Geolocalización
-- Almacenar ubicaciones como coordenadas GPS (latitud, longitud)
-- Usar PostGIS para consultas espaciales
-- Implementar búsqueda por radio (eventos cercanos)
-- Calcular distancias entre puntos
+### 5.0 App flow and MVP scope
+- First screen: Login, with Sign up access
+- Business sign up requires extra data plus NIF and admin validation
+- The map is the core screen
+- Events are always visible on the map
+- Questions can be toggled on or off
+  - Mode 1: Events only
+  - Mode 2: Events plus questions
 
-### 5.2 Sistema de monedas
-- Registrar todas las transacciones
-- Otorgar monedas por respuestas verificadas
-- Permitir canje de monedas por recompensas
-- Mantener historial de saldo
+### 5.1 Geolocation
+- Store locations as GPS coordinates (latitude, longitude)
+- Use PostGIS for spatial queries
+- Implement radius search (nearby events)
+- Calculate distances between points
 
-### 5.3 WebSocket para tiempo real
-- Chat de eventos en vivo
-- Notificaciones instantáneas
-- Actualización de contadores (asistentes, mensajes)
+### 5.2 Accounts and permissions
+- Normal users can create map questions, answer questions, vote answers, view events, confirm attendance, and ask inside events
+- Normal users cannot create events
+- Business accounts can create and edit events, view questions inside owned events, and respond as verified
 
-### 6.4 Seguridad
-- Autenticación con JWT
-- Hash de contraseñas con bcrypt
-- Validación de datos de entrada
-- Rate limiting para prevenir abuso
-- CORS configurado correctamente
+### 5.3 Question and answer model
+- Each question is a mini forum, not a chat
+- Answers are ordered by vote score, with the best answers first
+- Replies can be threaded under an answer
+- The same model applies to map questions and event questions
+
+### 5.4 Events and attendance
+- Events include title, description, location, date, and time
+- Users can confirm attendance and cancel by tapping again
+- Attendee count updates on each change
+- Event questions disappear when the event ends
+
+### 5.5 Notifications
+- Notify when an event is nearby
+- Notify when a question is nearby
+- Notify when someone replies to your question
+
+## 6. Security
+- JWT authentication
+- Password hashing with bcrypt
+- Input data validation
+- Rate limiting to prevent abuse
+- Properly configured CORS
 
 ---
 
-## 7. Base de Datos
+## 7. Database
 
-### 7.1 Tecnología
-- **PostgreSQL** con extensión **PostGIS**
-- Soporte nativo para geolocalización
-- Transacciones ACID
-- Tipos de datos avanzados (JSON, UUID, Arrays)
+### 7.1 Technology
+- **PostgreSQL** with **PostGIS** extension
+- Native geolocation support
+- ACID transactions
+- Advanced data types (JSON, UUID, Arrays)
 
-### 7.2 Índices Importantes
-- Índices geoespaciales en columnas de ubicación
-- Índices en claves foráneas
-- Índices en campos de búsqueda frecuente (email, username)
-- Índices compuestos para consultas complejas
+### 7.2 Important indexes
+- Geospatial indexes on location columns
+- Indexes on foreign keys
+- Indexes on frequent search fields (email, username)
+- Composite indexes for complex queries
 
-### 7.3 Consideraciones
-- Usar UUIDs para IDs de entidades
-- Implementar soft delete (marcar como inactivo en vez de eliminar)
-- Registrar timestamps (created_at, updated_at)
-- Normalizar datos para evitar redundancia
+### 7.3 Considerations
+- Use UUIDs for entity IDs
+- Implement soft delete (mark inactive instead of deleting)
+- Store timestamps (created_at, updated_at)
+- Normalize data to avoid redundancy
 
 ---
 
 ## 8. Testing
 
-### 8.1 Tipos de Tests
-- **Tests Unitarios**: Probar funciones y métodos individuales
-- **Tests de Integración**: Probar interacciones entre componentes
-- **Tests E2E**: Probar flujos completos de usuario
+### 8.1 Test types
+- **Unit tests**: Test individual functions and methods
+- **Integration tests**: Test interactions between components
+- **E2E tests**: Test full user flows
 
-### 8.2 Herramientas
-- Backend: Jest, Pytest o JUnit
+### 8.2 Tools
+- Backend: Jest, Pytest, or JUnit
 - Frontend: Jest, React Testing Library
-- E2E: Playwright o Cypress
+- E2E: Playwright or Cypress
 
-### 8.3 Cobertura
-- Objetivo: >70% de cobertura de código
-- Priorizar tests en lógica de negocio crítica
+### 8.3 Coverage
+- Target: >50% code coverage
+- Prioritize tests for critical business logic
 
 ---
 
-## 9. Despliegue
+## 9. Deployment
 
-### 9.1 Entornos
-- **Desarrollo**: Local con Docker
-- **Pre-producción**: Rama `trunk`
-- **Producción**: Rama `main`
+### 9.1 Environments
+- **Development**: Local 
+- **Pre-production**: `trunk` branch
+- **Production**: `main` branch
 
 ### 9.2 CI/CD
-- Ejecutar tests automáticamente en Pull Requests
-- Validar formato de código (linting)
-- Build automático al hacer merge
-- Deploy automático a producción desde `main`
+- Run tests automatically on Pull Requests
+- Validate code format (linting)
+- Automatic build on merge
+- Automatic deploy to production from `main`
 
-### 9.3 Monitoreo
-- Logs de errores y eventos importantes
-- Métricas de rendimiento (latencia, uso de recursos)
-- Alertas para errores críticos
+### 9.3 Monitoring
+- Error logs and important events
+- Performance metrics (latency, resource usage)
+- Alerts for critical errors
+
+
