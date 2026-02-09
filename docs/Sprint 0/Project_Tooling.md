@@ -15,7 +15,6 @@ Tools to plan, prioritize, and track progress:
 Tools for designing and validating the user experience:
 
 * **Canva** – Used for the creation of mockups
-* **** - Used for the creation of UML diagrams
 
 ---
 
@@ -34,7 +33,8 @@ Core collaboration tools for development:
 
 * **GitHub** – Repositories, pull requests, issues
 * **GitHub Issues / GitHub Projects** – Code-linked task tracking
-* **GitKraken / Sourcetree** – Visual Git clients (optional)
+* **Clockify** - Time tracking application
+* **GitKraken / Sourcetree / Fork** – Visual Git clients (optional)
 
 ---
 
@@ -55,8 +55,6 @@ Tools for testing and validating functionality:
 
 * **Postman / Insomnia** – Manual API testing
 * **Swagger UI** – API exploration and validation
-* **Playwright UI / Cypress Dashboard** – E2E test visualization
-* **BrowserStack** – Cross-browser and device testing
 
 ---
 
@@ -67,7 +65,7 @@ Tools to automate builds, tests, and deployments:
 * **GitHub Actions / GitLab CI** – CI/CD pipelines
 * **Docker Desktop** – Local development environments
 * **Dependabot / Renovate** – Dependency update automation
-* **Railway / Render Dashboards** – Deployment management (early-stage)
+* **Render** – Deployment management (early-stage)
 
 ---
 
