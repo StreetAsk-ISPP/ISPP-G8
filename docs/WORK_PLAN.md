@@ -13,19 +13,19 @@ This backlog consolidates the features necessary for the MVP, ordered by develop
 ### A: Foundations & Geolocation (Core)
 
 * **Technical Task:** Definition of **API Contract** (Swagger/OpenAPI) and Data Model.
-* **US-01:** User Registration (Email/Pass).
-* **US-03:** User Login.
 * **US-11:** View map with active questions (red dots) and current location.
 * **US-08:** Create geolocated question (Radius, Topic, Text).
+* **US-13:** View question details and list of answers (Threads).
+* **US-09:** Answer questions
 
 ### B: Social Interaction (Q&A Loop)
 
-* **US-13:** View question details and list of answers (Threads).
-* **US-09:** Answer questions (Presence verification via GPS).
+* **US-01:** User Registration.
+* **US-03:** User Login.
 * **US-10:** Rate answers (Like/Dislike).
 * **US-06:** Basic User Profile.
 
-### Epic C: Events & Business
+### C: Events & Business
 
 * **US-15:** View events map (Visual icons).
 * **US-16:** View event details (Time, location).
@@ -33,78 +33,82 @@ This backlog consolidates the features necessary for the MVP, ordered by develop
 * **US-29:** Create events (Business users only).
 * **US-30:** Edit events.
 
-### Epic D: Extras & Retention (Gamification & Admin)
+
+
+### D: Extras & Retention (Gamification & Admin)
 
 * **US-35:** Earn coins for answering (Backend logic).
 * **US-23:** View coin balance.
 * **US-12:** Basic notifications (New question nearby).
 * **US-02:** Plan selection (Free/Premium - Visual UI, no complex real payment gateway for MVP).
 * **US-37:** Admin Panel (Basic metrics).
-
 ---
 
 # 2. Sprint Planning
 
-## Sprint 1: Core + Deployment
+## Sprint 1: Core Q&A Loop (Anonymous/Guest)
 
-**Objective:** Enable a user to register, view a map, post a question, and have this deployed in the cloud. Strict Back/Front separation.
+**Objective:** Enable a user to view the map, post a question, **and answer a question** immediately (Guest Mode). The core value (information exchange) is prioritized over user identification.
 **Delivery Date:** March 5th.
 
 #### 🔧 Technical Tasks (Top Priority)
 
-1. **API Contract First:** Define the OpenAPI (Swagger) specification for Auth, Questions, and Geolocation endpoints. This allows Frontend and Backend to work in parallel.
-2. **Environment Setup:** Repository, Basic CI/CD, and Database (PostGIS or similar for geolocation).
-3. **Cloud Deployment (MVP v0):** Deploy a "Hello World" connected to the DB to ensure infrastructure from week 1.
+1. **API Contract First:** Define OpenAPI specs for Questions, Answers, and Geolocation.
+2. **Guest/Anonymous Logic:** Implement a mechanism (Device ID or temporary session) to allow interaction without full registration.
+3. **Environment & Deployment:** Setup DB (PostGIS) and deploy the initial Backend/Frontend to the cloud.
 
 #### 👤 User Stories (Functionality)
 
-* **US-01 & US-03 (Auth):** Registration and Login .
-* **US-11 (Map):** Implement map view (Google Maps/Mapbox) and rendering of pins from the API.
-* **US-08 (Create Question):** Form to submit a question with current latitude/longitude. Backend validates and saves.
-* **US-XX (System):** Logic for automatic question expiration (Basic Cronjob or TTL in database).
+* **US-11 (Map):** View map with active questions (red dots) and current location.
+* **US-08 (Create Question):** Form to submit a question with current latitude/longitude.
+* **US-13 (View Threads):** View question details and the list of existing answers.
+* **US-09 (Answer Questions):** Users can post answers to questions nearby (validating location).
+* **US-XX (System):** Logic for automatic question expiration.
 
-**S1 Deliverable:** An accessible URL where you can register, view the map, and post a question (appears as a dot on the map).
+**S1 Deliverable:** A fully functional Q&A loop. Users can open the app, find a red dot, read the thread, and reply—all without a login screen blocking them.
 
 ---
 
-## Sprint 2: Interaction & Visualization (Answers + Event Reading)
+## Sprint 2: Identity, Social & Event Visualization
 
-**Objective:** Close the communication loop (Answer/Vote) and introduce Event visualization to populate the map.
+**Objective:** Introduce User Identity (saving history), Quality Control (Ratings), and visual population of the map with Events.
 **Delivery Date:** March 26th.
 
 #### 🔧 Technical Tasks
 
-1. **"Proof of Presence" Logic:** Refine Backend validation to ensure the responder (US-09) is within the question's radius.
-2. **Geospatial Query Optimization:** Ensure fast loading of pins.
+1. **Auth System:** Implement JWT and secure password storage.
+2. **Data Migration:** Logic to associate previous "Guest" activity with the new User Account upon registration.
+3. **Event Data Model:** Database structure for Events (distinct from Questions).
 
 #### 👤 User Stories (Functionality)
 
-* **US-13 (Threads):** Detail view when clicking on a question.
-* **US-09 (Answer):** Ability to send text answers.
+* **US-01 & US-03 (Auth):** User Registration and Login.
+* **US-06 (Profile):** View basic user profile and history.
 * **US-10 (Rating):** Like/Dislike system on answers.
-* **US-15 & US-16 (View Events):** Events are added to the map (visual distinction between Question and Event). *Note: Events can be inserted via Database or simple Admin for now to test visualization.*
-* **US-06 (Profile):** View basic user data and simple statistics.
+* **US-15 & US-16 (View Events):** Events appear on the map with visual icons and details (Time/Location).
 
-**S2 Deliverable:** The app is now useful. Users can ask and answer, verifying location. Events are visible on the map (even if not yet created from the app).
+**S2 Deliverable:** The app now has registered users who can build reputation (via history) and curate content (ratings). The map becomes richer with Event icons.
 
 ---
 
 ## Sprint 3: Business Management & Gamification
 
-**Objective:** Allow businesses to manage their events (Create/Edit) and add the gamification layer (Coins) and notifications.
+**Objective:** Enable the Business model (B2B accounts), increase retention (Gamification), and provide Admin tools.
 **Delivery Date:** April 16th.
 
 #### 🔧 Technical Tasks
 
-1. **Roles and Permissions:** Differentiate between `User` and `Business` in Backend.
-2. **Notification Service:** Implementation of Push Notifications (Firebase/OneSignal).
+1. **Roles & Permissions:** Backend logic to distinguish `User` vs `Business`.
+2. **Notification Service:** Push notifications (Firebase/OneSignal).
+3. **Gamification Engine:** Logic to award coins for valid answers.
 
 #### 👤 User Stories (Functionality)
 
-* **US-28 (Business Registration):** Differentiated flow for companies.
-* **US-29 & US-30 (Event Management):** Complete CRUD of events from the business user interface.
-* **US-35 & US-23 (Coins/Gamification):** Backend adds coins upon answering. Frontend shows the balance in the profile.
-* **US-12 (Notifications):** Alert when someone answers your question.
-* **US-37 (Basic Admin):** A simple view for administrators to approve business accounts (US-39).
+* **US-28 (Business Registration):** Verification flow for companies.
+* **US-29 & US-30 (Event Management):** Create and Edit events (Business users).
+* **US-35 & US-23 (Gamification):** Earn coins for answering and view balance.
+* **US-12 (Notifications):** Alert when a nearby question is asked or your question is answered.
+* **US-37 (Admin):** Basic metrics panel and business approval.
+* **US-02 (Plans):** Visual UI for plan selection (Free/Premium).
 
-**S3 Deliverable (Complete MVP):** The application meets the basic promise: Users ask/answer and earn coins; Businesses create events to attract people. Everything functional and deployed.
+**S3 Deliverable (Complete MVP):** Full ecosystem. Users identify themselves, earn rewards, and businesses manage their own presence and events.
