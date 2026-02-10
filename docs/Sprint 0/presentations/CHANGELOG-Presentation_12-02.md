@@ -18,3 +18,10 @@ This document records all the changes made to the project’s presentation and s
 Creation of a slide for the presentation scheduled for the 12th. The update includes:
 - Design and development of a dedicated slide for the next day presentation
 - Implementation within that slide of a visual scheme representing competitor analysis
+
+### 08/02/2026  
+**Author**: Manuel Orta Pérez ([manortper1](https://github.com/manortper1))
+**Author**: Pablo Arrabal Hermoso ([pabloarrabalh](https://github.com/pabloarrabalh))
+
+Creation of the MVP presentation draft scheduled for the 12th. The update includes:
+- MVP presentation draft with structure organitation based on previews fedback.
