@@ -14,12 +14,22 @@ the ISPP course and not involved in the project development.
 
 ## 2. Pilot Users List
 
-| Name | Contact | Background |
-|-----|--------|-----------|
-| Elisa Correro Ostos | example1@email.com | University student |
-| Álvaro Gómez Campos | example2@email.com | University student |
-| Mario Sánchez Cortés | example3@email.com | University student |
-| Ricardo Manuel Corredera Bermejo | example3@email.com | High school teacher |
+| Name | Age | Contact | Background |
+|-----|--------|-----------|----|
+| Elisa Correro Ostos | 21 | elisacorreroostos@gmail.com | University student |
+| Álvaro Gómez Campos | 22 | alvarogomc31@gmail.com | University student |
+| Mario Sánchez Cortés | 22 | mariosancheezz03@gmail.com | University student |
+| Ricardo Manuel Corredera Bermejo | 62 | ricorrebe@gmail.com | High school teacher |
+| Daniela Sánchez Sánchez | 21 | danielasanchez252004@gmail.com | University student |
+| Ana Granados Jiménez | 21 | anagranados124@hotmail.com | University student |
+| Julia Romero Moreno | 21 | romeromorenojulia@gmail.com | University student |
+| Ángela Urrejola Daza | 21 | aurrdaz056@gmail.com | University student |
+| Pilar Mantilla Luna | 21 | pilar.mantilla.luna@gmail.com | University student |
+| Elena Carmona Soria | 21 | elenacs04@gmail.com | University student |
+| Ana María Lavado Contador | 62 | analavado79@gmail.com | Telephone agent |
+| Cesar Martínez Van Der Loven | 21 | cesarmartinez300804@gmail.com | University student |
+| Alejandro Briones Flores | 20 | brionesfloresf@gmail.com | University student |
+| Mario Canto Caballero | 21 | mcantocaballero@gmail.com | University student |
 
 
 > Contact information will be used exclusively for pilot testing
