@@ -2,7 +2,7 @@
 
 ## 🚀 Direct Access to Mockup
 
-**👉 [Open Interactive Mockup](https://streetaskmockup.netlify.app/)**
+**👉 [Open Interactive Mockup](https://streetask2.netlify.app/)**
 
 ---
 
