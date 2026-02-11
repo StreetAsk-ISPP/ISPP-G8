@@ -200,11 +200,6 @@ The stories are organized into three priority levels based on the MoSCoW framewo
 - **I want** to click on an event from the map or list to see all its details (time, place, number of attendees),  
 - **So that** I can get complete information before deciding to attend.
 
-**US-17: List of nearby events**  
-- **As** a user,  
-- **I want** to see a list of events sorted by proximity or date,  
-- **So that** I have an alternative to the map when I prefer detailed information.
-
 **US-17: Map toggle**  
 - **As** a user,  
 - **I want** to have a toggle that will show or hide questions (in red) on the map,  
@@ -344,6 +339,11 @@ The stories are organized into three priority levels based on the MoSCoW framewo
 - **As** a verified company,  
 - **I want** to access a dashboard with statistics of my events (views, attendees, interactions),  
 - **So that** I can measure the impact of my sponsored events.
+
+**US-48: Business account payment screen**  
+- **As** a company completing the Business account registration,  
+- **I want** to access a payment screen to complete the one-time Business account fee after admin verification,  
+- **So that** I can finalize my registration and unlock Pro benefits (ad-free, event creation, verified responses).
 
 ### Admin User Stories
 
