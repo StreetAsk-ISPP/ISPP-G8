@@ -11,6 +11,15 @@ This document records all the changes made to the project’s presentation and s
 
 
 ## 📝 Change Log
+
+### 11/02/2026  
+**Author**: Darío Rodríguez Sastre ([darrodsas](https://github.com/darrodsas))
+- Survey link, result and QR's added to presentaion
+- Pilot user info added to presentation
+- Added num pages to presentation
+- Work plan slide first implementation
+- Comments added to presentation to make easier the explanation
+
 ### 10/02/2026
 **Author**: Pablo Arrabal Hermoso ([pabloarrabalh](https://github.com/pabloarrabalh))
 Read and synthesized the SWOT analysis in preparation for creating the associated slides. The update includes:
