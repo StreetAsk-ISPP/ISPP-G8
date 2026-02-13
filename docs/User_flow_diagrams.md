@@ -43,8 +43,6 @@ US11 – Main Panel
 │
 ├── US6 – Profile
 │   ├── US4 – Edit profile
-│   ├── US20 – My questions
-│   ├── US19 – Active questions
 │   ├── US23 – Balance
 │   │   ├── US25 – Store
 │   │   └── US26 – Rewards history
