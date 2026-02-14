@@ -12,3 +12,11 @@ This document records all the changes made to the project’s presentation and s
 
 ## 📝 Change Log
 
+### 14/02/2026  
+**Author**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
+- Corrected errors from the previous presentation following feedback from 12/02
+- Added differential element
+- Division of core functionalities, MVP and mockups of the final product
+- Workflow according to contributing
+- Aesthetic corrections
+
