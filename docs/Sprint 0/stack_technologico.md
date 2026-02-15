@@ -257,3 +257,176 @@ This solution balances technical robustness with academic and operational constr
 
 
 ## Team and Software Management
+
+### 1. Purpose
+
+This section defines the project management tool that will be used during the upcoming sprints.
+
+Given the team size (18 members) and the startup-oriented approach of the project, the selected tool must:
+
+- Support structured sprint planning.
+- Enable coordination across multiple functional areas.
+- Provide agile metrics (velocity, burndown, progress tracking).
+- Integrate seamlessly with the GitHub development workflow.
+- Scale effectively for a medium-sized team.
+
+
+
+### 2. Selected Tool: ZenHub
+
+The team has selected **ZenHub** as the project and sprint management tool.
+
+ZenHub operates as an agile project management layer integrated directly into GitHub, extending native GitHub Issues with advanced Scrum capabilities.
+
+
+
+### 3. Rationale for Selection
+
+The decision was based on the following factors:
+
+- The team consists of 18 members, which requires structured coordination.
+- The project aims to simulate a real startup environment.
+- Advanced agile metrics are necessary for sprint planning and evaluation.
+- Tight integration with GitHub is essential to maintain traceability.
+
+ZenHub provides:
+
+- Sprint planning tools
+- Burndown charts
+- Velocity tracking
+- Roadmap visualization
+- Dependency management
+- Direct integration with GitHub issues and pull requests
+
+This makes it suitable for scaling agile processes beyond basic task tracking.
+
+
+
+### 4. Alternatives Considered
+
+#### 4.1 GitHub Projects
+
+GitHub Projects was evaluated as a potential solution.
+
+**Advantages:**
+- Fully integrated with GitHub.
+- Simple and easy to use.
+- No additional configuration required.
+- Low operational overhead.
+
+**Disadvantages:**
+- Limited agile metrics.
+- No robust velocity tracking.
+- Basic burndown functionality.
+- Limited dependency management.
+- Insufficient for coordinating 18 team members effectively.
+
+**Decision:**  
+Rejected due to limited scalability and lack of advanced Scrum metrics.
+
+
+
+#### 4.2 Jira
+
+Jira was also evaluated as an industry-standard agile management tool.
+
+**Advantages:**
+- Advanced Scrum support.
+- Extensive reporting and metrics.
+- Mature ecosystem.
+- Widely adopted in enterprise environments.
+
+**Disadvantages:**
+- Separate from GitHub (requires integration).
+- Increased operational complexity.
+- Higher configuration overhead.
+- Steeper learning curve.
+- Adds friction to development workflow.
+
+**Decision:**  
+Rejected due to infrastructure complexity and separation from the GitHub-centered workflow.
+
+
+
+### 5. Why ZenHub Over the Alternatives
+
+ZenHub was selected because it combines:
+
+- Advanced agile management capabilities (similar to Jira),
+- Seamless integration with GitHub (like GitHub Projects),
+- Lower operational overhead compared to Jira,
+- Scalability suitable for a team of 18 members.
+
+It allows the team to:
+
+- Maintain full traceability from issue → branch → commit → PR → merge.
+- Track sprint performance objectively.
+- Monitor team velocity.
+- Identify bottlenecks early.
+- Plan releases more strategically.
+
+This aligns with the project’s startup-oriented mindset and professional development goals.
+
+
+
+### 6. Risks and Mitigation Plan
+
+#### Risk 1 – Learning Curve
+
+Description:
+Team members may initially struggle to use advanced ZenHub features.
+
+Mitigation:
+- Provide a short onboarding session.
+- Define clear sprint and board usage guidelines.
+- Use a standardized workflow across teams.
+
+
+
+#### Risk 2 – Underutilization of Advanced Features
+
+Description:
+The team may not fully leverage velocity tracking or burndown metrics.
+
+Mitigation:
+- Assign a Scrum responsible to monitor metrics.
+- Review sprint performance formally at the end of each sprint.
+
+
+
+#### Risk 3 – Increased Process Complexity
+
+Description:
+More structure may slow down early development.
+
+Mitigation:
+- Keep workflows simple.
+- Avoid unnecessary customization.
+- Focus only on features that add measurable value.
+
+
+
+#### Risk 4 – Tool Dependency
+
+Description:
+Reliance on ZenHub could introduce process dependency.
+
+Mitigation:
+- Since ZenHub is built on top of GitHub Issues, core data remains in GitHub.
+- Maintain workflow documentation independent of the tool.
+
+
+
+### 7. Conclusion
+
+Given the team size (18 members), the startup-oriented approach, and the need for structured agile metrics, **ZenHub** is the most appropriate project management tool.
+
+It provides:
+
+- Scalability.
+- Advanced Scrum metrics.
+- Full GitHub integration.
+- Professional workflow support.
+- Reduced operational friction compared to Jira.
+
+The selection balances agility, scalability, and integration, ensuring the team can operate in a structured yet flexible manner consistent with real-world startup practices.
