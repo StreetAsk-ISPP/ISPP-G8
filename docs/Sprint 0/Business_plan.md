@@ -875,14 +875,14 @@ We track how users engage with the core Q&A system to understand if the product 
 
 These numbers tell us if the business model is working and generating revenue:
 
-- **Paid Highlighted Questions**: Number of users paying to boost their questions for more visibility or to keep them on top. This shows if users see value in paid features.
-- **Revenue from Highlighted Questions**: How much money we make from users paying to boost questions.
-- **Active Business Accounts**: How many companies or event organizers are using the platform to create paid highlighted events.
-- **Revenue from Business Events**: How much money businesses spend on highlighted events each month.
+- **Paid Highlighted Events**: Number of business accounts paying to boost their events for more visibility on the map and lists. This shows if businesses see value in paid promotional features.
+- **Revenue from Highlighted Events**: How much money we make from businesses paying to promote their events.
+- **Active Business Accounts**: How many companies or event organizers are using the platform to create and manage events.
+- **Revenue from Business Accounts**: How much money we receive from one-time Business account registration fees.
 - **Customer Acquisition Cost**: How much we spend to acquire one new paid user or business account.
 - **Customer Lifetime Value**: How much revenue we expect from a typical business account over their entire relationship with the platform.
-- **Churn Rate**: What percentage of paid users stop paying each month. Lower is better, as it means retention of revenue.
-- **Average Transaction Value**: On average, how many users and businesses spend when they use paid features.
+- **Churn Rate**: What percentage of premium users stop paying each month. Lower is better, as it means retention of revenue.
+- **Average Transaction Value**: On average, how much users and businesses spend when they use paid features (premium subscriptions, event highlights).
 
 ### 9.3 Growth Metrics
 
@@ -953,93 +953,3 @@ The team is organized into three functional areas with clear responsibilities:
 **Liability Framework**: The platform operates as a neutral intermediary for user-generated content. While the platform moderates content, it cannot be held liable for all user contributions under applicable safe harbor provisions, provided it acts responsibly to address reported violations.
 
 **Transparent Data Practices**: Users can access, download, or delete their personal data. Location data is not shared with third parties without explicit consent, except where required by law.
-
----
-
-## Financial Projections
-
-### 12.1 Cost Structure
-
-#### Initial Costs (One-Time)
-
-- **PWA and Backend Development (MVP)**: €8,000–€18,000 (design, frontend, API, initial deployment).
-- **UX/UI Design and Interactive Prototypes**: €1,000–€3,000.
-- **Legal and Compliance** (policies, privacy, GDPR advisory): €1,000–€3,000.
-- **Launch Materials** (QR codes, posters, printed materials): €300–€1,000.
-- **Estimated Total Initial Cost**: €10,300–€25,000.
-
-#### Recurring Operational Costs (Monthly)
-
-- **Hosting and Cloud Services** (databases, notifications, CDN): €100–€800.
-- **Monitoring, Logging, and Backups**: €50–€200.
-- **Marketing and Local Activation** (pilot intensive weeks): €800–€3,000 (can be concentrated in activation months).
-- **Moderation and Support** (team members or contractors): €300–€1,500.
-- **Ongoing Administrative and Legal Expenses**: €50–€300.
-- **Salaries/Compensation** (if outsourcing or hiring part-time staff): variable; conservative example: €2,000–€6,000.
-- **Estimated Total Operational Cost** (pilot phase, small team): ~€1,300–€11,800/month (range depending on salary payments).
-
-#### Key Assumptions
-
-- Founding team contributes work without initial salary costs.
-- Infrastructure sized for pilot (50–80 active users) — not for tens of thousands of users.
-
----
-
-### 12.2 Revenue Projection (12–24 Month Horizon)
-
-#### Phases and Revenue Model (Aligned with the Document Plan)
-
-- **MVP (months 0–3)**: No monetization.
-- **Phase 2 (initial monetization launch, months 4–9)**: Paid highlighted questions (B2C microtransactions) and business visibility (B2B).
-- **Phase 3 (national consolidation, months 10–24)**: Venue subscriptions, analytics packages, and campaign fees.
-
-#### Pricing Assumptions (Examples)
-
-- **Highlighted Question (B2C user)**: €0.50 per promotion.
-- **Event/Visibility for Business (B2B)**: €15–€60 per campaign/event depending on reach.
-- **Monthly Subscription for Venue Analytics** (when available): €50–€200/month.
-- **ARPU (Average Revenue Per Monthly Active User)** estimated in early phases: €0–€0.30; during consolidation: €0.5–€2 (depending on B2B).
-
-#### Conservative Scenario (6–12 Months)
-
-- **Pilot (3 active weeks)**: 50–80 active users → revenue ≈ €0.
-- **After S2 with gradual monetization**: 500 MAU, low micropayment conversion → monthly revenue ≈ €200–€800.
-- **6–12 months**: with expansion to 3–5 cities and first businesses: monthly revenue ≈ €1,000–€6,000.
-
-#### Moderate Scenario (12–18 Months)
-
-- **National (8–10 cities)**, MAU ≈ 10,000 → if ARPU ≈ €0.5 → monthly revenue ≈ €5,000.
-- **With 20–40 B2B clients** paying for campaigns and 5–10 subscriptions → +€1,500–€6,000/month.
-
-#### Optimistic Scenario (18–24 Months)
-
-- **International/select capitals**, MAU >50,000, combined ARPU €0.6–€1 → monthly revenue ≈ €30,000.
-- **Expanded B2B** (analytics, campaigns) provides significant recurring revenue.
-
----
-
-### 12.3 Break-even Point
-
-**Practical Definition**: The point where monthly recurring revenue ≥ monthly operational costs + amortization of initial investment.
-
-#### Example Calculation (Simplified, with Rounded Numbers)
-
-- **Target monthly operational costs** (with minimal team and active marketing): €3,000/month.
-- **With average ARPU of €0.5 per MAU**, to cover €3,000 requires ≈ 6,000 active MAU.
-- **B2B Alternative**: 12 venues paying €250/month ≈ €3,000/month.
-
-#### Interpretation and Estimated Timeline
-
-- With a conservative strategy, **local break-even (per city)** can be achieved within 3–6 months of intensive activation across multiple zones if early B2B conversion is secured.
-- At the **national consolidation level**, expect 9–18 months to achieve overall break-even (depending on investment in salaries and marketing).
-- **Factors that accelerate break-even**:
-  - Early B2B contracts (venues, promoters).
-  - Cost reduction through efficient cloud use and free tools for initial marketing.
-  - ARPU improvement via service packaging (volume bundles, subscriptions).
-
-#### Practical Recommendations
-
-- **Prioritize pilot B2B sales** (few accounts with reduced rates) to generate early recurring revenue.
-- **Keep cost structure low during MVP** (founders + freelancers), concentrating spending on marketing during activation windows.
-- **Measure CAC and LTV from the first pilot** to refine pricing and validate estimated time to break-even.
-- **Update projections monthly during S2/S3** with real data (MAU, conversion to paid, acquisition cost).
