@@ -1,41 +1,48 @@
-# Workflows de GitHub Actions
+# GitHub Actions Workflows
 
-Este documento resume los posibles flujos de trabajo (`workflows`) para nuestro proyecto, integrando linting, testing y análisis de calidad de código.
-
----
-
-## 1. Linting con ESLint
-**Objetivo:**  
-Verificar que el código JavaScript/TypeScript cumpla con las reglas de estilo definidas antes de hacer merge a la rama principal.
-
-**Disparadores:**  
-- Push a cualquier rama  
-- Pull request hacia `main` y `trunk`
+This document summarizes the possible `workflows` for our project, integrating linting, testing, and code quality analysis.
 
 ---
 
-## 2. Tests con Pytest
-**Objetivo:**  
-Ejecutar la suite de pruebas de Python para garantizar la estabilidad y correcto funcionamiento del código.
+## 1. Linting with ESLint
 
-**Disparadores:**  
-- Push a cualquier rama  
-- Pull request hacia `main` y `trunk`
+**Objective:**
+Ensure that JavaScript/TypeScript code complies with the defined style rules before merging into the main branch.
 
----
+**Triggers:**
 
-## 3. Análisis de código con Codacy
-**Objetivo:**  
-Evaluar la calidad de código y reportar problemas de estilo, complejidad y seguridad.
-
-**Disparadores:**  
-- Push a cualquier rama  
-- Pull request hacia `main` y `trunk`
+* Push to any branch
+* Pull request targeting `main` and `trunk`
 
 ---
 
-## 4. Posibles mejoras futuras
-- Integración de Dependabot para actualizar dependencias automáticamente.  
-- Notificaciones a Slack/Teams sobre resultados de los workflows.  
-- Tests en múltiples versiones de Python y Node.js.  
-- Workflow de despliegue automatizado al merge en `trunk (preproducción)` y `main (producción)`.
+## 2. Testing with Pytest, Jest or JUnit
+
+**Objective:**
+Run the test suite to guarantee stability and correct functionality of the codebase.
+
+**Triggers:**
+
+* Push to any branch
+* Pull request targeting `main` and `trunk`
+
+---
+
+## 3. Code Analysis with Codacy
+
+**Objective:**
+Evaluate code quality and report issues related to style, complexity, and security.
+
+**Triggers:**
+
+* Push to any branch
+* Pull request targeting `main` and `trunk`
+
+---
+
+## 4. Possible Future Improvements
+
+* Integrate Dependabot to automatically update dependencies.
+* Slack/Teams notifications for workflow results.
+* Testing across multiple versions of Python and Node.js.
+* Automated deployment workflow on merge to `trunk (pre-production)` and `main (production)`.
