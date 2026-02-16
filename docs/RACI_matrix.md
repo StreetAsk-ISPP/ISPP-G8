@@ -49,8 +49,11 @@ _Based on priorities A and B of the Work Plan_
 | **API Contract Definition**   |       I        |     **A**      |    **R**    |      C       |    C    |
 | **Cloud Env Config (Deploy)** |       I        |     **A**      |    **R**    |      C       |    I    |
 | **Auth System (JWT/Login)**   |       I        |       A        |    **R**    |    **R**     |    C    |
+| **Guest/Anonymous Logic**     |       I        |       A        |    **R**    |    **R**     |    C    |
 | **Map & Red Dots (US-11)**    |       I        |       A        |      C      |    **R**     |    C    |
 | **Create Question (US-08)**   |       I        |       A        |    **R**    |    **R**     |    C    |
+| **Answer Questions (US-09)**  |       I        |       A        |    **R**    |    **R**     |    C    |
+| **View Threads (US-13)**      |       I        |       A        |      C      |    **R**     |    C    |
 | **Code Review (PRs)**         |       I        |    **R/A**     |      I      |      I       |    C    |
 | **Merge to `trunk`**          |       I        |     **A**      |      I      |      I       |    I    |
 
