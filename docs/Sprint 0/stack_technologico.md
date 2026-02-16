@@ -1,623 +1,70 @@
 # Tecnological Stack
 
-## Backend Development
+## 1: Backend Development
 
-## Frontend Development
+## 2: Frontend Development
 
+## 3: Backend & Database Deployment 
 
-# Technology Stack – Frontend
+### 3.1: Cloud Provider Selection: Why Azure?
 
-## 1. Purpose
+The decision to utilize **Microsoft Azure** as our cloud infrastructure is driven by a strategic resource advantage:
 
-This section defines the selected technology stack for the frontend development of the system.
-
-The objective is to:
-
-- Clearly define the chosen technology for development.
-- Justify the decision based on technical criteria and project constraints.
-- Document the evaluated alternatives and the reasons for their rejection.
-- Identify associated risks and establish mitigation strategies.
+* **University of Seville Partnership:** The University of Seville is an active beneficiary of the **Azure for Students** program. Only the following regions are available ("spaincentral","switzerlandnorth","italynorth","germanywestcentral","polandcentral").
+* **Cost Efficiency:** This partnership grants us access to **$100 in annual credits** and free tier services for 12 months. This allows the team to deploy enterprise-grade architecture (PaaS and Serverless) without incurring out-of-pocket expenses during the development and initial production phases.
+* **Professional Certification:** Developing on Azure aligns with industry standards, offering the team experience with tools widely used in the corporate sector (PostgreSQL on Azure, GitHub Actions).
 
 ---
 
-## 2. Selected Technology
+### 3.2: Architecture Selection: Option 3 (Winner)
 
-The frontend of the system will be developed using:
+We evaluated three potential architectures. We have selected **Option 3: Azure Container Apps** as the optimal balance between modernity, cost (covered by student credits), and performance.
 
-- **React** (Single Page Application – SPA)
-- **JavaScript** as the development language
-- **Vite** as the build tool and bundler
-- **Node.js** as the runtime environment during development
-
-React with JavaScript has been selected due to:
-
-- Its strong industry adoption and maturity as a technology.
-- Component-based architecture that promotes modularity and maintainability.
-- Efficient rendering through the Virtual DOM.
-- Accessible learning curve by using plain JavaScript, without the overhead of TypeScript.
-- Extensive ecosystem of libraries and documentation resources.
-- Seamless integration with REST APIs exposed by the Spring Boot backend.
-- Team familiarity with the language, reducing onboarding friction.
-
-The frontend will operate as a client-side rendered SPA consuming the backend REST API.
+| Architecture | Description | Verdict |
+| --- | --- | --- |
+| **Azure App Service** | Traditional PaaS for hosting web apps. | **Discarded.** While simple, it lacks the flexibility of container orchestration and can be more expensive to scale vertically. |
+| **Azure Spring Apps** | Managed service specifically for Spring Boot. | **Discarded.** The base cost is too high, consuming our student credits too quickly for a single microservice. |
+| **Azure Container Apps** | **Serverless Containers (Kubernetes-based).** | **WINNER.** It allows us to run **Docker containers** natively. It supports **scaling to zero** (saving credits when the app is not in use) and provides a production-ready environment similar to Kubernetes but without the management overhead. |
 
 ---
 
-## 3. Rationale for JavaScript over TypeScript
+### 3.3: The Deployment Pipeline (CI/CD)
 
-While TypeScript offers static typing and more advanced analysis tooling, JavaScript has been selected for the following reasons:
+We will automate the delivery of both the Database and the Backend Code using **GitHub Actions**. Manual deployments are restricted to the initial infrastructure setup.
 
-- The development team has greater experience with JavaScript, reducing adaptation time.
-- In the academic context of the project, the added complexity of TypeScript does not provide a proportional benefit.
-- The project scope does not justify the additional configuration and compilation overhead.
-- JavaScript allows faster iterations during development, without needing to resolve type errors in early stages.
+#### A. The Database: Azure Database for PostgreSQL
 
-This decision may be revisited in later phases if the project scales in complexity or incorporates more developers.
+We will use the **Flexible Server** deployment option.
 
----
+* **Provisioning:** We will provision the instance via the Azure Portal (using student credits).
+* **Security:** The database will be configured inside a Virtual Network (VNet) or with firewall rules that **only** allow connections from our Container App and the developers' specific IP addresses for debugging.
+* **Schema Management:** We will not run SQL scripts manually. The Spring Boot application will include **Flyway** (or Liquibase) to automatically migrate the database schema (create tables, add columns) every time the application starts.
 
-## 4. Evaluated Alternatives
+#### B. The Backend: Source Code to Container
 
-### 4.1 Decision Drivers
+The Continuous Deployment (CD) pipeline will function as follows:
 
-The stack selection was based on the following criteria:
-
-- Compatibility with project constraints (one deployment per sprint).
-- Ease of integration with the Spring Boot backend.
-- Team learning curve.
-- Long-term stability and sustainability.
-- Operational simplicity in an academic project context.
+1. **Trigger:** Developer pushes code to the `main` branch.
+2. **Build (CI):** GitHub Actions creates a runner, checks out the code, and runs `mvn clean package` to test and build the JAR file.
+3. **Dockerize:** The Action builds a Docker image using our `Dockerfile`.
+4. **Registry:** The image is pushed to **Azure Container Registry (ACR)**.
+5. **Deploy (CD):** The Action triggers a revision update in **Azure Container Apps**, pulling the new image from ACR and restarting the container gracefully.
 
 ---
 
-### 4.2 Alternative 1 – Vue.js with JavaScript
+### 3.4: Risk Assessment & Mitigation
 
-**Advantages:**
-- Clear and simple syntax, especially for developers with HTML/CSS experience.
-- High-quality official documentation.
-- Smaller bundle size in lightweight applications.
+Deploying a cloud-native application under an academic license involves specific risks.
 
-**Disadvantages:**
-- Lower industry adoption compared to React, limiting the availability of resources and libraries.
-- Smaller ecosystem for specific integrations.
-- Lower team familiarity with the framework.
-
-**Decision:** Rejected due to lower industry adoption and reduced team familiarity.
+| Risk | Impact | Mitigation Strategy |
+| --- | --- | --- |
+| **Credit Exhaustion** | If the $100 student credit runs out, services will stop immediately. | **Budget Alerts:** We will configure "Cost Alerts" in Azure to notify us when we reach 50% and 80% of the credit limit. We will use "B-series" (Burstable) compute instances which are the cheapest. |
+| **Cold Starts** | Azure Container Apps "scales to zero" to save money. The first user might wait 10+ seconds for the backend to wake up. | **Acceptance:** For a student project/MVP, this is an acceptable trade-off to save credits. If needed for a demo, we can set `minReplicas=1` temporarily. |
+| **Data Loss** | Accidental deletion of the database resource. | **Backups:** Azure PostgreSQL Flexible Server includes automatic backups (7-day retention). We will also enable "Resource Locks" in the Azure Portal to prevent accidental deletion. |
+| **Vendor Lock-in** | Difficulty migrating if we lose University access. | **Docker Strategy:** Since the entire backend is dockerized and the DB is standard PostgreSQL, we can migrate to AWS, Google Cloud, or a local server in less than 2 hours by simply moving the container image and dumping the SQL data. |
 
 ---
 
-### 4.3 Alternative 2 – Angular with TypeScript
+## 4: Frontend Deployment
 
-**Advantages:**
-- Full-featured framework with built-in solutions (routing, forms, HTTP).
-- Strongly typed through TypeScript.
-- Well-suited for large-scale projects.
-
-**Disadvantages:**
-- Significantly steeper learning curve.
-- Higher verbosity and configuration complexity.
-- Oversized for the current project scope.
-- Mandatory use of TypeScript increases friction for the team.
-
-**Decision:** Rejected due to unnecessary overhead for the project scope.
-
----
-
-### 4.4 Alternative 3 – React with TypeScript
-
-**Advantages:**
-- Static typing that reduces errors at compile time.
-- Better IDE support and autocompletion.
-- More suitable for long-term projects with large teams.
-
-**Disadvantages:**
-- Additional learning curve for team members unfamiliar with TypeScript.
-- Longer initial configuration time.
-- In an academic project scope, the benefit does not justify the added cost.
-
-**Decision:** Rejected in favor of plain React with JavaScript to reduce development friction.
-
----
-
-### 4.5 Final Decision
-
-The combination **React + JavaScript + Vite** has been selected for offering:
-
-- A balance between productivity and technical quality.
-- Full compatibility with the defined deployment architecture (SPA integrated into Spring Boot).
-- A mature and well-documented ecosystem.
-- Development speed appropriate for the academic context of the project.
-- Team familiarity, minimizing onboarding time.
-
----
-
-## 5. Identified Risks and Mitigation Plan
-
-### Risk 1 – Undetected errors at development time due to lack of static typing
-
-**Description:**
-By using JavaScript instead of TypeScript, certain type errors only manifest at runtime, which can complicate debugging.
-
-**Mitigation:**
-- review Pull Requests thoroughly before approving changes.
-- Adopt ESLint with strict rules for static code analysis.
-- Establish unit test coverage with Jest or Vitest for critical modules.
-
-### Risk 2 – Code scalability as the project grows
-
-**Description:**
-In larger JavaScript projects, the absence of typing can hinder the maintainability and scalability of the codebase.
-
-**Mitigation:**
-- Establish clear coding conventions from the start (naming, folder structure, separation of concerns).
-
-
-### Risk 3 – Incompatibilities between dependency versions
-
-**Description:**
-The npm ecosystem can present conflicts between package versions, especially when updating dependencies.
-
-**Mitigation:**
-- Ensure reproducible installs for all the members in the team.
-- Review changelogs before updating critical dependencies.
-
-
-### Risk 4 – Bundle performance in production
-
-**Description:**
-An unoptimized bundle can negatively impact application load times, especially when served alongside the Spring Boot backend.
-
-**Mitigation:**
-- Use Vite's production optimizations, which include minification and tree-shaking.
-- Apply code splitting and lazy loading on application routes.
-- Remove unused dependencies before each release.
-
-
-### Risk 5 – Inconsistencies between development and production environments
-
-**Description:**
-The development environment may differ from the production environment, producing unexpected behavior.
-
-**Mitigation:**
-- Periodically test the production build during the sprint, not only at sprint closure.
-- Document the build and Spring Boot integration procedure so the entire team can reproduce it consistently.
-
-
-## 6. Conclusion
-
-The selected stack — **React with JavaScript and Vite** — provides:
-
-- A mature and widely adopted technological foundation.
-- High productivity given the team's level of familiarity.
-- Direct integration with the defined deployment architecture (compiled SPA served by Spring Boot).
-- A balance between simplicity and technical capability, appropriate for the academic context of the project.
-- A set of identified risks with concrete and actionable mitigation plans.
-
-This decision ensures a stable, maintainable development process that is aligned with the constraints and objectives of the project.
-
-## Backend Deployment
-
-## Frontend Deployment
-
-### 1. Purpose
-
-This section defines the technological stack and deployment strategy for the frontend of the system.
-
-The objective is to:
-
-- Clearly define the selected technology.
-- Justify the decision based on technical and project constraints.
-- Ensure compliance with the rule of **only one deployment per sprint**.
-- Identify potential risks and establish mitigation strategies.
-
-
-
-### 2. Selected Technology
-
-The frontend of the system will be developed using:
-
-- **React** (Single Page Application – SPA)
-- Node.js runtime environment
-- Vite as build tool and bundler
-
-React has been selected due to:
-
-- Its strong industry adoption and maturity.
-- Component-based architecture promoting modularity and maintainability.
-- Efficient rendering through the Virtual DOM.
-- Strong ecosystem and long-term sustainability.
-- Seamless integration with REST APIs exposed by Spring Boot.
-
-The frontend will operate as a client-side rendered SPA consuming the backend REST API.
-
-
-
-### 3. Deployment Architecture
-
-The frontend will not be deployed as an independent service.
-
-Instead, the production build of the React application will be integrated into the Spring Boot backend and served as static resources.
-
-After executing:
-
-    npm install
-    npm run build
-
-The generated build files (e.g., `dist/`) will be copied into:
-
-    src/main/resources/static/
-
-Spring Boot will then serve:
-
-- `/` → `index.html`
-- Static assets → `/assets/...`
-- API endpoints → `/api/...`
-
-The backend will be packaged using:
-
-    mvn clean package
-
-This produces a **single deployable artifact (JAR or Docker image)** containing:
-
-- Backend logic (Spring Boot REST API)
-- Compiled frontend (React SPA)
-
-
-
-### 4. Compliance with the “One Deployment per Sprint” Constraint
-
-The project enforces a strict limitation of **one deployment per sprint**.
-
-To ensure compliance:
-
-- Frontend and backend are deployed together as a single artifact.
-- Deployment is triggered only at sprint closure.
-- Pull Requests execute build and test pipelines but do not trigger production deployment.
-- The main branch is protected.
-- Deployment requires a controlled sprint release (tag-based or release workflow).
-
-By consolidating frontend and backend into a single artifact, we eliminate the possibility of multiple independent deployments within a sprint.
-
-This strategy guarantees strict adherence to project constraints.
-
-
-
-### 5. Technology Selection Rationale
-
-The chosen approach (React SPA compiled and served by Spring Boot) was selected after evaluating multiple alternatives.
-
-#### 5.1 Decision Drivers
-
-The decision was based on the following criteria:
-
-- Compliance with one-deployment-per-sprint constraint.
-- Version consistency between frontend and backend.
-- Operational simplicity.
-- Reduced infrastructure complexity.
-- Academic project context prioritizing stability over scalability.
-
-#### 5.2 Alternative 1 – Independent Frontend Deployment (e.g., Vercel, Netlify)
-
-**Advantages:**
-- CDN-based performance optimization.
-- Independent frontend releases.
-- Preview deployments for branches.
-
-**Disadvantages:**
-- Requires separate deployment process.
-- Risk of frontend/backend version desynchronization.
-- Increased operational complexity.
-- Higher risk of violating sprint deployment limitation.
-
-**Decision:** Rejected due to misalignment with sprint deployment constraint.
-
-
-
-#### 5.3 Alternative 2 – Dedicated Static Server (e.g., Nginx)
-
-**Advantages:**
-- High-performance static serving.
-- Clear separation of concerns.
-
-**Disadvantages:**
-- Additional infrastructure to maintain.
-- More complex deployment pipeline.
-- Increased configuration overhead.
-
-**Decision:** Rejected due to unnecessary architectural complexity for the project scope.
-
-
-
-#### 5.4 Final Decision
-
-The unified deployment model ensures:
-
-- Strict compliance with sprint constraints.
-- Single source of truth for application versioning.
-- Simplified CI/CD.
-- Reduced operational risk.
-- Controlled and stable release process.
-
-
-
-### 6. SPA Routing Considerations
-
-As the application is a Single Page Application:
-
-- Client-side routes (e.g., `/events/1`) must not return 404 errors when refreshed.
-- Spring Boot will be configured to forward unknown non-API routes to `index.html`.
-
-This guarantees correct client-side routing behavior.
-
-
-
-### 7. CI/CD Strategy
-
-The CI/CD pipeline will follow these principles:
-
-- Pull Requests:
-  - Execute frontend build.
-  - Execute backend build.
-  - Run tests.
-  - No production deployment.
-
-- Sprint Closure:
-  - Deployment triggered manually or by sprint release tag.
-  - Single artifact built and deployed.
-
-Additional safeguards:
-
-- Protected main branch.
-- Mandatory review before merge.
-- Controlled deployment workflow.
-
-
-
-### 8. Identified Risks and Mitigation Plan
-
-#### Risk 1 – SPA routing returning 404 errors
-
-Description:
-Refreshing nested routes may cause the server to return 404.
-
-Mitigation:
-- Configure Spring Boot to redirect all non-API requests to `index.html`.
-
-
-
-#### Risk 2 – Browser caching serving outdated frontend versions
-
-Description:
-Users may receive outdated static files after deployment.
-
-Mitigation:
-- Use hashed filenames generated by the bundler.
-- Configure appropriate cache-control headers.
-- Avoid aggressive caching for `index.html`.
-
-
-
-#### Risk 3 – Increased CI/CD pipeline duration
-
-Description:
-Frontend build increases pipeline execution time.
-
-Mitigation:
-- Cache Node dependencies.
-- Trigger frontend build only when frontend files change.
-
-
-
-#### Risk 4 – Oversized deployable artifact
-
-Description:
-Bundling frontend and backend may increase artifact size.
-
-Mitigation:
-- Enable production minification.
-- Remove unused dependencies.
-- Apply code splitting and lazy loading.
-
-
-
-#### Risk 5 – Violation of sprint deployment policy
-
-Description:
-Accidental multiple deployments during a sprint.
-
-Mitigation:
-- Protect main branch.
-- Restrict deployment to sprint release tags.
-- Enforce review process before release.
-
-
-
-### 9. Conclusion
-
-The selected frontend deployment strategy — compiling the React SPA and serving it through Spring Boot — provides:
-
-- Architectural simplicity.
-- Operational efficiency.
-- Strict compliance with sprint constraints.
-- Version consistency between frontend and backend.
-- Reduced deployment risk.
-- Controlled and predictable release management.
-
-This solution balances technical robustness with academic and operational constraints, ensuring a stable, maintainable, and compliant deployment process.
-
-
-
-## Team and Software Management
-
-### 1. Purpose
-
-This section defines the project management tool that will be used during the upcoming sprints.
-
-Given the team size (18 members) and the startup-oriented approach of the project, the selected tool must:
-
-- Support structured sprint planning.
-- Enable coordination across multiple functional areas.
-- Provide agile metrics (velocity, burndown, progress tracking).
-- Integrate seamlessly with the GitHub development workflow.
-- Scale effectively for a medium-sized team.
-
-
-
-### 2. Selected Tool: ZenHub
-
-The team has selected **ZenHub** as the project and sprint management tool.
-
-ZenHub operates as an agile project management layer integrated directly into GitHub, extending native GitHub Issues with advanced Scrum capabilities.
-
-
-
-### 3. Rationale for Selection
-
-The decision was based on the following factors:
-
-- The team consists of 18 members, which requires structured coordination.
-- The project aims to simulate a real startup environment.
-- Advanced agile metrics are necessary for sprint planning and evaluation.
-- Tight integration with GitHub is essential to maintain traceability.
-
-ZenHub provides:
-
-- Sprint planning tools
-- Burndown charts
-- Velocity tracking
-- Roadmap visualization
-- Dependency management
-- Direct integration with GitHub issues and pull requests
-
-This makes it suitable for scaling agile processes beyond basic task tracking.
-
-
-
-### 4. Alternatives Considered
-
-#### 4.1 GitHub Projects
-
-GitHub Projects was evaluated as a potential solution.
-
-**Advantages:**
-- Fully integrated with GitHub.
-- Simple and easy to use.
-- No additional configuration required.
-- Low operational overhead.
-
-**Disadvantages:**
-- Limited agile metrics.
-- No robust velocity tracking.
-- Basic burndown functionality.
-- Limited dependency management.
-- Insufficient for coordinating 18 team members effectively.
-
-**Decision:**  
-Rejected due to limited scalability and lack of advanced Scrum metrics.
-
-
-
-#### 4.2 Jira
-
-Jira was also evaluated as an industry-standard agile management tool.
-
-**Advantages:**
-- Advanced Scrum support.
-- Extensive reporting and metrics.
-- Mature ecosystem.
-- Widely adopted in enterprise environments.
-
-**Disadvantages:**
-- Separate from GitHub (requires integration).
-- Increased operational complexity.
-- Higher configuration overhead.
-- Steeper learning curve.
-- Adds friction to development workflow.
-
-**Decision:**  
-Rejected due to infrastructure complexity and separation from the GitHub-centered workflow.
-
-
-
-### 5. Why ZenHub Over the Alternatives
-
-ZenHub was selected because it combines:
-
-- Advanced agile management capabilities (similar to Jira),
-- Seamless integration with GitHub (like GitHub Projects),
-- Lower operational overhead compared to Jira,
-- Scalability suitable for a team of 18 members.
-
-It allows the team to:
-
-- Maintain full traceability from issue → branch → commit → PR → merge.
-- Track sprint performance objectively.
-- Monitor team velocity.
-- Identify bottlenecks early.
-- Plan releases more strategically.
-
-This aligns with the project’s startup-oriented mindset and professional development goals.
-
-
-
-### 6. Risks and Mitigation Plan
-
-#### Risk 1 – Learning Curve
-
-Description:
-Team members may initially struggle to use advanced ZenHub features.
-
-Mitigation:
-- Provide a short onboarding session.
-- Define clear sprint and board usage guidelines.
-- Use a standardized workflow across teams.
-
-
-
-#### Risk 2 – Underutilization of Advanced Features
-
-Description:
-The team may not fully leverage velocity tracking or burndown metrics.
-
-Mitigation:
-- Assign a Scrum responsible to monitor metrics.
-- Review sprint performance formally at the end of each sprint.
-
-
-
-#### Risk 3 – Increased Process Complexity
-
-Description:
-More structure may slow down early development.
-
-Mitigation:
-- Keep workflows simple.
-- Avoid unnecessary customization.
-- Focus only on features that add measurable value.
-
-
-
-#### Risk 4 – Tool Dependency
-
-Description:
-Reliance on ZenHub could introduce process dependency.
-
-Mitigation:
-- Since ZenHub is built on top of GitHub Issues, core data remains in GitHub.
-- Maintain workflow documentation independent of the tool.
-
-
-
-### 7. Conclusion
-
-Given the team size (18 members), the startup-oriented approach, and the need for structured agile metrics, **ZenHub** is the most appropriate project management tool.
-
-It provides:
-
-- Scalability.
-- Advanced Scrum metrics.
-- Full GitHub integration.
-- Professional workflow support.
-- Reduced operational friction compared to Jira.
-
-The selection balances agility, scalability, and integration, ensuring the team can operate in a structured yet flexible manner consistent with real-world startup practices.
+## 5: Team and Software Management 

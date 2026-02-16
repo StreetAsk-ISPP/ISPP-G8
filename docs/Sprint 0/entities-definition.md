@@ -39,10 +39,8 @@ Usuario regular de la aplicación. Hereda de Usuario y añade funcionalidades de
 - `username` (String): Nombre de usuario único
 - `telefono` (String, opcional): Número de teléfono
 - `foto_perfil` (String): URL de la imagen de perfil
-- `nivel` (Integer): Nivel del usuario basado en participación
-- `puntos_experiencia` (Integer): Puntos acumulados para subir de nivel
-- `saldo_monedas` (Integer): Monedas virtuales acumuladas
-- `preguntas_disponibles_diarias` (Integer): Número de preguntas que puede hacer por día
+- `saldo_monedas` (Integer): Monedas virtuales acumuladas (Contribution Coins)
+- `rating` (Float): Rating del usuario basado en (respuestas_positivas - respuestas_negativas) / total_respuestas, escala de 5
 - `ubicacion_actual` (Point): Coordenadas geográficas actuales (latitud, longitud)
 - `radio_visibilidad_km` (Float): Radio de alcance en kilómetros
 - `verificado` (Boolean): Si el usuario ha verificado su email
@@ -186,38 +184,42 @@ Representa una respuesta a una pregunta publicada.
 
 ---
 
-### 8. ChatEvento (ChatEvento)
-Representa el chat grupal de un evento.
+### 8. ForoPregunta (ForoPregunta)
+Representa el mini-foro asociado a cada pregunta, donde los usuarios pueden responder y crear hilos de respuestas.
 
 **Atributos:**
 - `id` (UUID): Identificador único
-- `evento_id` (UUID): Referencia al evento
-- `activo` (Boolean): Si el chat está habilitado
+- `pregunta_id` (UUID): Referencia a la pregunta
+- `activo` (Boolean): Si el foro está activo
 - `fecha_creacion` (DateTime): Fecha de creación
+- `fecha_expiracion` (DateTime): Fecha de expiración automática (2h free, configurable premium)
 
 **Relaciones:**
-- Pertenece a un evento (1:1 con Evento)
-- Contiene múltiples mensajes (1:N con MensajeChat)
+- Pertenece a una pregunta (1:1 con Pregunta)
+- Contiene múltiples respuestas con formato de hilos (1:N con Respuesta)
+
+**Nota:** Las preguntas dentro de eventos se agrupan juntas; las preguntas fuera de eventos son independientes. El foro se elimina automáticamente cuando la pregunta expira o cuando el evento asociado termina.
 
 ---
 
-### 9. MensajeChat (MensajeChat)
-Representa un mensaje dentro de un chat de evento.
+### 9. VotoRespuesta (VotoRespuesta)
+Registra los votos (likes/dislikes) de los usuarios sobre las respuestas.
 
 **Atributos:**
 - `id` (UUID): Identificador único
-- `chat_id` (UUID): Referencia al chat
-- `usuario_id` (UUID): Referencia al usuario que envía el mensaje
-- `contenido` (Text): Contenido del mensaje
-- `tipo` (Enum): TEXTO, IMAGEN, UBICACION
-- `url_multimedia` (String, opcional): URL de imagen o archivo adjunto
-- `fecha_envio` (DateTime): Fecha y hora del mensaje
-- `editado` (Boolean): Si el mensaje fue editado
-- `fecha_edicion` (DateTime, opcional): Fecha de última edición
+- `respuesta_id` (UUID): Referencia a la respuesta votada
+- `usuario_id` (UUID): Referencia al usuario que vota
+- `tipo_voto` (Enum): LIKE, DISLIKE
+- `fecha_voto` (DateTime): Fecha del voto
 
 **Relaciones:**
-- Pertenece a un chat (N:1 con ChatEvento)
+- Pertenece a una respuesta (N:1 con Respuesta)
 - Pertenece a un usuario (N:1 con Usuario)
+
+**Reglas de Negocio:**
+- Un usuario solo puede votar una vez por respuesta (índice único usuario_id + respuesta_id)
+- El rating del usuario que responde se calcula como: (respuestas_con_mas_likes - respuestas_con_mas_dislikes) / total_respuestas en escala de 5
+- El autor de la respuesta gana 1 moneda si likes > dislikes, pierde 1 si dislikes > likes (US-35)
 
 ---
 
@@ -387,4 +389,28 @@ ChatEvento (1) ──── (N) MensajeChat [contiene]
 ' ===== MODERACIÓN =====
 Administrador (1) ──── (N) Reporte [resuelve]
 ```
+
+---
+
+## Diagrama UML - Modelo de Datos
+
+### Diagrama de clases UML
+
+![Diagrama UML del Sistema](./images/diagramaUML.png)
+
+### Leyenda de Cardinalidades
+
+- `1` : Relación uno a uno
+- `*` : Relación uno a muchos
+- `0..1` : Relación opcional
+
+### Notas del Diagrama
+
+- **Herencia**: Usuario es la clase padre de UsuarioAPie, CuentaEmpresa y Administrador
+- **UsuarioAPie** puede crear múltiples eventos, preguntas y respuestas
+- **Asistencia**: La tabla AsistenciaEvento gestiona la relación N:M entre usuarios y eventos con estados (ASISTIRE, INTERESADO, NO_ASISTIRE)
+- **ForoPregunta**: Cada pregunta tiene un mini-foro asociado con respuestas en formato de hilos
+- **VotoRespuesta**: Sistema de likes/dislikes que afecta el rating del usuario y las monedas ganadas
+- El sistema de monedas registra todas las transacciones de UsuarioAPie
+- Los administradores gestionan reportes y verificaciones de cuentas business
 

@@ -46,69 +46,87 @@ This backlog consolidates the features necessary for the MVP, ordered by develop
 
 # 2. Sprint Planning
 
-## Sprint 1: Core Q&A Loop (Anonymous/Guest)
+## Sprint 1: Core Q&A Loop (Registered Users)
 
-**Objective:** Enable a user to view the map, post a question, **and answer a question** immediately (Guest Mode). The core value (information exchange) is prioritized over user identification.
+**Objective:** Enable a registered user to view the map, post a question with topic and radius, **and answer questions** from other users. All users must register to interact with the platform.
 **Delivery Date:** March 5th.
 
 #### 🔧 Technical Tasks (Top Priority)
 
-1. **API Contract First:** Define OpenAPI specs for Questions, Answers, and Geolocation.
-2. **Guest/Anonymous Logic:** Implement a mechanism (Device ID or temporary session) to allow interaction without full registration.
+1. **API Contract First:** Define OpenAPI specs for Questions, Answers, Authentication, and Geolocation.
+2. **Auth System:** Implement user registration and login with JWT authentication.
 3. **Environment & Deployment:** Setup DB (PostGIS) and deploy the initial Backend/Frontend to the cloud.
 
 #### 👤 User Stories (Functionality)
 
+* **US-01 (Registration):** User registration with email and password.
+* **US-03 (Login):** User login with credentials.
 * **US-11 (Map):** View map with active questions (red dots) and current location.
-* **US-08 (Create Question):** Form to submit a question with current latitude/longitude.
-* **US-13 (View Threads):** View question details and the list of existing answers.
-* **US-09 (Answer Questions):** Users can post answers to questions nearby (validating location).
-* **US-XX (System):** Logic for automatic question expiration.
+* **US-08 (Create Question):** Form to submit a question with topic (mandatory), radius, and question text.
+* **US-13 (View Threads):** View question details and the list of existing answers in mini-forum format.
+* **US-09 (Answer Questions):** Users can post answers to questions nearby (validating location) with threaded replies.
+* **US-XX (System):** Logic for automatic question expiration (2 hours for free users).
 
-**S1 Deliverable:** A fully functional Q&A loop. Users can open the app, find a red dot, read the thread, and reply—all without a login screen blocking them.
+**S1 Deliverable:** A fully functional Q&A loop with user registration. Users must register/login, then can view the map, find red dots (questions), read the thread, and reply.
 
 ---
 
-## Sprint 2: Identity, Social & Event Visualization
+## Sprint 2: Social Interaction & Quality Control
 
-**Objective:** Introduce User Identity (saving history), Quality Control (Ratings), and visual population of the map with Events.
+**Objective:** Enhance the Q&A system with Quality Control (Ratings), User Profiles, and Notifications.
 **Delivery Date:** March 26th.
 
 #### 🔧 Technical Tasks
 
-1. **Auth System:** Implement JWT and secure password storage.
-2. **Data Migration:** Logic to associate previous "Guest" activity with the new User Account upon registration.
-3. **Event Data Model:** Database structure for Events (distinct from Questions).
+1. **Rating System:** Implement Like/Dislike voting on answers.
+2. **User Profile Backend:** Store and display user statistics and history.
+3. **Notification Service:** Basic push notifications for nearby questions and responses.
 
 #### 👤 User Stories (Functionality)
 
-* **US-01 & US-03 (Auth):** User Registration and Login.
-* **US-06 (Profile):** View basic user profile and history.
-* **US-10 (Rating):** Like/Dislike system on answers.
-* **US-15 & US-16 (View Events):** Events appear on the map with visual icons and details (Time/Location).
+* **US-06 (Profile):** View basic user profile, statistics, and activity history.
+* **US-10 (Rating):** Like/Dislike system on answers with user rating calculation.
+* **US-12 (Notifications):** Receive notifications for nearby questions and responses to own questions.
+* **US-04 (Edit Profile):** Edit profile information.
 
-**S2 Deliverable:** The app now has registered users who can build reputation (via history) and curate content (ratings). The map becomes richer with Event icons.
+**S2 Deliverable:** The app now has user profiles with reputation based on answer quality. Users receive notifications and can rate answers to surface the best information.
 
 ---
 
-## Sprint 3: Business Management & Gamification
+## Sprint 3: Events, Business Accounts & Gamification
 
-**Objective:** Enable the Business model (B2B accounts), increase retention (Gamification), and provide Admin tools.
+**Objective:** Enable Event visualization and management, Business accounts (B2B), Gamification system, and Admin tools.
 **Delivery Date:** April 16th.
 
 #### 🔧 Technical Tasks
 
-1. **Roles & Permissions:** Backend logic to distinguish `User` vs `Business`.
-2. **Notification Service:** Push notifications (Firebase/OneSignal).
+1. **Event Data Model:** Database structure for Events (distinct from Questions).
+2. **Roles & Permissions:** Backend logic to distinguish `User` vs `Business`.
 3. **Gamification Engine:** Logic to award coins for valid answers.
+4. **Admin Panel:** Basic metrics and business account approval.
 
 #### 👤 User Stories (Functionality)
 
-* **US-28 (Business Registration):** Verification flow for companies.
-* **US-29 & US-30 (Event Management):** Create and Edit events (Business users).
-* **US-35 & US-23 (Gamification):** Earn coins for answering and view balance.
-* **US-12 (Notifications):** Alert when a nearby question is asked or your question is answered.
-* **US-37 (Admin):** Basic metrics panel and business approval.
-* **US-02 (Plans):** Visual UI for plan selection (Free/Premium).
+**Events:**
+* **US-15 (Event Map):** Events appear on the map with visual icons.
+* **US-16 (Event Details):** View event details (time, location, attendees).
+* **US-17 (Map Toggle):** Toggle to show/hide questions on the map (events always visible).
+* **US-27 (Attendance):** Mark/unmark attendance to events.
+
+**Business Accounts:**
+* **US-28 (Business Registration):** Verification flow for companies with NIF.
+* **US-48 (Payment Screen):** Payment screen for one-time Business account fee.
+* **US-29, US-30, US-31, US-32 (Event Management):** Create, Edit, View, Delete events (Business users).
+
+**Gamification:**
+* **US-35 (Earn Coins):** Earn coins for answering questions.
+* **US-23 (Coin Balance):** View coin balance in profile.
+* **US-02 (Plans):** Plan selection UI (Free/Premium).
+
+**Admin:**
+* **US-37 (Admin Panel):** Basic metrics panel and business approval.
+* **US-39 (Verify Business):** Approve or reject business verification requests.
+
+**S3 Deliverable (Complete MVP):** Full ecosystem with events on the map, business accounts managing events, user gamification with coins, and admin tools for moderation.
 
 **S3 Deliverable (Complete MVP):** Full ecosystem. Users identify themselves, earn rewards, and businesses manage their own presence and events.
