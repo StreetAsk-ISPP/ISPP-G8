@@ -23,3 +23,13 @@ This document records all the changes made to the project’s presentation and s
 ### 17/02/2026  
 **Author**: Manuel Chica López ([manchilop](https://github.com/manchilop))
 - Improved Git workflow section
+
+### 17/02/2026  
+**Author**: Manuel Zoilo Buzon Muñoz ([manumnzz](https://github.com/manumnzz))
+- Creation of new business and growth-related slides for the final presentation. The update includes:
+- Creation of the “From MVP to Total Product Vision” slide
+- Creation of the “Scalable Vision” slide
+- Creation of the “Value Proposition & Market” slide
+- Creation of the “Sustainable Business Model” slide
+- Creation of the “Growth Projections” slide
+- All slides were integrated into the main presentation deck and aligned with the defined narrative flow.
