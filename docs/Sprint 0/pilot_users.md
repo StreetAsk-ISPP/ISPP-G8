@@ -64,6 +64,7 @@ the ISPP course and not involved in the project development.
 | Javier Claros Barrera | 20 | javierclarosb@gmail.com | University student |
 | Sara Gómez Aparcero | 21 | saragoap@gmail.com | University student |
 | Victoria Isabel Férnandez Rubio | 21 | victoriaisabelfernandez84@gmail.com | University student | 
+| Adrián García Ruiz | 22 | adriangr591@gmail.com | Data Analyst |
 
 > Contact information will be used exclusively for pilot testing
 > communication and feedback collection.
