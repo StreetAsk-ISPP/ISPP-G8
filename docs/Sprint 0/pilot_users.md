@@ -42,7 +42,7 @@ the ISPP course and not involved in the project development.
 | Alejandro Miranda Ortega  | 22 | alejandromirandaort.us@gmail.com | University student |
 | Alejandro Garcia Pérez | 22 | ajgp11@alu.ua.es | University student |
 | Alberto Carmona Sicre  | 22 | alcarsi2003@gmail.com | University student |
-| Miguel Santos de Quevedo  | 22 |  | University student |
+| Miguel Santos de Quevedo  | 22 | msantosipod@gmail.com | University student |
 | Raúl Crúz Martín  | 22 | racruma2003@gmail.com | University student |
 | Badr Dadou  | 23 | baddad@alum.us.es | University student |
 | María Pacheco Pérez | 22 | marripurri@gmail.com | University student |
