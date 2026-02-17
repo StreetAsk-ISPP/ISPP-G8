@@ -32,7 +32,7 @@ the ISPP course and not involved in the project development.
 | Mario Canto Caballero | 21 | mcantocaballero@gmail.com | University student |
 | Carmen Martínez Serrano | 21 | carmenms1604@gmail.com | University student |
 | Elena Martin Carrillo | 21 | elena2004mc@gmail.com | University student |
-
+| Pablo Jesús Linares Rodríguez | 21 | pablojesuslinaresr@gmail.com | University student |
 
 
 > Contact information will be used exclusively for pilot testing
