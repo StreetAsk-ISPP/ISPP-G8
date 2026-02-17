@@ -33,3 +33,9 @@ This document records all the changes made to the project’s presentation and s
 - Creation of the “Sustainable Business Model” slide
 - Creation of the “Growth Projections” slide
 - All slides were integrated into the main presentation deck and aligned with the defined narrative flow.
+
+### 17/02/2026
+**Author**: Celia del Pilar Dorantes Ruiz ([celdorrui](https://github.com/celdorrui))
+- Migrated survey results from screenshots to editable designs in Canva
+- Ensured visual consistency with project's identity (colors, fonts, and styles)
+- Improved readability of labels, percentages, and legends for final presentation
