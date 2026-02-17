@@ -2,7 +2,7 @@
 
 Throughout this project, our team used Generative AI (ChatGPT and Gemini) to learn faster, communicate better, and stay organized. We used these tools not to replace our work, but to support us in areas where we needed a boost.
 
-### 1. Bridging the Technical Gap **
+### 1. Bridging the Technical Gap
 Coming from a web development background, stepping into mobile app development presented some new challenges for us. We used AI as a brainstorming partner to:
 
 * **Debate Architecture:** We had detailed conversations with the AI to understand the nuances of separating Backend and Frontend in a mobile context versus what we were used to in web.
