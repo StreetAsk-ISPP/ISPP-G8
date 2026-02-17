@@ -20,3 +20,8 @@ This document records all the changes made to the project’s presentation and s
 - Workflow according to contributing
 - Aesthetic corrections
 
+### 17/02/2026  
+**Author**: Celia del Pilar Dorantes Ruiz ([celdorrui](https://github.com/celdorrui))
+- Migrated survey results from screenshots to editable designs in Canva
+- Ensured visual consistency with project's identity (colors, fonts, and styles)
+- Improved readability of labels, percentages, and legends for final presentation
