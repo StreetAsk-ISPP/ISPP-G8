@@ -29,6 +29,7 @@ This document contains the visual prototypes for the user interface of our appli
 
 ## **US-08: Create question**
 ![](images/mockups/US-08_Create_question.jpg)
+![](images/mockups/US-08.1_Add_after_creating_a_question.jpg)
 
 ## **US-09: Answer questions**
 ![](images/mockups/US-09_Answer_questions.jpg)
@@ -152,6 +153,7 @@ Desirable Stories Post-MVP - Could Have
 
 ## **US-45: Recurring events**
 ![](images/mockups/US-45_Recurring-events.jpg)
+![](images/mockups/US-45.1Highlight_event_with_budget.jpg)
 
 ## **US-46: Business dashboard**
 ![](images/mockups/US-46_Business_dashboard.jpg)
