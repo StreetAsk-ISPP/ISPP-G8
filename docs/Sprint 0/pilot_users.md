@@ -35,6 +35,8 @@ the ISPP course and not involved in the project development.
 | Pablo Jesús Linares Rodríguez | 21 | pablojesuslinaresr@gmail.com | University student |
 | Lydia Sánchez Quesada | 21 | lydiasanque4@gmail.com | University student |
 | Guillermo Gómez Quesada | 21 | guille10gomez@gmail.com | University student |
+| María Gil Martínez | 22 | soymariagil@gmail.com | University student |
+| Andrea Sánchez Pajuelo | 21 | andreasanchezpajuelodocumentos@gmail.com | University student |
 
 > Contact information will be used exclusively for pilot testing
 > communication and feedback collection.
