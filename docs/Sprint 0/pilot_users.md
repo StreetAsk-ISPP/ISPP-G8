@@ -54,6 +54,7 @@ the ISPP course and not involved in the project development.
 | Óscar Muñoz Cano | 21 | oscmuncan@alum.us.es | University student |
 | Rosa Muñoz Cano | 18 | rosmuncan@alum.us.es | University student |
 | Germán Sánchez Carmona | 20 | german.san.car@gmail.com | University student |
+| Hugo Fernández Román | 20 | hugofr0802@gmail.com | Aircraft Maintenance Technician |
 
 > Contact information will be used exclusively for pilot testing
 > communication and feedback collection.
