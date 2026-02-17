@@ -7,7 +7,6 @@ This document records all the changes made to the project’s presentation and s
 ## 📎 Work Links
 
 - [Google Presentation](https://docs.google.com/presentation/d/1DjTnrgZn7_mJ-YPOKwo48aXWjFCuVarqdYv_nH7f1kY/edit?usp=sharing)
-- [Script Draft]()
 
 
 ## 📝 Change Log
@@ -57,3 +56,7 @@ Creation and refinement of detailed slides for the core functionalities of Stree
 - Consolidated SWOT analysis slides for improved presentation flow:
   - Combined Strengths and Weaknesses into a single slide focusing on internal factors
   - Combined Opportunities and Threats into a single slide focusing on external factors
+
+### 17/02/2026  
+**Author**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
+- Correct presentation errors, moves slides, etc.
