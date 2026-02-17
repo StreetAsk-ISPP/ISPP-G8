@@ -11,24 +11,20 @@ This document records all the changes made to the project’s presentation and s
 
 ## 📝 Change Log
 
-### 14/02/2026  
-**Author**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
-- Corrected errors from the previous presentation following feedback from 12/02
-- Added differential element
-- Division of core functionalities, MVP and mockups of the final product
-- Workflow according to contributing
-- Aesthetic corrections
+### 17/02/2026  
+**Author**: Manuel Orta Pérez ([manortper1](https://github.com/manortper1))
+- Added Risk and Mitigations
 
-### 16/02/2026  
-**Author**: <Manuel Lavado Corredera> ([60Manu82](https://github.com/60Manu82))
 
-Creation and refinement of detailed slides for the core functionalities of StreetAsk. The update includes:
-- Development of slides for US-11 (Map View), US-08 (Question Creation), US-13 (Threads), and US-09 (Proximity Answering)
-- Addition of brief technical highlights for each functionality
-- Structural and aesthetic improvements to improve clarity and presentation flow
+### 17/02/2026  
+**Author**: Darío Rodríguez Sastre ([darrodsas](https://github.com/darrodsas))
+- Added MockUps
+
+
 ### 17/02/2026  
 **Author**: Manuel Chica López ([manchilop](https://github.com/manchilop))
 - Improved Git workflow section
+
 
 ### 17/02/2026  
 **Author**: Manuel Zoilo Buzon Muñoz ([manumnzz](https://github.com/manumnzz))
@@ -40,16 +36,19 @@ Creation and refinement of detailed slides for the core functionalities of Stree
 - Creation of the “Growth Projections” slide
 - All slides were integrated into the main presentation deck and aligned with the defined narrative flow.
 
+
 ### 17/02/2026
 **Author**: Celia del Pilar Dorantes Ruiz ([celdorrui](https://github.com/celdorrui))
 - Migrated survey results from screenshots to editable designs in Canva
 - Ensured visual consistency with project's identity (colors, fonts, and styles)
 - Improved readability of labels, percentages, and legends for final presentation
 
+
 ### 17/02/2026  
 **Author**: José Egido Carnerero ([josegicar](https://github.com/josegicar))
 - Complete redesign of the Technological Stack slide
 - Visual adaptation of the stack to reflect the technical iconography
+
 
 ### 17/02/2026  
 **Author**: José María Silva Guzmán ([jossgilguz](https://github.com/jossilguz))
@@ -57,6 +56,29 @@ Creation and refinement of detailed slides for the core functionalities of Stree
   - Combined Strengths and Weaknesses into a single slide focusing on internal factors
   - Combined Opportunities and Threats into a single slide focusing on external factors
 
+
 ### 17/02/2026  
 **Author**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
 - Correct presentation errors, moves slides, etc.
+
+
+### 16/02/2026  
+**Author**: <Manuel Lavado Corredera> ([60Manu82](https://github.com/60Manu82))
+
+Creation and refinement of detailed slides for the core functionalities of StreetAsk. The update includes:
+- Development of slides for US-11 (Map View), US-08 (Question Creation), US-13 (Threads), and US-09 (Proximity Answering)
+- Addition of brief technical highlights for each functionality
+- Structural and aesthetic improvements to improve clarity and presentation flow
+
+
+### 14/02/2026  
+**Author**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
+- Corrected errors from the previous presentation following feedback from 12/02
+- Added differential element
+- Division of core functionalities, MVP and mockups of the final product
+- Workflow according to contributing
+- Aesthetic corrections
+
+
+  
+
