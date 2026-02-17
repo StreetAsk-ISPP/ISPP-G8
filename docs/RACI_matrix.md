@@ -1,24 +1,26 @@
-# RACI Matrix Proposal - StreetAsk (Sprint 1)
+# RACI Matrix Proposal - StreetAsk (Sprint 1) - Horizontal Structure
 
-This matrix defines the roles and responsibilities for **Sprint 1** and general project management, based on `WORK_PLAN.md`, `Comunication_Plan.md`, and `CONTRIBUTING.md`.
+This document defines the roles and responsibilities for **Sprint 1** and project management, adapted to the content of `WORK_PLAN.md` and `CONTRIBUTING.md`, taking into account our horizontal and distributed organizational structure.
 
 ### 0. Structure and Role Assignment Justification
 
-To ensure operational efficiency in a large team (20 people), we have segmented the matrix into **4 functional blocks**, avoiding information saturation and clarifying the focus of each sub-team. The assignment decisions respond to the following criteria agreed upon in our internal documentation:
+To maximize the agility and autonomy of our 20-person team, we have structured the organization into **4 Multidisciplinary Working Groups**. With this structure, we aim to eliminate functional silos.
 
-- **Management & Planning:** We separate the strategic authority of the **Project Leader (A)** from the operational management of the **Area Managers (R)**, who supervise daily task assignment as stipulated in the _Communication Plan_.
-- **Technical Development:** **Accountability (A)** for code lies exclusively with the authorized _Reviewers_ (Javi, Miguel, Santia, Guillermo) to protect the stability of the `trunk` branch, strictly complying with the workflow rules of `CONTRIBUTING.md`.
-- **Quality & Design:** The **QA** team acts as an auditor (_Consulted/Responsible_) to validate compliance with the _Definition of Done_ (tests and functionality) before any merge, while the Design team requires technical approval (_A_) from Managers to ensure mockup feasibility.
-- **Documentation:** Direct owners are assigned to key deliverables (presentations and legal documentation) to centralize consistency and avoid the dilution of responsibility in non-technical tasks.
+We distribute responsibility as follows:
+
+- **Horizontal Governance (No Single Leader):** We do not have the figure of a "Project Leader". Strategic decision-making is **consensus-based**. Each group has a **Coordinator**; decisions affecting the entire project are made in the **Coordinators' Committee**, where each coordinator conveys their group's stance, and decisions are made in a shared manner.
+- **Multidisciplinary Groups:** The team is divided into 4 operational groups. Each group is autonomous and internally possesses all necessary capabilities (Backend, Frontend, QA, Design, Doc) to complete their tasks from start to finish ("End-to-End"), similar to independent work cells.
+- **Dynamic Assignment:** The composition of the groups and the specific task load is dynamic, adjusting to the needs of each Sprint.
+- **Quality and Consistency:** Although the groups are autonomous, the technical roles (QA, Design) maintain cross-cutting standards defined in the _Definition of Done_ and the style guides.
 
 ### 1. Role Definitions (Stakeholders)
 
-- **Project Leader (PL):** General coordination, blocker resolution, and final decision-making.
-- **Area Managers / Reviewers (AM):** Javi, Miguel, Santia, and Guillermo. Responsible for approving PRs, supervising areas, and managing deadlines.
-- **Developers (Devs):** Responsible for technical implementation (Frontend/Backend).
-- **Design Team:** Responsible for user experience and mockups (Canva/Figma).
-- **QA Team:** Responsible for ensuring compliance with the _Definition of Done_.
-- **Doc/Business Team:** Responsible for the Business Plan and legal documentation.
+- **Coordinators (C):** (Javi, Miguel, Santia, and Guillermo). They represent each of the 4 groups. They do not impose orders, but facilitate consensus, resolve blockers between groups, and ensure global alignment. They have shared authority (**A**) over critical decisions.
+- **Group Members (Functional Roles):**
+  - **Developers (Devs):** Technical implementation (Fullstack/Front/Back) within each group.
+  - **Design:** UX/UI responsible members integrated into the groups.
+  - **QA:** Responsible for validating quality within the group flow and auditing cross-group intersections.
+  - **Doc/Business:** Management of documentation and business plans.
 
 ---
 
@@ -26,51 +28,57 @@ To ensure operational efficiency in a large team (20 people), we have segmented 
 
 **Legend:**
 
-- **R (Responsible):** Who executes the task.
-- **A (Accountable):** Who approves and has final authority (Only one per task).
-- **C (Consulted):** Expert consulted before deciding (two-way communication).
-- **I (Informed):** Informed after task completion (one-way communication).
+- **R (Responsible):** Who executes the task (within their group).
+- **A (Accountable):** Who has final authority (In this model, it is the **Coordinators' Committee** by consensus or the Group itself for self-managed tasks).
+- **C (Consulted):** Expert consulted (two-way communication between groups).
+- **I (Informed):** Informed after task completion.
 
 #### A. Management and Planning
 
-| Task / Deliverable                | Project Leader | Area Managers | Devs | Design | QA  | Doc/Biz |
-| :-------------------------------- | :------------: | :-----------: | :--: | :----: | :-: | :-----: |
-| **Sprint 1 Roadmap Definition**   |     **A**      |       R       |  C   |   I    |  I  |    C    |
-| **Task Assignment (Issues)**      |       A        |     **R**     |  I   |   I    |  I  |    I    |
-| **Communication with Professors** |    **R/A**     |       C       |  I   |   I    |  I  |    I    |
-| **Business Plan Update**          |       I        |       C       |  I   |   I    |  I  | **R/A** |
+_Planning is a joint exercise by the coordinators based on feedback from their groups._
+
+| Task / Deliverable                | Coordinators (Committee) | Groups (General Team) | QA / Design / Doc (Roles) |
+| :-------------------------------- | :----------------------: | :-------------------: | :-----------------------: |
+| **Sprint 1 Roadmap Definition**   |  **A / R** (Consensus)   |           C           |             I             |
+| **Task Assignment (Issues)**      |            A             | **R** (Self-assigned) |             I             |
+| **Communication with Professors** |  **A / R** (Rotational)  |           I           |             I             |
+| **Business Plan Update**          |            A             |           C           |   **R** (Doc/Biz Role)    |
 
 #### B. Technical Development (Sprint 1 - Core)
 
-_Based on priorities A and B of the Work Plan_
+_Tasks are distributed among the 4 groups. The "Devs" column refers to the developers within the group assigned to that task._
 
-| Task / Deliverable            | Project Leader | Reviewers (AM) | Backend Dev | Frontend Dev | QA Team |
-| :---------------------------- | :------------: | :------------: | :---------: | :----------: | :-----: |
-| **API Contract Definition**   |       I        |     **A**      |    **R**    |      C       |    C    |
-| **Cloud Env Config (Deploy)** |       I        |     **A**      |    **R**    |      C       |    I    |
-| **Auth System (JWT/Login)**   |       I        |       A        |    **R**    |    **R**     |    C    |
-| **Guest/Anonymous Logic**     |       I        |       A        |    **R**    |    **R**     |    C    |
-| **Map & Red Dots (US-11)**    |       I        |       A        |      C      |    **R**     |    C    |
-| **Create Question (US-08)**   |       I        |       A        |    **R**    |    **R**     |    C    |
-| **Answer Questions (US-09)**  |       I        |       A        |    **R**    |    **R**     |    C    |
-| **View Threads (US-13)**      |       I        |       A        |      C      |    **R**     |    C    |
-| **Code Review (PRs)**         |       I        |    **R/A**     |      I      |      I       |    C    |
-| **Merge to `trunk`**          |       I        |     **A**      |      I      |      I       |    I    |
+_Objective: Functional Q&A loop with mandatory registration._
 
-#### C. Quality and Design
+| Task / Deliverable                      | Coordinators | Dev Backend (In Group) | Dev Frontend (In Group) | QA (Transversal/Group) |
+| :-------------------------------------- | :----------: | :--------------------: | :---------------------: | :--------------------: |
+| **API Contract Definition**             |    **A**     |         **R**          |            C            |           C            |
+| **Env Config + PostGIS**                |    **A**     |         **R**          |            I            |           I            |
+| **Registration (US-01) & Auth (US-03)** |      A       |         **R**          |          **R**          |           C            |
+| **Map & Red Dots (US-11)**              |      A       |           C            |          **R**          |           C            |
+| **Create Question (US-08)**             |      A       |         **R**          |          **R**          |           C            |
+| **Answer Questions (US-09)**            |      A       |         **R**          |          **R**          |           C            |
+| **View Threads (US-13)**                |      A       |           C            |          **R**          |           C            |
+| **Auto-Expiration Logic (US-XX)**       |      I       |         **R**          |            I            |           C            |
+| **Code Review (PRs)**                   |    **A**     |         **R**          |          **R**          |           C            |
+| **Merge to `trunk`**                    |    **A**     |           I            |            I            |           I            |
 
-| Task / Deliverable                    | Project Leader | Area Managers | Devs  | Design Team | QA Team |
-| :------------------------------------ | :------------: | :-----------: | :---: | :---------: | :-----: |
-| **Mockups & Final UI**                |       C        |       A       |   C   |    **R**    |    I    |
-| **Unit Tests**                        |       I        |       I       | **R** |      I      |    C    |
-| **Functional Tests**                  |       I        |       A       |   C   |      I      |  **R**  |
-| **"Definition of Done" Verification** |       I        |       A       |   R   |      I      |  **C**  |
+#### C. Quality and Consolidated Design
+
+_QA and Design act as quality guarantors integrated into the groups, but with unified criteria._
+
+| Task / Deliverable                    | Coordinators | Devs (Implementation) | Design (Role) |      QA (Role)      |
+| :------------------------------------ | :----------: | :-------------------: | :-----------: | :-----------------: |
+| **Mockups & Final UI**                |      A       |           C           |     **R**     |          I          |
+| **Unit Tests**                        |      I       |         **R**         |       I       |          C          |
+| **Functional Tests**                  |      A       |           C           |       I       |        **R**        |
+| **"Definition of Done" Verification** |    **A**     |           R           |       I       | **C / R** (Auditor) |
 
 #### D. Documentation and Presentation
 
-| Task / Deliverable       | Project Leader | Presenters | Doc Team | Rest of Team |
-| :----------------------- | :------------: | :--------: | :------: | :----------: |
-| **Sprint Review Slides** |       C        |   **R**    |    C     |      I       |
-| **Presentation Script**  |     **A**      |   **R**    |    C     |      I       |
-| **Wiki/Docs Update**     |       I        |     I      |  **R**   |      I       |
-| **Meeting Minutes**      |       I        |     I      | **R/A**  |      I       |
+| Task / Deliverable       | Coordinators | Presenters | Doc/Biz Role | Rest of Team |
+| :----------------------- | :----------: | :--------: | :----------: | :----------: |
+| **Sprint Review Slides** |      A       |   **R**    |      C       |      I       |
+| **Presentation Script**  |    **A**     |   **R**    |      C       |      I       |
+| **Docs Update**          |      I       |     I      |    **R**     |      I       |
+| **Meeting Minutes**      |      I       |     I      |    **R**     |      I       |
