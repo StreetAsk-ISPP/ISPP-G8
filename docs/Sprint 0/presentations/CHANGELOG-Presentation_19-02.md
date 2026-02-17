@@ -25,3 +25,8 @@ This document records all the changes made to the project’s presentation and s
 - Migrated survey results from screenshots to editable designs in Canva
 - Ensured visual consistency with project's identity (colors, fonts, and styles)
 - Improved readability of labels, percentages, and legends for final presentation
+
+### 17/02/2026  
+**Author**: José Egido Carnerero ([josegicar](https://github.com/josegicar))
+- Complete redesign of the Technological Stack slide
+- Visual adaptation of the stack to reflect the technical iconography
