@@ -37,6 +37,14 @@ the ISPP course and not involved in the project development.
 | Guillermo Gómez Quesada | 21 | guille10gomez@gmail.com | University student |
 | María Gil Martínez | 22 | soymariagil@gmail.com | University student |
 | Andrea Sánchez Pajuelo | 21 | andreasanchezpajuelodocumentos@gmail.com | University student |
+| Felipe Manuel Montero Garcia | 22 | felmongar@alum.us.es | University student |
+| Marcial Jiménez Laguna | 22 | 17477509@alumni.centrosanisidoro.es | University student |
+| Alejandro Miranda Ortega  | 22 | alejandromirandaort.us@gmail.com | University student |
+| Alejandro Garcia Pérez | 22 | ajgp11@alu.ua.es | University student |
+| Alberto Carmona Sicre  | 22 | alcarsi2003@gmail.com | University student |
+| Miguel Santos de Quevedo  | 22 |  | University student |
+| Raúl Crúz Martín  | 22 | racruma2003@gmail.com | University student |
+| Badr Dadou  | 23 | baddad@alum.us.es | University student |
 
 > Contact information will be used exclusively for pilot testing
 > communication and feedback collection.
