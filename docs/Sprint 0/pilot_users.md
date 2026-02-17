@@ -33,7 +33,8 @@ the ISPP course and not involved in the project development.
 | Carmen Martínez Serrano | 21 | carmenms1604@gmail.com | University student |
 | Elena Martin Carrillo | 21 | elena2004mc@gmail.com | University student |
 | Pablo Jesús Linares Rodríguez | 21 | pablojesuslinaresr@gmail.com | University student |
-
+| Lydia Sánchez Quesada | 21 | lydiasanque4@gmail.com | University student |
+| Guillermo Gómez Quesada | 21 | guille10gomez@gmail.com | University student |
 
 > Contact information will be used exclusively for pilot testing
 > communication and feedback collection.
