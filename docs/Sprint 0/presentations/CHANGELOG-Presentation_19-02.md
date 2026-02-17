@@ -44,3 +44,9 @@ This document records all the changes made to the project’s presentation and s
 **Author**: José Egido Carnerero ([josegicar](https://github.com/josegicar))
 - Complete redesign of the Technological Stack slide
 - Visual adaptation of the stack to reflect the technical iconography
+
+### 17/02/2026  
+**Author**: José María Silva Guzmán ([jossgilguz](https://github.com/jossilguz))
+- Consolidated SWOT analysis slides for improved presentation flow:
+  - Combined Strengths and Weaknesses into a single slide focusing on internal factors
+  - Combined Opportunities and Threats into a single slide focusing on external factors
