@@ -45,8 +45,10 @@ the ISPP course and not involved in the project development.
 | Miguel Santos de Quevedo  | 22 |  | University student |
 | Raúl Crúz Martín  | 22 | racruma2003@gmail.com | University student |
 | Badr Dadou  | 23 | baddad@alum.us.es | University student |
-| María Pachecho Pérez | 22 | marripurri@gmail.com | University student |
+| María Pacheco Pérez | 22 | marripurri@gmail.com | University student |
 | María Fernández Rebollar | 22 | mariafdezrebollar@gmail.com | University student |
+| Ignacio Martín Díaz | 21 | nachomd19@gmail.com | University student |
+| Javier Cantero Vargas | 21 | javicanttero@gmail.com | University student |
 
 > Contact information will be used exclusively for pilot testing
 > communication and feedback collection.
