@@ -102,6 +102,194 @@ Java + Spring Boot provides the best balance between technical robustness, team 
 
 ## 2: Frontend Development
 
+## 1. Purpose
+
+This section defines the selected technology stack for the frontend development of the system.
+
+The objective is to:
+
+- Clearly define the chosen technology for development.
+- Justify the decision based on technical criteria and project constraints.
+- Document the evaluated alternatives and the reasons for their rejection.
+- Identify associated risks and establish mitigation strategies.
+
+---
+
+## 2. Selected Technology
+
+The frontend of the system will be developed using:
+
+- *React* (Single Page Application – SPA)
+- *JavaScript* as the development language
+- *Vite* as the build tool and bundler
+- *Node.js* as the runtime environment during development
+
+React with JavaScript has been selected due to:
+
+- Its strong industry adoption and maturity as a technology.
+- Component-based architecture that promotes modularity and maintainability.
+- Efficient rendering through the Virtual DOM.
+- Accessible learning curve by using plain JavaScript, without the overhead of TypeScript.
+- Extensive ecosystem of libraries and documentation resources.
+- Seamless integration with REST APIs exposed by the Spring Boot backend.
+- Team familiarity with the language, reducing onboarding friction.
+
+The frontend will operate as a client-side rendered SPA consuming the backend REST API.
+
+---
+
+## 3. Rationale for JavaScript over TypeScript
+
+While TypeScript offers static typing and more advanced analysis tooling, JavaScript has been selected for the following reasons:
+
+- The development team has greater experience with JavaScript, reducing adaptation time.
+- In the academic context of the project, the added complexity of TypeScript does not provide a proportional benefit.
+- The project scope does not justify the additional configuration and compilation overhead.
+- JavaScript allows faster iterations during development, without needing to resolve type errors in early stages.
+
+This decision may be revisited in later phases if the project scales in complexity or incorporates more developers.
+
+---
+
+## 4. Evaluated Alternatives
+
+### 4.1 Decision Drivers
+
+The stack selection was based on the following criteria:
+
+- Compatibility with project constraints (one deployment per sprint).
+- Ease of integration with the Spring Boot backend.
+- Team learning curve.
+- Long-term stability and sustainability.
+- Operational simplicity in an academic project context.
+
+---
+
+### 4.2 Alternative 1 – Vue.js with JavaScript
+
+*Advantages:*
+- Clear and simple syntax, especially for developers with HTML/CSS experience.
+- High-quality official documentation.
+- Smaller bundle size in lightweight applications.
+
+*Disadvantages:*
+- Lower industry adoption compared to React, limiting the availability of resources and libraries.
+- Smaller ecosystem for specific integrations.
+- Lower team familiarity with the framework.
+
+*Decision:* Rejected due to lower industry adoption and reduced team familiarity.
+
+---
+
+### 4.3 Alternative 2 – Angular with TypeScript
+
+*Advantages:*
+- Full-featured framework with built-in solutions (routing, forms, HTTP).
+- Strongly typed through TypeScript.
+- Well-suited for large-scale projects.
+
+*Disadvantages:*
+- Significantly steeper learning curve.
+- Higher verbosity and configuration complexity.
+- Oversized for the current project scope.
+- Mandatory use of TypeScript increases friction for the team.
+
+*Decision:* Rejected due to unnecessary overhead for the project scope.
+
+---
+
+### 4.4 Alternative 3 – React with TypeScript
+
+*Advantages:*
+- Static typing that reduces errors at compile time.
+- Better IDE support and autocompletion.
+- More suitable for long-term projects with large teams.
+
+*Disadvantages:*
+- Additional learning curve for team members unfamiliar with TypeScript.
+- Longer initial configuration time.
+- In an academic project scope, the benefit does not justify the added cost.
+
+*Decision:* Rejected in favor of plain React with JavaScript to reduce development friction.
+
+---
+
+### 4.5 Final Decision
+
+The combination *React + JavaScript + Vite* has been selected for offering:
+
+- A balance between productivity and technical quality.
+- Full compatibility with the defined deployment architecture (SPA integrated into Spring Boot).
+- A mature and well-documented ecosystem.
+- Development speed appropriate for the academic context of the project.
+- Team familiarity, minimizing onboarding time.
+
+---
+
+## 5. Identified Risks and Mitigation Plan
+
+### Risk 1 – Undetected errors at development time due to lack of static typing
+
+*Description:*
+By using JavaScript instead of TypeScript, certain type errors only manifest at runtime, which can complicate debugging.
+
+*Mitigation:*
+- review Pull Requests thoroughly before approving changes.
+- Adopt ESLint with strict rules for static code analysis.
+- Establish unit test coverage with Jest or Vitest for critical modules.
+
+### Risk 2 – Code scalability as the project grows
+
+*Description:*
+In larger JavaScript projects, the absence of typing can hinder the maintainability and scalability of the codebase.
+
+*Mitigation:*
+- Establish clear coding conventions from the start (naming, folder structure, separation of concerns).
+
+
+### Risk 3 – Incompatibilities between dependency versions
+
+*Description:*
+The npm ecosystem can present conflicts between package versions, especially when updating dependencies.
+
+*Mitigation:*
+- Ensure reproducible installs for all the members in the team.
+- Review changelogs before updating critical dependencies.
+
+
+### Risk 4 – Bundle performance in production
+
+*Description:*
+An unoptimized bundle can negatively impact application load times, especially when served alongside the Spring Boot backend.
+
+*Mitigation:*
+- Use Vite's production optimizations, which include minification and tree-shaking.
+- Apply code splitting and lazy loading on application routes.
+- Remove unused dependencies before each release.
+
+
+### Risk 5 – Inconsistencies between development and production environments
+
+*Description:*
+The development environment may differ from the production environment, producing unexpected behavior.
+
+*Mitigation:*
+- Periodically test the production build during the sprint, not only at sprint closure.
+- Document the build and Spring Boot integration procedure so the entire team can reproduce it consistently.
+
+
+## 6. Conclusion
+
+The selected stack — *React with JavaScript and Vite* — provides:
+
+- A mature and widely adopted technological foundation.
+- High productivity given the team's level of familiarity.
+- Direct integration with the defined deployment architecture (compiled SPA served by Spring Boot).
+- A balance between simplicity and technical capability, appropriate for the academic context of the project.
+- A set of identified risks with concrete and actionable mitigation plans.
+
+This decision ensures a stable, maintainable development process that is aligned with the constraints and objectives of the project.
+
 ## 3: Backend & Database Deployment 
 
 ### 3.1: Cloud Provider Selection: Why Azure?

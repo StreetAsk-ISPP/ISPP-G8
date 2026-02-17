@@ -27,3 +27,27 @@ Creation and refinement of detailed slides for the core functionalities of Stree
 - Development of slides for US-11 (Map View), US-08 (Question Creation), US-13 (Threads), and US-09 (Proximity Answering)
 - Addition of brief technical highlights for each functionality
 - Structural and aesthetic improvements to improve clarity and presentation flow
+### 17/02/2026  
+**Author**: Manuel Chica López ([manchilop](https://github.com/manchilop))
+- Improved Git workflow section
+
+### 17/02/2026  
+**Author**: Manuel Zoilo Buzon Muñoz ([manumnzz](https://github.com/manumnzz))
+- Creation of new business and growth-related slides for the final presentation. The update includes:
+- Creation of the “From MVP to Total Product Vision” slide
+- Creation of the “Scalable Vision” slide
+- Creation of the “Value Proposition & Market” slide
+- Creation of the “Sustainable Business Model” slide
+- Creation of the “Growth Projections” slide
+- All slides were integrated into the main presentation deck and aligned with the defined narrative flow.
+
+### 17/02/2026
+**Author**: Celia del Pilar Dorantes Ruiz ([celdorrui](https://github.com/celdorrui))
+- Migrated survey results from screenshots to editable designs in Canva
+- Ensured visual consistency with project's identity (colors, fonts, and styles)
+- Improved readability of labels, percentages, and legends for final presentation
+
+### 17/02/2026  
+**Author**: José Egido Carnerero ([josegicar](https://github.com/josegicar))
+- Complete redesign of the Technological Stack slide
+- Visual adaptation of the stack to reflect the technical iconography
