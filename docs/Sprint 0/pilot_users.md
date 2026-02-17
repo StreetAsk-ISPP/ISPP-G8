@@ -66,6 +66,9 @@ the ISPP course and not involved in the project development.
 | Victoria Isabel Férnandez Rubio | 21 | victoriaisabelfernandez84@gmail.com | University student | 
 | Oscar Mitillo López | 21 | oskimlb@gmail.com | University student | 
 | Adrián García Ruiz | 22 | adriangr591@gmail.com | Data Analyst |
+| Domingo Ruiz Bellido | 20 | domruibell@alum.us.es | University student |
+| Lucía Falcón Marín | 21 | lucia.falconmarin@gmail.com | University student |
+| Pablo Montero Tejero | 22 | pablomonterotej10@gmail.com | University student |
 
 > Contact information will be used exclusively for pilot testing
 > communication and feedback collection.
