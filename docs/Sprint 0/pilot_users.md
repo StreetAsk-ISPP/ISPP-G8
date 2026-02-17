@@ -51,6 +51,9 @@ the ISPP course and not involved in the project development.
 | Javier Cantero Vargas | 21 | javicanttero@gmail.com | University student |
 | Jose Guillermo Montes Caballero | 24 | jgmontcab@gmail.com | University student |
 | Javier del Pozo Camacho | 24 | jdlpozoc@gmail.com | Aerospace Engineer |
+| Óscar Muñoz Cano | 21 | oscmuncan@alum.us.es | University student |
+| Rosa Muñoz Cano | 18 | rosmuncan@alum.us.es | University student |
+| Germán Sánchez Carmona | 20 | german.san.car@gmail.com | University student |
 
 > Contact information will be used exclusively for pilot testing
 > communication and feedback collection.
