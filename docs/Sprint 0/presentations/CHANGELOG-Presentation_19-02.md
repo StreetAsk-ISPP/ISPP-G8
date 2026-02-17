@@ -20,3 +20,6 @@ This document records all the changes made to the project’s presentation and s
 - Workflow according to contributing
 - Aesthetic corrections
 
+### 17/02/2026  
+**Author**: Manuel Chica López ([manchilop](https://github.com/manchilop))
+- Improved Git workflow section
