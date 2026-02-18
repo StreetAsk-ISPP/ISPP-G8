@@ -11,6 +11,13 @@ This document records all the changes made to the project’s presentation and s
 
 ## 📝 Change Log
 
+### 18/02/2026
+**Authors**: Darío Rodríguez Sastre ([darrodsas](https://github.com/darrodsas)), Manuel Orta Pérez ([manortper1](https://github.com/manortper1)), Pablo Arrabal Hermoso ([pabloarrablah](https://github.com/pabloarrabalh)), Santia Bregu ([santiabregu](https://github.com/santiabregu))
+- Fix presentation errors
+- Add missing parts (gamification, pilot users, RACI matrix, ...)
+- Presentation rehearsal
+
+
 ### 17/02/2026  
 **Author**: Manuel Orta Pérez ([manortper1](https://github.com/manortper1))
 - Added Risk and Mitigations
