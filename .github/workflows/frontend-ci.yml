@@ -19,15 +19,21 @@ jobs:
     name: Lint / Test / Build
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: frontend
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Detect frontend
+        id: detect
+        run: |
+          if [ -f "frontend/package.json" ]; then
+            echo "has_frontend=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_frontend=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Setup Node
+        if: steps.detect.outputs.has_frontend == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -35,13 +41,25 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install deps
+        if: steps.detect.outputs.has_frontend == 'true'
+        working-directory: frontend
         run: npm ci
 
       - name: Lint
+        if: steps.detect.outputs.has_frontend == 'true'
+        working-directory: frontend
         run: npm run lint --if-present
 
       - name: Unit tests
+        if: steps.detect.outputs.has_frontend == 'true'
+        working-directory: frontend
         run: npm test --if-present
 
       - name: Build
+        if: steps.detect.outputs.has_frontend == 'true'
+        working-directory: frontend
         run: npm run build
+
+      - name: Skip (no frontend yet)
+        if: steps.detect.outputs.has_frontend != 'true'
+        run: echo "No frontend directory found (frontend/package.json). Skipping frontend CI."
