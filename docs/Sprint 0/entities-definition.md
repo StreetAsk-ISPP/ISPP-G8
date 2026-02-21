@@ -41,16 +41,13 @@ Usuario regular de la aplicación. Hereda de Usuario y añade funcionalidades de
 - `foto_perfil` (String): URL de la imagen de perfil
 - `saldo_monedas` (Integer): Monedas virtuales acumuladas (Contribution Coins)
 - `rating` (Float): Rating del usuario basado en (respuestas_positivas - respuestas_negativas) / total_respuestas, escala de 5
-- `ubicacion_actual` (Point): Coordenadas geográficas actuales (latitud, longitud)
-- `radio_visibilidad_km` (Float): Radio de alcance en kilómetros
-- `verificado` (Boolean): Si el usuario ha verificado su email
+- `ubicacion_actual` (Point): Coordenadas geográficas actuales (latitud, longitud) **Esto habría entonces que actualizarlo todo el tiempo no??**
 
 **Relaciones:**
 - Extiende de Usuario (1:1)
-- Puede crear múltiples eventos (1:N con Evento)
 - Puede hacer múltiples preguntas (1:N con Pregunta)
 - Puede responder múltiples preguntas (1:N con Respuesta)
-- Puede asistir a múltiples eventos (N:M con Evento a través de AsistenciaEvento)
+- Puede asistir a múltiples eventos (N:M con Evento a través de AsistenciaEvento) 
 - Puede recibir múltiples notificaciones (1:N con Notificación)
 - Puede tener múltiples transacciones de monedas (1:N con TransaccionMoneda)
 - Puede reportar contenido (1:N con Reporte)
@@ -72,8 +69,7 @@ Extensión de Usuario para empresas que organizan eventos oficiales. Hereda de U
 - `logo` (String): URL del logo de la empresa
 - `verificado` (Boolean): Si la empresa ha sido verificada por administradores
 - `fecha_verificacion` (DateTime, opcional): Fecha de verificación
-- `estado_solicitud` (Enum): PENDIENTE, APROBADA, RECHAZADA
-- `suscripcion_activa` (Boolean): Si tiene suscripción premium activa
+- `estado_solicitud` (Enum): PENDIENTE, APROBADA, RECHAZADA **(para que una cuenta de empresa se cree, debe de ser aceptada por administradores)**
 - `fecha_vencimiento_suscripcion` (DateTime, opcional): Fecha de fin de suscripción
 
 **Relaciones:**
@@ -87,29 +83,26 @@ Representa una actividad, pregunta o situación ubicada geográficamente.
 
 **Atributos:**
 - `id` (UUID): Identificador único del evento
-- `creador_id` (UUID): Referencia al usuario creador
+- `creador_id` (UUID): Referencia a la empresa creado creadora
 - `titulo` (String): Título del evento
 - `descripcion` (Text): Descripción detallada
-- `categoria` (Enum): MÚSICA, DEPORTES, GASTRONOMÍA, CULTURA, EMERGENCIA, SOCIAL, OTRO
+- `categoria` (Enum): MÚSICA, DEPORTES, GASTRONOMÍA, CULTURA, EMERGENCIA, SOCIAL, OTRO **a esto habría que darle una vuelta**
 - `ubicacion` (Point): Coordenadas geográficas (latitud, longitud)
 - `direccion` (String): Dirección textual del evento
 - `fecha_inicio` (DateTime): Fecha y hora de inicio
 - `fecha_fin` (DateTime, opcional): Fecha y hora de finalización
-- `es_patrocinado` (Boolean): Si es un evento promocionado por empresa
 - `destacado` (Boolean): Si el evento está destacado (pagado)
-- `fecha_destacado_hasta` (DateTime, opcional): Hasta cuándo estará destacado
-- `icono_mapa` (String): Tipo de icono visual en el mapa
+- `icono_mapa` (String): Tipo de icono visual en el mapa **??**
 - `num_asistentes` (Integer): Contador de personas confirmadas
-- `num_interesados` (Integer): Contador de personas interesadas
 - `activo` (Boolean): Si el evento está visible
 - `fecha_creacion` (DateTime): Fecha de creación
 - `fecha_actualizacion` (DateTime): Última actualización
 
 **Relaciones:**
-- Pertenece a un usuario creador (N:1 con Usuario)
+- Pertenece a una empresa creadora (N:1 con Usuario)
 - Puede tener múltiples preguntas asociadas (1:N con Pregunta)
 - Puede tener múltiples asistencias confirmadas (N:M con Usuario a través de AsistenciaEvento)
-- Puede tener un chat asociado (1:1 con ChatEvento)
+- Tiene un chat asociado (1:1 con ChatEvento)
 - Puede ser reportado (1:N con Reporte)
 
 ---
@@ -121,7 +114,7 @@ Tabla de relación N:M entre UsuarioAPie y Evento. Gestiona la confirmación de 
 - `id` (UUID): Identificador único
 - `usuario_apie_id` (UUID): Referencia al usuario APie
 - `evento_id` (UUID): Referencia al evento
-- `estado` (Enum): ASISTIRE, INTERESADO, NO_ASISTIRE
+- `estado` (Enum): ASISTIRE, INTERESADO, NO_ASISTIRE **esto debería ser un boolean no? Interesado no tiene sentido**
 - `fecha_confirmacion` (DateTime): Fecha de confirmación o cambio de estado
 
 **Relaciones:**
@@ -234,9 +227,7 @@ Representa alertas y avisos enviados a los usuarios.
 - `contenido` (Text): Descripción del aviso
 - `referencia_id` (UUID, opcional): ID del evento, pregunta o respuesta relacionada
 - `referencia_tipo` (String, opcional): Tipo de entidad referenciada
-- `leida` (Boolean): Si el usuario ha visto la notificación
 - `fecha_envio` (DateTime): Fecha de creación
-- `fecha_lectura` (DateTime, opcional): Fecha en que se leyó
 
 **Relaciones:**
 - Pertenece a un usuario (N:1 con Usuario)
