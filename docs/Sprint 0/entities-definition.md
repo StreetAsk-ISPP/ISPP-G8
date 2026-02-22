@@ -41,7 +41,7 @@ Usuario regular de la aplicación. Hereda de Usuario y añade funcionalidades de
 - `foto_perfil` (String): URL de la imagen de perfil
 - `saldo_monedas` (Integer): Monedas virtuales acumuladas (Contribution Coins)
 - `rating` (Float): Rating del usuario basado en (respuestas_positivas - respuestas_negativas) / total_respuestas, escala de 5
-- `ubicacion_actual` (Point): Coordenadas geográficas actuales (latitud, longitud) **Esto habría entonces que actualizarlo todo el tiempo no??**
+
 
 **Relaciones:**
 - Extiende de Usuario (1:1)
@@ -69,7 +69,7 @@ Extensión de Usuario para empresas que organizan eventos oficiales. Hereda de U
 - `logo` (String): URL del logo de la empresa
 - `verificado` (Boolean): Si la empresa ha sido verificada por administradores
 - `fecha_verificacion` (DateTime, opcional): Fecha de verificación
-- `estado_solicitud` (Enum): PENDIENTE, APROBADA, RECHAZADA **(para que una cuenta de empresa se cree, debe de ser aceptada por administradores)**
+- `estado_solicitud` (Enum): PENDIENTE, APROBADA, RECHAZADA 
 - `fecha_vencimiento_suscripcion` (DateTime, opcional): Fecha de fin de suscripción
 
 **Relaciones:**
@@ -79,20 +79,19 @@ Extensión de Usuario para empresas que organizan eventos oficiales. Hereda de U
 ---
 
 ### 4. Evento (Evento)
-Representa una actividad, pregunta o situación ubicada geográficamente.
+Representa una actividad o situación ubicada geográficamente.
 
 **Atributos:**
 - `id` (UUID): Identificador único del evento
-- `creador_id` (UUID): Referencia a la empresa creado creadora
+- `creador_id` (UUID): Referencia a la empresa creadora
 - `titulo` (String): Título del evento
 - `descripcion` (Text): Descripción detallada
-- `categoria` (Enum): MÚSICA, DEPORTES, GASTRONOMÍA, CULTURA, EMERGENCIA, SOCIAL, OTRO **a esto habría que darle una vuelta**
+- `categoria` (Enum): OCIO, BIENESTAR, CULTURA, GASTRONOMÍA, EMERGENCIA, OTRO 
 - `ubicacion` (Point): Coordenadas geográficas (latitud, longitud)
 - `direccion` (String): Dirección textual del evento
 - `fecha_inicio` (DateTime): Fecha y hora de inicio
 - `fecha_fin` (DateTime, opcional): Fecha y hora de finalización
 - `destacado` (Boolean): Si el evento está destacado (pagado)
-- `icono_mapa` (String): Tipo de icono visual en el mapa **??**
 - `num_asistentes` (Integer): Contador de personas confirmadas
 - `activo` (Boolean): Si el evento está visible
 - `fecha_creacion` (DateTime): Fecha de creación
@@ -114,20 +113,17 @@ Tabla de relación N:M entre UsuarioAPie y Evento. Gestiona la confirmación de 
 - `id` (UUID): Identificador único
 - `usuario_apie_id` (UUID): Referencia al usuario APie
 - `evento_id` (UUID): Referencia al evento
-- `estado` (Enum): ASISTIRE, INTERESADO, NO_ASISTIRE **esto debería ser un boolean no? Interesado no tiene sentido**
+- `asiste` (Boolean): Si el usuario asistirá al evento
 - `fecha_confirmacion` (DateTime): Fecha de confirmación o cambio de estado
 
 **Relaciones:**
 - Conecta UsuarioAPie con Evento (N:M)
-- Un usuario puede tener un solo registro activo por evento (índice único)
-- Un evento puede tener múltiples asistencias con diferentes estados
+- Un usuario puede tener un solo registro activo por evento (No puede asistir varias veces a un mismo evento)
 
 **Reglas de Negocio:**
-- Un UsuarioAPie solo puede tener un estado por evento (única combinación usuario_apie_id + evento_id)
-- El contador `Evento.num_asistentes` se calcula contando registros con estado = 'ASISTIRE'
-- El contador `Evento.num_interesados` se calcula contando registros con estado = 'INTERESADO'
+- Un UsuarioAPie solo puede tener una asistencia por evento 
+- El contador `Evento.num_asistentes` se calcula contando registros con asiste = True
 - Al cambiar de estado, se actualiza `fecha_confirmacion`
-- Si un usuario marca 'NO_ASISTIRE', se puede eliminar el registro o mantenerlo para estadísticas
 
 ---
 
@@ -143,7 +139,7 @@ Representa una consulta publicada por un usuario relacionada con un evento o ubi
 - `ubicacion` (Point): Coordenadas geográficas
 - `radio_alcance_km` (Float): Radio de alcance para notificar usuarios
 - `activa` (Boolean): Si la pregunta sigue vigente
-- `fecha_expiracion` (DateTime): Fecha límite de relevancia
+- `fecha_expiracion` (DateTime): Fecha de expiración automática (2h free, configurable premium)
 - `fecha_creacion` (DateTime): Fecha de publicación
 - `num_respuestas` (Integer): Contador de respuestas
 
@@ -168,34 +164,19 @@ Representa una respuesta a una pregunta publicada.
 - `monedas_ganadas` (Integer): Monedas obtenidas por la respuesta verificada
 - `ubicacion_usuario` (Point): Ubicación del usuario al responder (para verificar proximidad)
 - `fecha_creacion` (DateTime): Fecha de publicación
-- `activa` (Boolean): Si la respuesta está visible
+- `votos_positivos` (Integer): Votos a favor de la respuesta obtenidos por otros usuarios 
+- `votos_negativos` (Integer): Votos en contra de la respuesta obtenidos por otros usuarios 
+- 
 
 **Relaciones:**
 - Pertenece a una pregunta (N:1 con Pregunta)
 - Pertenece a un usuario (N:1 con Usuario)
 - Puede ser reportada (1:N con Reporte)
 
----
-
-### 8. ForoPregunta (ForoPregunta)
-Representa el mini-foro asociado a cada pregunta, donde los usuarios pueden responder y crear hilos de respuestas.
-
-**Atributos:**
-- `id` (UUID): Identificador único
-- `pregunta_id` (UUID): Referencia a la pregunta
-- `activo` (Boolean): Si el foro está activo
-- `fecha_creacion` (DateTime): Fecha de creación
-- `fecha_expiracion` (DateTime): Fecha de expiración automática (2h free, configurable premium)
-
-**Relaciones:**
-- Pertenece a una pregunta (1:1 con Pregunta)
-- Contiene múltiples respuestas con formato de hilos (1:N con Respuesta)
-
-**Nota:** Las preguntas dentro de eventos se agrupan juntas; las preguntas fuera de eventos son independientes. El foro se elimina automáticamente cuando la pregunta expira o cuando el evento asociado termina.
 
 ---
 
-### 9. VotoRespuesta (VotoRespuesta)
+### 8. VotoRespuesta (VotoRespuesta)
 Registra los votos (likes/dislikes) de los usuarios sobre las respuestas.
 
 **Atributos:**
@@ -212,7 +193,7 @@ Registra los votos (likes/dislikes) de los usuarios sobre las respuestas.
 **Reglas de Negocio:**
 - Un usuario solo puede votar una vez por respuesta (índice único usuario_id + respuesta_id)
 - El rating del usuario que responde se calcula como: (respuestas_con_mas_likes - respuestas_con_mas_dislikes) / total_respuestas en escala de 5
-- El autor de la respuesta gana 1 moneda si likes > dislikes, pierde 1 si dislikes > likes (US-35)
+- El autor de la respuesta gana 1 moneda si likes > dislikes, pierde 1 si dislikes > likes 
 
 ---
 
@@ -222,8 +203,7 @@ Representa alertas y avisos enviados a los usuarios.
 **Atributos:**
 - `id` (UUID): Identificador único
 - `usuario_id` (UUID): Referencia al usuario destinatario
-- `tipo` (Enum): EVENTO_CERCANO, RESPUESTA_PREGUNTA, VERIFICACION_RESPUESTA, CHAT_MENSAJE, NIVEL_SUBIDO, ADMIN
-- `titulo` (String): Título de la notificación
+- `tipo` (Enum): PREGUNTA_CERCANA ,EVENTO_CERCANO, RESPUESTA_PREGUNTA, VERIFICACION_RESPUESTA, ADMIN
 - `contenido` (Text): Descripción del aviso
 - `referencia_id` (UUID, opcional): ID del evento, pregunta o respuesta relacionada
 - `referencia_tipo` (String, opcional): Tipo de entidad referenciada
@@ -241,7 +221,6 @@ Registro de movimientos de monedas virtuales del usuario.
 - `id` (UUID): Identificador único
 - `usuario_id` (UUID): Referencia al usuario
 - `tipo` (Enum): GANANCIA, GASTO
-- `concepto` (Enum): RESPUESTA_VERIFICADA, COMPRA_RECOMPENSA, DESTACAR_EVENTO, BONO_NIVEL
 - `cantidad` (Integer): Número de monedas (positivo o negativo)
 - `saldo_anterior` (Integer): Saldo antes de la transacción
 - `saldo_posterior` (Integer): Saldo después de la transacción
@@ -253,49 +232,13 @@ Registro de movimientos de monedas virtuales del usuario.
 
 ---
 
-### 12. Recompensa (Recompensa)
-Representa premios o beneficios que los usuarios pueden canjear con monedas.
-
-**Atributos:**
-- `id` (UUID): Identificador único
-- `nombre` (String): Nombre de la recompensa
-- `descripcion` (Text): Descripción del beneficio
-- `tipo` (Enum): INSIGNIA, DESTACAR_PREGUNTA, AUMENTO_PREGUNTAS_DIARIAS, ICONO_ESPECIAL
-- `costo_monedas` (Integer): Precio en monedas virtuales
-- `activa` (Boolean): Si está disponible para canje
-- `duracion_dias` (Integer, opcional): Duración del beneficio (para temporales)
-- `icono` (String): URL del icono de la recompensa
-
-**Relaciones:**
-- Puede ser canjeada por usuarios (N:M con Usuario a través de CanjeRecompensa)
-
----
-
-### 13. CanjeRecompensa (CanjeRecompensa)
-Registra las recompensas obtenidas por usuarios.
-
-**Atributos:**
-- `id` (UUID): Identificador único
-- `usuario_id` (UUID): Referencia al usuario
-- `recompensa_id` (UUID): Referencia a la recompensa
-- `fecha_canje` (DateTime): Fecha de obtención
-- `fecha_expiracion` (DateTime, opcional): Fecha de vencimiento (si aplica)
-- `activo` (Boolean): Si la recompensa sigue vigente
-
-**Relaciones:**
-- Conecta Usuario con Recompensa (N:M)
-
----
-
 ### 14. Reporte (Reporte)
 Representa denuncias de contenido inapropiado.
 
 **Atributos:**
 - `id` (UUID): Identificador único
-- `reportante_id` (UUID): Referencia al usuario que reporta
-- `tipo_contenido` (Enum): EVENTO, PREGUNTA, RESPUESTA, USUARIO
+- `usuario_id` (UUID): Referencia al usuario que reporta
 - `contenido_id` (UUID): ID del elemento reportado
-- `motivo` (Enum): SPAM, CONTENIDO_INAPROPIADO, LENGUAJE_OFENSIVO, INFORMACION_FALSA, OTRO
 - `descripcion` (Text, opcional): Detalles adicionales
 - `estado` (Enum): PENDIENTE, EN_REVISION, RESUELTO, RECHAZADO
 - `fecha_reporte` (DateTime): Fecha de creación
@@ -303,7 +246,7 @@ Representa denuncias de contenido inapropiado.
 
 **Relaciones:**
 - Pertenece a un usuario reportante (N:1 con Usuario)
-- Puede ser revisado por un administrador (N:1 con Administrador)
+- Puede ser revisado por uno o varios administradores (N:N con Administrador)
 
 ---
 
@@ -325,22 +268,6 @@ Extensión de Usuario con permisos administrativos. Hereda de Usuario.
 
 ---
 
-### 16. Categoria (Categoria)
-Clasificación de eventos para facilitar filtros y búsquedas.
-
-**Atributos:**
-- `id` (UUID): Identificador único
-- `nombre` (String): Nombre de la categoría
-- `descripcion` (Text): Descripción de la categoría
-- `icono` (String): Icono visual para el mapa
-- `color` (String): Código de color hexadecimal
-- `activa` (Boolean): Si está disponible para uso
-- `orden` (Integer): Orden de visualización
-
-**Relaciones:**
-- Puede tener múltiples eventos (1:N con Evento)
-
----
 
 ## Resumen de Relaciones Principales
 
@@ -394,14 +321,4 @@ Administrador (1) ──── (N) Reporte [resuelve]
 - `1` : Relación uno a uno
 - `*` : Relación uno a muchos
 - `0..1` : Relación opcional
-
-### Notas del Diagrama
-
-- **Herencia**: Usuario es la clase padre de UsuarioAPie, CuentaEmpresa y Administrador
-- **UsuarioAPie** puede crear múltiples eventos, preguntas y respuestas
-- **Asistencia**: La tabla AsistenciaEvento gestiona la relación N:M entre usuarios y eventos con estados (ASISTIRE, INTERESADO, NO_ASISTIRE)
-- **ForoPregunta**: Cada pregunta tiene un mini-foro asociado con respuestas en formato de hilos
-- **VotoRespuesta**: Sistema de likes/dislikes que afecta el rating del usuario y las monedas ganadas
-- El sistema de monedas registra todas las transacciones de UsuarioAPie
-- Los administradores gestionan reportes y verificaciones de cuentas business
 
