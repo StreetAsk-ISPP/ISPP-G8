@@ -14,8 +14,9 @@ import java.time.LocalDateTime;
 @Table(name = "appusers")
 public class User extends BaseEntity {
 
+    //email = username
 	@Column(unique = true)
-	private String email; 
+	private String username; //Springboot gestiona usuarios con algunas funciones, todos tienen username, para no romperlo vamos a interpretar el email como username 
 
 	private String password;
 
