@@ -19,3 +19,10 @@ __pycache__/
 dist/
 build/
 *.log
+
+# Maven
+target/
+*.jar
+*.war
+*.ear
+.m2/

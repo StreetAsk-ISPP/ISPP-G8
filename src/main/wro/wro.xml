@@ -1,0 +1,7 @@
+<groups xmlns="http://www.isdc.ro/wro">
+  <group name="streetask">
+    <css>classpath:META-INF/resources/webjars/bootstrap/3.3.6/less/bootstrap.less</css>
+    <css>/streetask.less</css>
+   </group>
+</groups>
+
