@@ -2,7 +2,9 @@ name: Validar Backend Spring Boot
 
 on:
   push:
-    branches: [ "trunk" ]
+    branches:
+      - "trunk"
+      - "feature/**backend**"
   pull_request:
     branches: [ "trunk" ]
 
