@@ -2,14 +2,11 @@ package com.streetask.app.user;
 
 import com.streetask.app.model.BaseEntity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import java.time.LocalDateTime;
+
 
 @Getter
 @Setter
@@ -18,9 +15,20 @@ import lombok.Setter;
 public class User extends BaseEntity {
 
 	@Column(unique = true)
-	String username;
+	private String email; 
 
-	String password;
+	private String password;
+
+    @Enumerated(EnumType.STRING)
+    private TipoCuenta tipo_cuenta;
+
+    private Boolean activo;
+
+    private LocalDateTime fecha_registro;
+
+    private LocalDateTime ultima_conexion;
+
+
 
 	@NotNull
 	@ManyToOne(optional = false)
