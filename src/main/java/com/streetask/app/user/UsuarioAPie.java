@@ -1,5 +1,4 @@
 package com.streetask.app.user;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -16,9 +15,6 @@ public class UsuarioAPie extends User {
 //usuarioId FK
     private String name;
     private String apellidos;
-
-    @Column(unique = true)
-    private String username;
 
     private String telefono;
 

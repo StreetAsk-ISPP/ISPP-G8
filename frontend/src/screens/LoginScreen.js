@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import CustomButton from '../components/CustomButton';
 import { useAuth } from '../context/AuthContext';
-import { sleep } from '../utils/helpers';
 import { globalStyles } from '../styles/globalStyles';
 import { theme } from '../constants/theme';
+import apiClient from '../services/apiClient';
 
 export default function LoginScreen() {
 	const { login } = useAuth();
 
-	const [email, setEmail] = useState('');
+	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
 	const [error, setError] = useState('');
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,17 +17,17 @@ export default function LoginScreen() {
 	const handleLogin = async () => {
 		setError('');
 
-		if (!email.trim() || !password.trim()) {
-			setError('Please enter email and password.');
+		if (!username.trim() || !password.trim()) {
+			setError('Please enter username and password.');
 			return;
 		}
 
 		try {
 			setIsSubmitting(true);
-			await sleep(400);
-			await login('demo-jwt-token');
+			const response = await apiClient.post('/api/v1/auth/signin', { username, password });
+			await login(response.data.token);
 		} catch {
-			setError('Login failed. Please try again.');
+			setError('Login failed. Please check your credentials.');
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -42,10 +42,9 @@ export default function LoginScreen() {
 				<View style={{ height: 16 }} />
 
 				<TextInput
-					value={email}
-					onChangeText={setEmail}
-					placeholder="Email"
-					keyboardType="email-address"
+					value={username}
+					onChangeText={setUsername}
+					placeholder="Username"
 					autoCapitalize="none"
 					style={styles.input}
 				/>
