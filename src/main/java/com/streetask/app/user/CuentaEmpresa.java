@@ -1,4 +1,5 @@
 package com.streetask.app.user;
+
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -7,7 +8,6 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
-
 @Entity
 @Table(name = "cuenta_empresa")
 @Getter
@@ -15,7 +15,7 @@ import lombok.Setter;
 
 public class CuentaEmpresa extends User {
 
-//usuarioId FK
+    // usuarioId FK
     private String nombre_empresa;
 
     @Column(unique = true)
@@ -25,7 +25,7 @@ public class CuentaEmpresa extends User {
 
     private String sitio_web;
 
-    private String  descpricion;
+    private String descpricion;
 
     private String logo;
 
@@ -40,7 +40,7 @@ public class CuentaEmpresa extends User {
     private Boolean suscripcion_activa;
 
     private LocalDateTime fecha_vencimiento_suscripcion;
-    
-//Faltan relaciones
 
-} 
+    // Faltan relaciones
+
+}

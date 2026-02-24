@@ -1,5 +1,6 @@
 package com.streetask.app.auth.payload.request;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 import lombok.Getter;
@@ -8,28 +9,23 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SignupRequest {
-	
-	// User
+
+	// Email (username en la BD para autenticación)
 	@NotBlank
-	private String username;
-	
+	@Email
+	private String email;
+
 	@NotBlank
-	private String authority;
+	private String userName;
 
 	@NotBlank
 	private String password;
-	
-	//Both
+
+	// Datos personales
 	@NotBlank
 	private String firstName;
-	
+
 	@NotBlank
 	private String lastName;
-	
-	@NotBlank
-	private String city;
 
 }
-
-
-

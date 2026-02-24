@@ -1,9 +1,9 @@
 package com.streetask.app.user;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-
 
 @Entity
 @Table(name = "usuarios_apie")
@@ -12,7 +12,7 @@ import lombok.Setter;
 
 public class UsuarioAPie extends User {
 
-//usuarioId FK
+    // usuarioId FK
     private String name;
     private String apellidos;
 
@@ -22,14 +22,14 @@ public class UsuarioAPie extends User {
 
     private Integer saldo_monedas;
 
-    private Float rating; 
+    private Float rating;
 
     // Implementar point para ubicacion
-    
+
     private Float radio_visibilidad_km;
 
     private Boolean verificado;
 
-//Faltan relaciones
+    // Faltan relaciones
 
-} 
+}
