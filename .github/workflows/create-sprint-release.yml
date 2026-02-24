@@ -1,0 +1,48 @@
+name: Create sprint release branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      sprint:
+        description: "Sprint number, e.g. 07"
+        required: true
+        type: string
+      source_branch:
+        description: "Source branch (usually trunk)"
+        required: true
+        default: "trunk"
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  create_release_branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_branch }}
+          fetch-depth: 0
+
+      - name: Create/Update release branch
+        run: |
+          set -e
+          RELEASE_BRANCH="release/sprint-${{ inputs.sprint }}"
+          SOURCE_BRANCH="${{ inputs.source_branch }}"
+
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git fetch origin "${SOURCE_BRANCH}:${SOURCE_BRANCH}"
+          git checkout "${SOURCE_BRANCH}"
+
+          # Create or fast-align release branch to the source branch
+          if git show-ref --verify --quiet "refs/heads/${RELEASE_BRANCH}"; then
+            git branch -f "${RELEASE_BRANCH}" "${SOURCE_BRANCH}"
+          else
+            git branch "${RELEASE_BRANCH}" "${SOURCE_BRANCH}"
+          fi
+
+          git push -f origin "${RELEASE_BRANCH}"

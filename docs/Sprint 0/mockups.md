@@ -162,3 +162,20 @@ Desirable Stories Post-MVP - Could Have
 
 ## **US-47: Map toggle**
 ![](images/mockups/US-47_Map_toggle.jpg)
+
+# Interactive mockup
+
+https://streetask2.netlify.app/
+
+## Test Credentials
+
+To access the mockup you can use:
+
+```
+Email: john@example.com
+Password: 123456
+```
+
+Or register a new account from the login screen.
+
+---
