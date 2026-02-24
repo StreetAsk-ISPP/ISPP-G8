@@ -35,7 +35,7 @@ public class UserDetailsImpl implements UserDetails {
 	public static UserDetailsImpl build(User user) {
 		List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(user.getAuthority().getAuthority()));
 
-		return new UserDetailsImpl(user.getId(), user.getUsername(),
+		return new UserDetailsImpl(user.getId(), user.getEmail(),
 				user.getPassword(),
 				authorities);
 	}
@@ -44,7 +44,6 @@ public class UserDetailsImpl implements UserDetails {
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		return authorities;
 	}
-
 
 	public Integer getId() {
 		return id;
@@ -98,6 +97,3 @@ public class UserDetailsImpl implements UserDetails {
 	}
 
 }
-
-
-

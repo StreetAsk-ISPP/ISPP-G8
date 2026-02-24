@@ -7,12 +7,15 @@ import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import com.streetask.app.auth.payload.request.BusinessSignupRequest;
+import com.streetask.app.auth.payload.request.CompleteSignupRequest;
 import com.streetask.app.auth.payload.request.LoginRequest;
 import com.streetask.app.auth.payload.request.SignupRequest;
 import com.streetask.app.auth.payload.response.JwtResponse;
 import com.streetask.app.auth.payload.response.MessageResponse;
 import com.streetask.app.configuration.jwt.JwtUtils;
 import com.streetask.app.configuration.services.UserDetailsImpl;
+import com.streetask.app.user.CuentaEmpresaRepository;
 import com.streetask.app.user.UserService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,7 +32,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.security.authentication.BadCredentialsException;
 
-
 @RestController
 @RequestMapping("/api/v1/auth")
 @Tag(name = "Authentication", description = "The Authentication API based on JWT")
@@ -39,31 +41,34 @@ public class AuthController {
 	private final UserService userService;
 	private final JwtUtils jwtUtils;
 	private final AuthService authService;
+	private final CuentaEmpresaRepository cuentaEmpresaRepository;
 
 	@Autowired
 	public AuthController(AuthenticationManager authenticationManager, UserService userService, JwtUtils jwtUtils,
-			AuthService authService) {
+			AuthService authService, CuentaEmpresaRepository cuentaEmpresaRepository) {
 		this.userService = userService;
 		this.jwtUtils = jwtUtils;
 		this.authenticationManager = authenticationManager;
 		this.authService = authService;
+		this.cuentaEmpresaRepository = cuentaEmpresaRepository;
 	}
 
 	@PostMapping("/signin")
 	public ResponseEntity authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-		try{
+		try {
 			Authentication authentication = authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+					new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 			String jwt = jwtUtils.generateJwtToken(authentication);
 
 			UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 			List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority())
-				.collect(Collectors.toList());
+					.collect(Collectors.toList());
 
-			return ResponseEntity.ok().body(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), roles));
-		}catch(BadCredentialsException exception){
+			return ResponseEntity.ok()
+					.body(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), roles));
+		} catch (BadCredentialsException exception) {
 			return ResponseEntity.badRequest().body("Bad Credentials!");
 		}
 	}
@@ -74,17 +79,42 @@ public class AuthController {
 		return ResponseEntity.ok(isValid);
 	}
 
-	
-	@PostMapping("/signup")	
-	public ResponseEntity<MessageResponse> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-		if (userService.existsUser(signUpRequest.getUsername()).equals(true)) {
-			return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
+	@PostMapping("/signup/basic")
+	public ResponseEntity<MessageResponse> registerBasicUser(@Valid @RequestBody SignupRequest signUpRequest) {
+		// Verificar si el email ya existe
+		if (userService.existsUser(signUpRequest.getEmail()).equals(true)) {
+			return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already registered!"));
 		}
-		authService.createUser(signUpRequest);
-		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+		authService.createBasicUser(signUpRequest);
+		return ResponseEntity.ok(new MessageResponse("Basic user data saved! Complete your registration."));
+	}
+
+	@PostMapping("/signup/normal")
+	public ResponseEntity<MessageResponse> completeNormalUser(@Valid @RequestBody CompleteSignupRequest signUpRequest) {
+		// Verificar que el usuario básico existe
+		try {
+			authService.createNormalUser(signUpRequest);
+			return ResponseEntity.ok(new MessageResponse("Normal user registered successfully!"));
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body(new MessageResponse("Error: User not found or already completed!"));
+		}
+	}
+
+	@PostMapping("/signup/business")
+	public ResponseEntity<MessageResponse> completeBusinessUser(
+			@Valid @RequestBody BusinessSignupRequest signUpRequest) {
+		// Verificar si el NIF ya existe
+		if (cuentaEmpresaRepository.existsByCif(signUpRequest.getNif()).equals(true)) {
+			return ResponseEntity.badRequest().body(new MessageResponse("Error: NIF is already registered!"));
+		}
+		// Completar con datos business
+		try {
+			authService.convertToBusinessUser(signUpRequest);
+			return ResponseEntity.ok(new MessageResponse(
+					"Business account registered successfully! Your account is pending admin verification."));
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body(new MessageResponse("Error: User not found or already completed!"));
+		}
 	}
 
 }
-
-
-
