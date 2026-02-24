@@ -83,6 +83,8 @@ public class SecurityConfiguration {
             .requestMatchers("/api/v1/plan").permitAll()
             .requestMatchers("/api/v1/clinics").permitAll()
             .requestMatchers("/api/v1/developers").permitAll()
+            .requestMatchers("/api/v1/locations/public/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/v1/locations/user/**").permitAll()
 
             // API restringida para propietarios de mascotas:
             .requestMatchers("/api/v1/plan").hasAuthority("OWNER")
