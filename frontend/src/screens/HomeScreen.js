@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import CustomButton from '../components/CustomButton';
+import MapComponent from '../components/MapComponent';
 import { useAuth } from '../context/AuthContext';
 import { globalStyles } from '../styles/globalStyles';
 import { theme } from '../constants/theme';
@@ -17,9 +18,7 @@ export default function HomeScreen() {
                 </View>
 
                 <View style={styles.mapContainer}>
-                    <Text style={styles.placeholderText}>
-                        [ Geolocation map will be integrated here ]
-                    </Text>
+                    <MapComponent />
                 </View>
 
                 <View style={styles.footer}>
