@@ -8,7 +8,7 @@
 ## 📝 Change Log
 
 ### 25/02/2026  
-**Author**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
+**Author**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10)), Sergio Terrazas Lobato ([Sergiootl](https://github.com/Sergiootl))
 - Estructura y arreglos, contenido, enlaces entre diapositivas, etc.
 
 ### 24/02/2026  
