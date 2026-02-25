@@ -54,7 +54,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/signin")
-	public ResponseEntity authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+	public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 		try {
 			Authentication authentication = authenticationManager.authenticate(
 					new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
@@ -108,6 +108,9 @@ public class AuthController {
 	@PostMapping("/signup/business")
 	public ResponseEntity<MessageResponse> completeBusinessUser(
 			@Valid @RequestBody BusinessSignupRequest signUpRequest) {
+		String normalizedTaxId = signUpRequest.getTaxId().trim().toUpperCase().replace(" ", "").replace("-", "");
+		signUpRequest.setTaxId(normalizedTaxId);
+
 		// Check whether tax ID already exists
 		if (businessAccountRepository.existsByTaxId(signUpRequest.getTaxId()).equals(true)) {
 			return ResponseEntity.badRequest().body(new MessageResponse("Error: Tax ID is already registered!"));

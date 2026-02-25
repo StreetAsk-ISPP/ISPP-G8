@@ -154,6 +154,7 @@ class AuthSignupIntegrationTest {
                 BusinessAccount businessAccount = (BusinessAccount) storedUser;
 
                 assertThat(businessAccount.getTaxId()).isEqualTo(taxId);
+                assertThat(businessAccount.getCompanyName()).isEqualTo("Test Company");
                 assertThat(businessAccount.getAddress()).isEqualTo("Gran Via 1");
                 assertThat(businessAccount.getAuthority().getAuthority()).isEqualTo("BUSINESS");
                 assertThat(businessAccount.getActive()).isFalse();
@@ -193,6 +194,61 @@ class AuthSignupIntegrationTest {
                                 .andExpect(jsonPath("$.message").value("Error: Tax ID is already registered!"));
         }
 
+        @Test
+        void signupBusinessShouldReturnBadRequestWhenTaxIdFormatIsInvalid() throws Exception {
+                String email = "business.invalidtaxid@streetask.com";
+
+                mockMvc.perform(post("/api/v1/auth/signup/basic")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(validBasicPayload(email, "invalidTaxUser"))))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(post("/api/v1/auth/signup/business")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                                validBusinessPayload(email, "12345678A", "Invalid Address"))))
+                                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void signupBusinessShouldReturnBadRequestWhenCompanyNameIsMissing() throws Exception {
+                String email = "business.nocompany@streetask.com";
+
+                mockMvc.perform(post("/api/v1/auth/signup/basic")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(validBasicPayload(email, "noCompanyUser"))))
+                                .andExpect(status().isOk());
+
+                Map<String, Object> payload = validBusinessPayload(email, "B12345679", "Address 3");
+                payload.remove("companyName");
+
+                mockMvc.perform(post("/api/v1/auth/signup/business")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(payload)))
+                                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void signupBusinessShouldNormalizeTaxIdToUpperCaseBeforeSaving() throws Exception {
+                String email = "business.normalize@streetask.com";
+
+                mockMvc.perform(post("/api/v1/auth/signup/basic")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(validBasicPayload(email, "normalizeUser"))))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(post("/api/v1/auth/signup/business")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                                validBusinessPayload(email, "b12345670", "Address 4"))))
+                                .andExpect(status().isOk());
+
+                User storedUser = userRepository.findByEmail(email).orElseThrow();
+                assertThat(storedUser).isInstanceOf(BusinessAccount.class);
+                BusinessAccount businessAccount = (BusinessAccount) storedUser;
+                assertThat(businessAccount.getTaxId()).isEqualTo("B12345670");
+        }
+
         private Map<String, Object> validBasicPayload(String email, String userName) {
                 Map<String, Object> payload = new HashMap<>();
                 payload.put("email", email);
@@ -207,6 +263,7 @@ class AuthSignupIntegrationTest {
                 Map<String, Object> payload = new HashMap<>();
                 payload.put("email", email);
                 payload.put("taxId", taxId);
+                payload.put("companyName", "Test Company");
                 payload.put("address", address);
                 return payload;
         }

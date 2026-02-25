@@ -16,7 +16,6 @@
 package com.streetask.app.user;
 
 import java.util.UUID;
-import java.util.Optional;
 
 import jakarta.validation.Valid;
 

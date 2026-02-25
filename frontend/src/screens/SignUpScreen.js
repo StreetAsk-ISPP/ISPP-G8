@@ -38,7 +38,7 @@ export default function SignUpScreen({ navigation }) {
 		return true;
 	};
 
-	const handleNormalSignup = async () => {
+	const handleRegularSignup = async () => {
 		setError('');
 
 		if (!validateForm()) {
@@ -48,7 +48,7 @@ export default function SignUpScreen({ navigation }) {
 		try {
 			setIsSubmitting(true);
 			
-			// Paso 1: Crear usuario básico
+			// Step 1: Create basic user
 			await apiClient.post('/api/v1/auth/signup/basic', {
 				email,
 				userName,
@@ -57,27 +57,27 @@ export default function SignUpScreen({ navigation }) {
 				lastName,
 			});
 
-			// Paso 2: Completar como usuario normal
-			await apiClient.post('/api/v1/auth/signup/normal', {
+			// Step 2: Complete as regular user
+			await apiClient.post('/api/v1/auth/signup/regular', {
 				email,
 			});
 
-			// Paso 3: Login automático
+			// Step 3: Automatic login
 			const loginResponse = await apiClient.post('/api/v1/auth/signin', {
 				email,
 				password,
 			});
 			
-			// Guardar token y redirigir a Home
+			// Save token and redirect to Home
 			await login(loginResponse.data.token);
 		} catch (err) {
 			let errorMessage = err.response?.data?.message || err.response?.data || err.message || 'Registration failed. Please try again.';
 			
-			// Convertir a string si es necesario
 			errorMessage = typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage);
 			
-			// Verificar si es error de email duplicado
-			if (errorMessage.toLowerCase().includes('email') || errorMessage.toLowerCase().includes('already')) {
+			if (errorMessage.toLowerCase().includes('username')) {
+				setError('This username is already taken. Please choose a different username.');
+			} else if (errorMessage.toLowerCase().includes('email')) {
 				setError('This email is already registered. Please use a different email or try logging in.');
 			} else {
 				setError(errorMessage);
@@ -97,7 +97,7 @@ export default function SignUpScreen({ navigation }) {
 		try {
 			setIsSubmitting(true);
 
-			// Crear usuario básico
+			// Create basic user
 			await apiClient.post('/api/v1/auth/signup/basic', {
 				email,
 				userName,
@@ -106,7 +106,7 @@ export default function SignUpScreen({ navigation }) {
 				lastName,
 			});
 
-			// Navegar a la segunda pantalla de business
+			// Navigate to the business details screen
 			navigation.navigate('BusinessSignup', {
 				email,
 				password,
@@ -114,11 +114,11 @@ export default function SignUpScreen({ navigation }) {
 		} catch (err) {
 			let errorMessage = err.response?.data?.message || err.response?.data || err.message || 'Registration failed. Please try again.';
 			
-			// Convertir a string si es necesario
 			errorMessage = typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage);
 			
-			// Verificar si es error de email duplicado
-			if (errorMessage.toLowerCase().includes('email') || errorMessage.toLowerCase().includes('already')) {
+			if (errorMessage.toLowerCase().includes('username')) {
+				setError('This username is already taken. Please choose a different username.');
+			} else if (errorMessage.toLowerCase().includes('email')) {
 				setError('This email is already registered. Please use a different email or try logging in.');
 			} else {
 				setError(errorMessage);
@@ -249,7 +249,7 @@ export default function SignUpScreen({ navigation }) {
 
 					<View style={styles.buttonContainer}>
 					<TouchableOpacity
-						onPress={handleNormalSignup}
+						onPress={handleRegularSignup}
 						disabled={isSubmitting}
 						activeOpacity={0.8}
 					>
@@ -260,7 +260,7 @@ export default function SignUpScreen({ navigation }) {
 							style={styles.normalButton}
 						>
 						<View style={styles.normalButtonTextContainer}>
-							<Text style={styles.normalButtonText}>Normal</Text>
+							<Text style={styles.normalButtonText}>Regular</Text>
 							<Text style={styles.normalButtonText}>account</Text>
 						</View>
 						</LinearGradient>
