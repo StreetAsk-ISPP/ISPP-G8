@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import CustomButton from '../components/CustomButton';
 import { useAuth } from '../context/AuthContext';
 import { globalStyles } from '../styles/globalStyles';
@@ -7,6 +8,7 @@ import { theme } from '../constants/theme';
 
 export default function HomeScreen() {
     const { logout } = useAuth();
+    const navigation = useNavigation();
 
     return (
         <SafeAreaView style={globalStyles.screen}>
@@ -23,16 +25,16 @@ export default function HomeScreen() {
                 </View>
 
                 <View style={styles.footer}>
-                    <CustomButton 
-                        label="Ask a question" 
-                        onPress={() => console.log('Open question modal')} 
+                    <CustomButton
+                        label="Ask a question"
+                        onPress={() => navigation.navigate('QuestionThread', { questionId: 'q1' })}
                     />
                     
                     <View style={{ height: 12 }} />
 
-                    <CustomButton 
-                        label="Sign out" 
-                        onPress={logout} 
+                    <CustomButton
+                        label="Sign out"
+                        onPress={logout}
                     />
                 </View>
             </View>

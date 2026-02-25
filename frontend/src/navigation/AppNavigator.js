@@ -4,6 +4,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
+import QuestionThreadScreen from '../screens/QuestionThreadScreen';
 
 import { useAuth } from '../context/AuthContext';
 import { theme } from '../constants/theme';
@@ -26,7 +27,10 @@ export default function AppNavigator() {
             {!isAuthenticated ? (
                 <Stack.Screen name="Login" component={LoginScreen} />
             ) : (
-                <Stack.Screen name="Home" component={HomeScreen} />
+                <>
+                    <Stack.Screen name="Home" component={HomeScreen} />
+                    <Stack.Screen name="QuestionThread" component={QuestionThreadScreen} />
+                </>
             )}
         </Stack.Navigator>
     );
