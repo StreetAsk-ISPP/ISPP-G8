@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import org.springframework.data.repository.CrudRepository;
 
-import com.streetask.app.model.Question;
+import com.streetask.app.models.questions.Question;
 
 public interface QuestionRepository extends CrudRepository<Question, UUID> {
 

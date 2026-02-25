@@ -1,9 +1,9 @@
-package com.streetask.app.model;
+package com.streetask.app.models.questions;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.streetask.app.user.RegularUser;
+import com.streetask.app.models.user.RegularUser;
 
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
