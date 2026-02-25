@@ -26,3 +26,7 @@ target/
 *.war
 *.ear
 .m2/
+
+# Test reports
+allure-results/
+allure-report/

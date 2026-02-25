@@ -3,10 +3,11 @@ package com.streetask.app.user;
 import com.streetask.app.model.BaseEntity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.time.LocalDateTime;
-
 
 @Getter
 @Setter
@@ -15,22 +16,32 @@ import java.time.LocalDateTime;
 @Table(name = "appusers")
 public class User extends BaseEntity {
 
-    //email = username
+	// Email for authentication
+	@NotBlank
+	@Email
 	@Column(unique = true)
-	private String username; //Springboot gestiona usuarios con algunas funciones, todos tienen username, para no romperlo vamos a interpretar el email como username 
+	private String email;
+
+	@NotBlank
+	@Column(unique = true)
+	private String userName;
 
 	private String password;
 
-    @Enumerated(EnumType.STRING)
-    private TipoCuenta tipo_cuenta;
+	@NotBlank
+	private String firstName;
 
-    private Boolean activo;
+	@NotBlank
+	private String lastName;
 
-    private LocalDateTime fecha_registro;
+	@Enumerated(EnumType.STRING)
+	private AccountType accountType;
 
-    private LocalDateTime ultima_conexion;
+	private Boolean active;
 
+	private LocalDateTime createdAt;
 
+	private LocalDateTime lastLogin;
 
 	@NotNull
 	@ManyToOne(optional = false)
@@ -51,6 +62,3 @@ public class User extends BaseEntity {
 	}
 
 }
-
-
-
