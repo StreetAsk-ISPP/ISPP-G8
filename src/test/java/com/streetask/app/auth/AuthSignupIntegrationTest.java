@@ -195,6 +195,17 @@ class AuthSignupIntegrationTest {
         }
 
         @Test
+        void signupBusinessShouldReturnBadRequestWhenBasicUserDoesNotExist() throws Exception {
+                mockMvc.perform(post("/api/v1/auth/signup/business")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                                validBusinessPayload("missing.user@streetask.com", "B99999991",
+                                                                "Address Missing"))))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.message").value("Error: User not found or already completed!"));
+        }
+
+        @Test
         void signupBusinessShouldReturnBadRequestWhenTaxIdFormatIsInvalid() throws Exception {
                 String email = "business.invalidtaxid@streetask.com";
 
