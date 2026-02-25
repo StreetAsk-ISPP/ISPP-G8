@@ -1,110 +1,175 @@
 import { useState } from 'react';
-import { Text, TextInput, View, TouchableOpacity } from 'react-native';
-import CustomButton from '../components/CustomButton';
-import { useAuth } from '../context/AuthContext';
-import { globalStyles } from '../styles/globalStyles';
-import { theme } from '../constants/theme';
+import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
 import apiClient from '../services/apiClient';
+import { useAuth } from '../context/AuthContext';
+import { theme } from '../constants/theme';
 
 export default function LoginScreen({ navigation }) {
-	const { login } = useAuth();
+  const { login } = useAuth();
 
-	const [email, setEmail] = useState('');
-	const [password, setPassword] = useState('');
-	const [error, setError] = useState('');
-	const [isSubmitting, setIsSubmitting] = useState(false);
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-	const handleLogin = async () => {
-		setError('');
+  const handleLogin = async () => {
+    setError('');
 
-		if (!email.trim() || !password.trim()) {
-			setError('Please enter email and password.');
-			return;
-		}
+    if (!identifier.trim() || !password.trim()) {
+      setError('Please enter username/email and password.');
+      return;
+    }
 
-		try {
-			setIsSubmitting(true);
-			const response = await apiClient.post('/api/v1/auth/signin', { email, password });
-			await login(response.data.token);
-		} catch {
-			setError('Login failed. Please check your credentials.');
-		} finally {
-			setIsSubmitting(false);
-		}
-	};
+    try {
+      setIsSubmitting(true);
+      const response = await apiClient.post('/api/v1/auth/signin', {
+        email: identifier,
+        password,
+      });
+      await login(response.data.token);
+    } catch {
+      setError('Login failed. Please check your credentials.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-	return (
-		<View style={globalStyles.screen}>
-			<View style={globalStyles.card}>
-				<Text style={globalStyles.title}>Sign In</Text>
-				<Text style={globalStyles.subtitle}>Log in to access the app.</Text>
+  return (
+    <View style={styles.screen}>
+      <View style={styles.container}>
+        <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
 
-				<View style={{ height: 16 }} />
+        <Text style={styles.title}>Login</Text>
 
-				<TextInput
-					value={email}
-					onChangeText={setEmail}
-					placeholder="Email"
-					keyboardType="email-address"
-					autoCapitalize="none"
-					style={styles.input}
-				/>
+        <View style={styles.form}>
+          <Text style={styles.label}>Username</Text>
+          <TextInput
+            value={identifier}
+            onChangeText={setIdentifier}
+            autoCapitalize="none"
+            autoCorrect={false}
+            placeholder="email or username"
+            placeholderTextColor={theme.colors.textSecondary}
+            style={styles.input}
+          />
 
-				<View style={{ height: 8 }} />
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            placeholder="type your password"
+            placeholderTextColor={theme.colors.textSecondary}
+            style={styles.input}
+          />
 
-				<TextInput
-					value={password}
-					onChangeText={setPassword}
-					placeholder="Password"
-					secureTextEntry
-					style={styles.input}
-				/>
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-				{error ? <Text style={styles.errorText}>{error}</Text> : null}
+          <TouchableOpacity
+            style={[styles.loginButton, isSubmitting && styles.loginButtonDisabled]}
+            onPress={handleLogin}
+            disabled={isSubmitting}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.loginButtonText}>{isSubmitting ? 'LOGGING IN...' : 'LOGIN'}</Text>
+          </TouchableOpacity>
+        </View>
 
-				<View style={{ height: 16 }} />
-
-				<CustomButton
-					label={isSubmitting ? 'Signing in...' : 'Sign In'}
-					onPress={handleLogin}
-				/>
-
-				<View style={{ height: 16 }} />
-
-				<TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-					<Text style={styles.signUpLink}>
-						Don’t have an account? <Text style={styles.signUpLinkBold}>Sign Up</Text>
-					</Text>
-				</TouchableOpacity>
-			</View>
-		</View>
-	);
+        <View style={styles.footer}>
+          <Text style={styles.signUpPrompt}>Don’t have an account?</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('SignUp')} activeOpacity={0.8}>
+            <Text style={styles.signUpLink}>Sign Up Here</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
 }
 
-const styles = {
-	input: {
-		borderWidth: 1,
-		borderColor: theme.colors.border,
-		borderRadius: theme.radius.md,
-		backgroundColor: theme.colors.surface,
-		paddingHorizontal: theme.spacing.md,
-		paddingVertical: theme.spacing.sm,
-	signUpLink: {
-		textAlign: 'center',
-		color: theme.colors.textSecondary,
-		fontSize: theme.typography.body,
-	},
-	signUpLinkBold: {
-		color: theme.colors.primary,
-		fontWeight: '700',
-	},
-		fontSize: theme.typography.body,
-		color: theme.colors.textPrimary,
-	},
-	errorText: {
-		marginTop: 8,
-		color: theme.colors.danger,
-		fontSize: theme.typography.caption,
-	},
-};
-
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+    paddingHorizontal: theme.spacing.md,
+  },
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: theme.spacing.md,
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    marginBottom: theme.spacing.md,
+  },
+  title: {
+    textAlign: 'center',
+    fontSize: theme.typography.h1,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.md,
+  },
+  form: {
+    width: '100%',
+    paddingHorizontal: theme.spacing.lg,
+  },
+  label: {
+    fontSize: theme.typography.caption,
+    fontWeight: '500',
+    color: theme.colors.textPrimary,
+    marginBottom: 4,
+    marginTop: theme.spacing.sm,
+  },
+  input: {
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+    borderRadius: 10,
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 10,
+    height: 42,
+    fontSize: theme.typography.caption,
+    color: theme.colors.textPrimary,
+  },
+  errorText: {
+    color: theme.colors.danger,
+    fontSize: theme.typography.caption,
+    marginBottom: theme.spacing.sm,
+  },
+  loginButton: {
+    backgroundColor: theme.colors.textSecondary,
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginTop: theme.spacing.md,
+  },
+  loginButtonDisabled: {
+    opacity: 0.7,
+  },
+  loginButtonText: {
+    color: theme.colors.surface,
+    fontSize: theme.typography.caption,
+    fontWeight: '700',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: theme.spacing.lg,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  signUpPrompt: {
+    textAlign: 'center',
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.caption,
+  },
+  signUpLink: {
+    textAlign: 'center',
+    color: theme.colors.textPrimary,
+    fontSize: theme.typography.body,
+    fontWeight: '600',
+    marginTop: theme.spacing.xs,
+  },
+});
