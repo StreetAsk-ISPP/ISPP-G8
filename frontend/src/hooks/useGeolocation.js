@@ -12,7 +12,7 @@ export default function useGeolocation() {
 
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
-      setError('Permiso de ubicación denegado');
+      setError('Location permission denied');
       setIsLoading(false);
       return null;
     }

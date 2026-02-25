@@ -15,7 +15,7 @@
  */
 package com.streetask.app.user;
 
-import java.util.Optional;
+import java.util.UUID;
 
 import jakarta.validation.Valid;
 
@@ -45,17 +45,15 @@ public class UserService {
 	}
 
 	@Transactional(readOnly = true)
-	public User findUser(String username) {
-		return userRepository.findByUsername(username)
-				.orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+	public User findUser(String email) {
+		return userRepository.findByEmail(email)
+				.orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
 	}
 
 	@Transactional(readOnly = true)
-	public User findUser(Integer id) {
+	public User findUser(UUID id) {
 		return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 	}
-
-
 
 	@Transactional(readOnly = true)
 	public User findCurrentUser() {
@@ -63,12 +61,16 @@ public class UserService {
 		if (auth == null)
 			throw new ResourceNotFoundException("Nobody authenticated!");
 		else
-			return userRepository.findByUsername(auth.getName())
-					.orElseThrow(() -> new ResourceNotFoundException("User", "Username", auth.getName()));
+			return userRepository.findByEmail(auth.getName())
+					.orElseThrow(() -> new ResourceNotFoundException("User", "Email", auth.getName()));
 	}
 
-	public Boolean existsUser(String username) {
-		return userRepository.existsByUsername(username);
+	public Boolean existsUser(String email) {
+		return userRepository.existsByEmail(email);
+	}
+
+	public Boolean existsByUserName(String userName) {
+		return userRepository.existsByUserName(userName);
 	}
 
 	@Transactional(readOnly = true)
@@ -81,7 +83,7 @@ public class UserService {
 	}
 
 	@Transactional
-	public User updateUser(@Valid User user, Integer idToUpdate) {
+	public User updateUser(@Valid User user, UUID idToUpdate) {
 		User toUpdate = findUser(idToUpdate);
 		BeanUtils.copyProperties(user, toUpdate, "id");
 		userRepository.save(toUpdate);
@@ -90,12 +92,9 @@ public class UserService {
 	}
 
 	@Transactional
-	public void deleteUser(Integer id) {
+	public void deleteUser(UUID id) {
 		User toDelete = findUser(id);
 		this.userRepository.delete(toDelete);
 	}
 
 }
-
-
-

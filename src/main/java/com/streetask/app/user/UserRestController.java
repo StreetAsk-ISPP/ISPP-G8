@@ -15,6 +15,7 @@
  */
 package com.streetask.app.user;
 
+import java.util.UUID;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -69,7 +70,7 @@ class UserRestController {
 	}
 
 	@GetMapping(value = "{id}")
-	public ResponseEntity<User> findById(@PathVariable("id") Integer id) {
+	public ResponseEntity<User> findById(@PathVariable("id") UUID id) {
 		return new ResponseEntity<>(userService.findUser(id), HttpStatus.OK);
 	}
 
@@ -82,16 +83,16 @@ class UserRestController {
 
 	@PutMapping(value = "{userId}")
 	@ResponseStatus(HttpStatus.OK)
-	public ResponseEntity<User> update(@PathVariable("userId") Integer id, @RequestBody @Valid User user) {
+	public ResponseEntity<User> update(@PathVariable("userId") UUID id, @RequestBody @Valid User user) {
 		RestPreconditions.checkNotNull(userService.findUser(id), "User", "ID", id);
 		return new ResponseEntity<>(this.userService.updateUser(user, id), HttpStatus.OK);
 	}
 
 	@DeleteMapping(value = "{userId}")
 	@ResponseStatus(HttpStatus.OK)
-	public ResponseEntity<MessageResponse> delete(@PathVariable("userId") int id) {
+	public ResponseEntity<MessageResponse> delete(@PathVariable("userId") UUID id) {
 		RestPreconditions.checkNotNull(userService.findUser(id), "User", "ID", id);
-		if (userService.findCurrentUser().getId() != id) {
+		if (!userService.findCurrentUser().getId().equals(id)) {
 			userService.deleteUser(id);
 			return new ResponseEntity<>(new MessageResponse("User deleted!"), HttpStatus.OK);
 		} else

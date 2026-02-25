@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View, TouchableOpacity } from 'react-native';
 import CustomButton from '../components/CustomButton';
 import { useAuth } from '../context/AuthContext';
 import { globalStyles } from '../styles/globalStyles';
 import { theme } from '../constants/theme';
 import apiClient from '../services/apiClient';
 
-export default function LoginScreen() {
+export default function LoginScreen({ navigation }) {
 	const { login } = useAuth();
 
-	const [username, setUsername] = useState('');
+	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [error, setError] = useState('');
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,14 +17,14 @@ export default function LoginScreen() {
 	const handleLogin = async () => {
 		setError('');
 
-		if (!username.trim() || !password.trim()) {
-			setError('Please enter username and password.');
+		if (!email.trim() || !password.trim()) {
+			setError('Please enter email and password.');
 			return;
 		}
 
 		try {
 			setIsSubmitting(true);
-			const response = await apiClient.post('/api/v1/auth/signin', { username, password });
+			const response = await apiClient.post('/api/v1/auth/signin', { email, password });
 			await login(response.data.token);
 		} catch {
 			setError('Login failed. Please check your credentials.');
@@ -42,9 +42,10 @@ export default function LoginScreen() {
 				<View style={{ height: 16 }} />
 
 				<TextInput
-					value={username}
-					onChangeText={setUsername}
-					placeholder="Username"
+					value={email}
+					onChangeText={setEmail}
+					placeholder="Email"
+					keyboardType="email-address"
 					autoCapitalize="none"
 					style={styles.input}
 				/>
@@ -67,6 +68,14 @@ export default function LoginScreen() {
 					label={isSubmitting ? 'Signing in...' : 'Sign In'}
 					onPress={handleLogin}
 				/>
+
+				<View style={{ height: 16 }} />
+
+				<TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+					<Text style={styles.signUpLink}>
+						Don't have an account? <Text style={styles.signUpLinkBold}>Sign Up</Text>
+					</Text>
+				</TouchableOpacity>
 			</View>
 		</View>
 	);
@@ -80,6 +89,15 @@ const styles = {
 		backgroundColor: theme.colors.surface,
 		paddingHorizontal: theme.spacing.md,
 		paddingVertical: theme.spacing.sm,
+	signUpLink: {
+		textAlign: 'center',
+		color: theme.colors.textSecondary,
+		fontSize: theme.typography.body,
+	},
+	signUpLinkBold: {
+		color: theme.colors.primary,
+		fontWeight: '700',
+	},
 		fontSize: theme.typography.body,
 		color: theme.colors.textPrimary,
 	},

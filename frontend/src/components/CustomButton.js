@@ -1,13 +1,26 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { theme } from '../constants/theme';
 
-export default function CustomButton({ label, onPress, variant = 'primary' }) {
+export default function CustomButton({ label, onPress, variant = 'primary', disabled = false, style, textStyle }) {
   return (
     <Pressable
-      style={[styles.button, variant === 'secondary' && styles.buttonSecondary]}
+      style={[
+        styles.button, 
+        variant === 'secondary' && styles.buttonSecondary,
+        disabled && styles.buttonDisabled,
+        style
+      ]}
       onPress={onPress}
+      disabled={disabled}
     >
-      <Text style={[styles.label, variant === 'secondary' && styles.labelSecondary]}>{label}</Text>
+      <Text style={[
+        styles.label, 
+        variant === 'secondary' && styles.labelSecondary,
+        disabled && styles.labelDisabled,
+        textStyle
+      ]}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -25,6 +38,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
   label: {
     color: theme.colors.surface,
     fontSize: theme.typography.body,
@@ -32,5 +48,8 @@ const styles = StyleSheet.create({
   },
   labelSecondary: {
     color: theme.colors.textPrimary,
+  },
+  labelDisabled: {
+    opacity: 0.7,
   },
 });

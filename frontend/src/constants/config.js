@@ -1,4 +1,4 @@
-const rawApiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim() || 'http://localhost:3000';
+const rawApiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim() || 'http://localhost:8080';
 const apiBaseUrl = rawApiBaseUrl.replace(/\/+$/, '');
 const configuredTimeoutMs = Number(process.env.EXPO_PUBLIC_API_TIMEOUT_MS);
 
