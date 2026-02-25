@@ -13,14 +13,14 @@ import com.streetask.app.auth.payload.request.CompleteSignupRequest;
 import com.streetask.app.auth.payload.request.SignupRequest;
 import com.streetask.app.user.Authorities;
 import com.streetask.app.user.AuthoritiesService;
-import com.streetask.app.user.CuentaEmpresa;
-import com.streetask.app.user.CuentaEmpresaRepository;
-import com.streetask.app.user.EstadoSolicitud;
-import com.streetask.app.user.TipoCuenta;
+import com.streetask.app.user.AccountType;
+import com.streetask.app.user.BusinessAccount;
+import com.streetask.app.user.BusinessAccountRepository;
+import com.streetask.app.user.RequestStatus;
 import com.streetask.app.user.User;
 import com.streetask.app.user.UserService;
-import com.streetask.app.user.UsuarioAPie;
-import com.streetask.app.user.UsuarioAPieRepository;
+import com.streetask.app.user.RegularUser;
+import com.streetask.app.user.RegularUserRepository;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,69 +34,65 @@ public class AuthService {
 	private final PasswordEncoder encoder;
 	private final AuthoritiesService authoritiesService;
 	private final UserService userService;
-	private final UsuarioAPieRepository usuarioAPieRepository;
-	private final CuentaEmpresaRepository cuentaEmpresaRepository;
+	private final RegularUserRepository regularUserRepository;
+	private final BusinessAccountRepository businessAccountRepository;
 
 	@Autowired
 	public AuthService(PasswordEncoder encoder, AuthoritiesService authoritiesService, UserService userService,
-			UsuarioAPieRepository usuarioAPieRepository, CuentaEmpresaRepository cuentaEmpresaRepository) {
+			RegularUserRepository regularUserRepository, BusinessAccountRepository businessAccountRepository) {
 		this.encoder = encoder;
 		this.authoritiesService = authoritiesService;
 		this.userService = userService;
-		this.usuarioAPieRepository = usuarioAPieRepository;
-		this.cuentaEmpresaRepository = cuentaEmpresaRepository;
+		this.regularUserRepository = regularUserRepository;
+		this.businessAccountRepository = businessAccountRepository;
 	}
 
 	@Transactional
-	public void createNormalUser(@Valid CompleteSignupRequest request) {
-		// Buscar el usuario básico creado en la primera pantalla
+	public void createRegularUser(@Valid CompleteSignupRequest request) {
+		// Find the basic user created in the first step
 		User basicUser = userService.findUser(request.getEmail());
 
-		UsuarioAPie usuario = new UsuarioAPie();
+		RegularUser user = new RegularUser();
 
-		// Copiar datos de User (base)
-		usuario.setEmail(basicUser.getEmail());
-		usuario.setUserName(basicUser.getUserName());
-		usuario.setPassword(basicUser.getPassword());
-		usuario.setFirstName(basicUser.getFirstName());
-		usuario.setLastName(basicUser.getLastName());
-		usuario.setTipo_cuenta(TipoCuenta.USUARIO_APIE);
-		usuario.setActivo(true); // Usuario normal activo inmediatamente
-		usuario.setFecha_registro(basicUser.getFecha_registro());
+		// Copy base User fields
+		user.setEmail(basicUser.getEmail());
+		user.setUserName(basicUser.getUserName());
+		user.setPassword(basicUser.getPassword());
+		user.setFirstName(basicUser.getFirstName());
+		user.setLastName(basicUser.getLastName());
+		user.setAccountType(AccountType.REGULAR_USER);
+		user.setActive(true);
+		user.setCreatedAt(basicUser.getCreatedAt());
 
-		// Datos específicos de UsuarioAPie
-		usuario.setName(basicUser.getFirstName());
-		usuario.setApellidos(basicUser.getLastName());
-		usuario.setSaldo_monedas(0);
-		usuario.setRating(0.0f);
-		usuario.setVerificado(false);
+		// Regular user defaults
+		user.setCoinBalance(0);
+		user.setRating(0.0f);
+		user.setVerified(false);
 
-		// Asignar autoridad de USER
+		// Assign USER authority
 		Authorities role = authoritiesService.findByAuthority("USER");
-		usuario.setAuthority(role);
+		user.setAuthority(role);
 
-		// Eliminar el usuario básico y hacer flush para forzar el DELETE
+		// Delete basic user and flush to force DELETE
 		userService.deleteUser(basicUser.getId());
 		entityManager.flush();
 
-		// Guardar el usuario a pie
-		usuarioAPieRepository.save(usuario);
+		regularUserRepository.save(user);
 	}
 
 	@Transactional
 	public User createBasicUser(@Valid SignupRequest request) {
-		// Crea un usuario básico temporal que será convertido a UsuarioAPie o
-		// CuentaEmpresa
+		// Create temporary basic user; then convert to RegularUser or BusinessAccount
 		User user = new User();
 		user.setEmail(request.getEmail());
-		user.setUserName(request.getUserName()); // nombre de usuario elegido
+		user.setUserName(request.getUserName());
 		user.setPassword(encoder.encode(request.getPassword()));
 		user.setFirstName(request.getFirstName());
 		user.setLastName(request.getLastName());
-		user.setActivo(false); // Inactivo hasta que se complete el registro
-		user.setFecha_registro(LocalDateTime.now());
+		user.setActive(false);
+		user.setCreatedAt(LocalDateTime.now());
 
-		// Asignar autoridad temporal USER
+		// Assign temporary USER authority
 		Authorities role = authoritiesService.findByAuthority("USER");
 		user.setAuthority(role);
 
@@ -105,42 +101,37 @@ public class AuthService {
 
 	@Transactional
 	public void convertToBusinessUser(@Valid BusinessSignupRequest request) {
-		// Buscar el usuario básico creado en la primera pantalla
+		// Find the basic user created in the first step
 		User basicUser = userService.findUser(request.getEmail());
 
-		// Crear CuentaEmpresa con los datos del usuario básico
-		CuentaEmpresa empresa = new CuentaEmpresa();
+		BusinessAccount businessAccount = new BusinessAccount();
 
-		// Copiar datos básicos
-		empresa.setEmail(basicUser.getEmail());
-		empresa.setUserName(basicUser.getUserName());
-		empresa.setPassword(basicUser.getPassword());
-		empresa.setFirstName(basicUser.getFirstName());
-		empresa.setLastName(basicUser.getLastName());
-		empresa.setTipo_cuenta(TipoCuenta.EMPRESA);
-		empresa.setActivo(false); // Inactivo hasta que admin verifique
-		empresa.setFecha_registro(basicUser.getFecha_registro());
+		businessAccount.setEmail(basicUser.getEmail());
+		businessAccount.setUserName(basicUser.getUserName());
+		businessAccount.setPassword(basicUser.getPassword());
+		businessAccount.setFirstName(basicUser.getFirstName());
+		businessAccount.setLastName(basicUser.getLastName());
+		businessAccount.setAccountType(AccountType.BUSINESS);
+		businessAccount.setActive(false);
+		businessAccount.setCreatedAt(basicUser.getCreatedAt());
 
-		// Datos específicos de CuentaEmpresa
-		empresa.setCif(request.getNif());
-		empresa.setDireccion(request.getAddress());
+		businessAccount.setTaxId(request.getTaxId());
+		businessAccount.setAddress(request.getAddress());
 
-		// Estados por defecto
-		empresa.setVerificado(false);
-		empresa.setRating(0.0f);
-		empresa.setEstado_solicitud(EstadoSolicitud.PENDIENTE);
-		empresa.setSuscripcion_activa(false);
+		businessAccount.setVerified(false);
+		businessAccount.setRating(0.0f);
+		businessAccount.setRequestStatus(RequestStatus.PENDING);
+		businessAccount.setSubscriptionActive(false);
 
-		// Asignar autoridad de BUSINESS
+		// Assign BUSINESS authority
 		Authorities role = authoritiesService.findByAuthority("BUSINESS");
-		empresa.setAuthority(role);
+		businessAccount.setAuthority(role);
 
-		// Eliminar el usuario básico y hacer flush para forzar el DELETE
+		// Delete basic user and flush to force DELETE
 		userService.deleteUser(basicUser.getId());
 		entityManager.flush();
 
-		// Guardar la cuenta empresa
-		cuentaEmpresaRepository.save(empresa);
+		businessAccountRepository.save(businessAccount);
 	}
 
 }

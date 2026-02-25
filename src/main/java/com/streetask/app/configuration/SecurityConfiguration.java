@@ -48,67 +48,67 @@ public class SecurityConfiguration {
 	private static final String ADMIN = "ADMIN";
 	private static final String CLINIC_OWNER = "CLINIC_OWNER";
 
-
 	@Bean
 	protected SecurityFilterChain configure(HttpSecurity http) throws Exception {
 
 		http
-			.cors(withDefaults())
-			.csrf(AbstractHttpConfigurer::disable)
-			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-			.headers((headers) -> headers.frameOptions((frameOptions) -> frameOptions.disable()))
-			.exceptionHandling((exepciontHandling) -> exepciontHandling.authenticationEntryPoint(unauthorizedHandler))
+				.cors(withDefaults())
+				.csrf(AbstractHttpConfigurer::disable)
+				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.headers((headers) -> headers.frameOptions((frameOptions) -> frameOptions.disable()))
+				.exceptionHandling((exepciontHandling) -> exepciontHandling.authenticationEntryPoint(
+						unauthorizedHandler))
 
-            .authorizeHttpRequests(auth -> auth
-            // Recursos estáticos comunes (css, js, images, webjars…) públicos
-            .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-            // H2 Console accesible
-            .requestMatchers(PathRequest.toH2Console()).permitAll()
-            .requestMatchers("/h2-console/**").permitAll()
+				.authorizeHttpRequests(auth -> auth
+						// Public common static resources (css, js, images, webjars...)
+						.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+						// Accessible H2 Console
+						.requestMatchers(PathRequest.toH2Console()).permitAll()
+						.requestMatchers("/h2-console/**").permitAll()
 
-            // Raíz / páginas públicas
-            .requestMatchers("/", "/oups").permitAll()
+						// Root / public pages
+						.requestMatchers("/", "/oups").permitAll()
 
-            // Swagger / OpenAPI accesible
-            .requestMatchers(
-                "/v3/api-docs/**",
-                "/swagger-ui.html",
-                "/swagger-ui/**",
-                "/swagger-resources/**"
-            ).permitAll()
+						// Accessible Swagger / OpenAPI
+						.requestMatchers(
+								"/v3/api-docs/**",
+								"/swagger-ui.html",
+								"/swagger-ui/**",
+								"/swagger-resources/**")
+						.permitAll()
 
-            // API pública
-            .requestMatchers("/api/v1/auth/**").permitAll()
-            .requestMatchers("/api/v1/developers").permitAll()
-            .requestMatchers("/api/v1/plan").permitAll()
-            .requestMatchers("/api/v1/clinics").permitAll()
-            .requestMatchers("/api/v1/developers").permitAll()
+						// Public API
+						.requestMatchers("/api/v1/auth/**").permitAll()
+						.requestMatchers("/api/v1/developers").permitAll()
+						.requestMatchers("/api/v1/plan").permitAll()
+						.requestMatchers("/api/v1/clinics").permitAll()
+						.requestMatchers("/api/v1/developers").permitAll()
 
-            // API restringida para propietarios de mascotas:
-            .requestMatchers("/api/v1/plan").hasAuthority("OWNER")
+						// Restricted API for pet owners:
+						.requestMatchers("/api/v1/plan").hasAuthority("OWNER")
 
-            // API restringida para administradores
-            .requestMatchers("/api/v1/users/**").hasAuthority(ADMIN)
-            .requestMatchers("/api/v1/clinicOwners/all").hasAuthority(ADMIN)
-            .requestMatchers(HttpMethod.DELETE, "/api/v1/consultations/**").hasAuthority(ADMIN)
-            .requestMatchers("/api/v1/owners/**").hasAuthority(ADMIN)
-            .requestMatchers("/api/v1/pets/stats").hasAuthority(ADMIN)
-            .requestMatchers("/api/v1/vets/stats").hasAuthority(ADMIN)
+						// Restricted API for administrators
+						.requestMatchers("/api/v1/users/**").hasAuthority(ADMIN)
+						.requestMatchers("/api/v1/clinicOwners/all").hasAuthority(ADMIN)
+						.requestMatchers(HttpMethod.DELETE, "/api/v1/consultations/**").hasAuthority(ADMIN)
+						.requestMatchers("/api/v1/owners/**").hasAuthority(ADMIN)
+						.requestMatchers("/api/v1/pets/stats").hasAuthority(ADMIN)
+						.requestMatchers("/api/v1/vets/stats").hasAuthority(ADMIN)
 
-			// Otras reglas de controal de acceso:
-			.requestMatchers("/api/v1/clinicOwners/**").hasAnyAuthority(ADMIN, CLINIC_OWNER)
-			.requestMatchers("/api/v1/visits/**").authenticated()
-			.requestMatchers("/api/v1/pets").authenticated()
-			.requestMatchers("/api/v1/pets/**").authenticated()
-            .requestMatchers("/api/v1/consultations/**").authenticated()
-			.requestMatchers("/api/v1/clinics/**").hasAnyAuthority(CLINIC_OWNER, ADMIN)
-			.requestMatchers(HttpMethod.GET, "/api/v1/vets/**").authenticated()
-			.requestMatchers("/api/v1/vets/**").hasAnyAuthority(ADMIN, "VET", CLINIC_OWNER)
+						// Other access-control rules:
+						.requestMatchers("/api/v1/clinicOwners/**").hasAnyAuthority(ADMIN, CLINIC_OWNER)
+						.requestMatchers("/api/v1/visits/**").authenticated()
+						.requestMatchers("/api/v1/pets").authenticated()
+						.requestMatchers("/api/v1/pets/**").authenticated()
+						.requestMatchers("/api/v1/consultations/**").authenticated()
+						.requestMatchers("/api/v1/clinics/**").hasAnyAuthority(CLINIC_OWNER, ADMIN)
+						.requestMatchers(HttpMethod.GET, "/api/v1/vets/**").authenticated()
+						.requestMatchers("/api/v1/vets/**").hasAnyAuthority(ADMIN, "VET", CLINIC_OWNER)
 
-            // El resto denegado
-             .anyRequest().denyAll())
+						// Deny everything else
+						.anyRequest().denyAll())
 
-			.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+				.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 		return http.build();
 	}
 
@@ -118,10 +118,9 @@ public class SecurityConfiguration {
 	}
 
 	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception{
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
 		return config.getAuthenticationManager();
 	}
-
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -131,7 +130,8 @@ public class SecurityConfiguration {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(List.of("http://localhost:8080", "http://localhost:8081", "http://localhost:19006"));
+		configuration
+				.setAllowedOrigins(List.of("http://localhost:8080", "http://localhost:8081", "http://localhost:19006"));
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("*"));
 		configuration.setAllowCredentials(true);
@@ -141,6 +141,3 @@ public class SecurityConfiguration {
 	}
 
 }
-
-
-

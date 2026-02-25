@@ -13,6 +13,9 @@ Base entity representing authentication for any person on the platform. Parent c
 **Attributes:**
 - `id` (UUID): Unique user identifier
 - `email` (String): Unique email address
+- `username` (String): Unique username
+- `first_name` (String): First name
+- `last_name` (String): Last name(s)
 - `password` (String): Encrypted password
 - `account_type` (Enum): `REGULAR_USER`, `BUSINESS`, `ADMIN`
 - `active` (Boolean): Whether the account is active
@@ -34,13 +37,12 @@ Regular application user. Inherits from `User` and adds interaction, gamificatio
 **Attributes:**
 - `id` (UUID): Unique identifier
 - `user_id` (UUID): Reference to base user (FK)
-- `first_name` (String): First name
-- `last_name` (String): Last name(s)
-- `username` (String): Unique username
 - `phone` (String, optional): Phone number
 - `profile_photo` (String): Profile image URL
 - `coin_balance` (Integer): Accumulated virtual coins (Contribution Coins)
 - `rating` (Float): User rating based on (positive_answers - negative_answers) / total_answers, scale of 5
+- `visibility_radius_km` (Float): User visibility radius in kilometers for geolocation features
+- `verified` (Boolean): Whether the regular user account is verified
 
 **Relationships:**
 - Extends `User` (1:1)
@@ -64,8 +66,8 @@ User extension for companies that organize official events. Inherits from `User`
 - `tax_id` (String): Tax ID
 - `address` (String): Company address
 - `website` (String, optional): Website URL
-- `description` (String): Company description
-- `logo` (String): Company logo URL
+- `description` (String, opcional): Company description
+- `logo` (String, opcional): Company logo URL
 - `verified` (Boolean): Whether the company is verified by admins
 - `verified_at` (DateTime, optional): Verification date
 - `request_status` (Enum): `PENDING`, `APPROVED`, `REJECTED`

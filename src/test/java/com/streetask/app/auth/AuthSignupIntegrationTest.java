@@ -16,10 +16,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.streetask.app.user.CuentaEmpresa;
+import com.streetask.app.user.BusinessAccount;
 import com.streetask.app.user.User;
 import com.streetask.app.user.UserRepository;
-import com.streetask.app.user.UsuarioAPie;
+import com.streetask.app.user.RegularUser;
 
 import jakarta.transaction.Transactional;
 
@@ -28,160 +28,186 @@ import jakarta.transaction.Transactional;
 @Transactional
 class AuthSignupIntegrationTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+        @Autowired
+        private ObjectMapper objectMapper;
 
-    @Autowired
-    private UserRepository userRepository;
+        @Autowired
+        private UserRepository userRepository;
 
-    @Test
-    void signupBasicShouldCreateUserWhenPayloadIsValid() throws Exception {
-        String email = "normal.success@streetask.com";
+        @Test
+        void signupBasicShouldCreateUserWhenPayloadIsValid() throws Exception {
+                String email = "regular.success@streetask.com";
 
-        mockMvc.perform(post("/api/v1/auth/signup/basic")
-                .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validBasicPayload(email, "normalUser1"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Basic user data saved! Complete your registration."));
+                mockMvc.perform(post("/api/v1/auth/signup/basic")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(validBasicPayload(email, "regularUser1"))))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.message")
+                                                .value("Basic user data saved! Complete your registration."));
 
-        assertThat(userRepository.findByEmail(email)).isPresent();
-    }
+                assertThat(userRepository.findByEmail(email)).isPresent();
+        }
 
-    @Test
-    void signupBasicShouldReturnBadRequestWhenEmailAlreadyExists() throws Exception {
-        String email = "duplicated.email@streetask.com";
+        @Test
+        void signupBasicShouldReturnBadRequestWhenEmailAlreadyExists() throws Exception {
+                String email = "duplicated.email@streetask.com";
 
-        mockMvc.perform(post("/api/v1/auth/signup/basic")
-                .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validBasicPayload(email, "dupUser1"))))
-                .andExpect(status().isOk());
+                mockMvc.perform(post("/api/v1/auth/signup/basic")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(validBasicPayload(email, "dupUser1"))))
+                                .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v1/auth/signup/basic")
-                .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validBasicPayload(email, "dupUser2"))))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Error: Email is already registered!"));
-    }
+                mockMvc.perform(post("/api/v1/auth/signup/basic")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(validBasicPayload(email, "dupUser2"))))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.message").value("Error: Email is already registered!"));
+        }
 
-    @Test
-    void signupBasicShouldReturnBadRequestWhenRequiredFieldIsMissing() throws Exception {
-        Map<String, Object> invalidPayload = new HashMap<>();
-        invalidPayload.put("email", "invalid.payload@streetask.com");
-        invalidPayload.put("password", "123456");
-        invalidPayload.put("firstName", "Invalid");
-        invalidPayload.put("lastName", "Payload");
+        @Test
+        void signupBasicShouldReturnBadRequestWhenUserNameAlreadyExists() throws Exception {
+                String duplicatedUserName = "duplicatedUser";
 
-        mockMvc.perform(post("/api/v1/auth/signup/basic")
-                .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidPayload)))
-                .andExpect(status().isBadRequest());
-    }
+                mockMvc.perform(post("/api/v1/auth/signup/basic")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                                validBasicPayload("first.user@streetask.com", duplicatedUserName))))
+                                .andExpect(status().isOk());
 
-    @Test
-    void signupNormalShouldConvertBasicUserToUsuarioAPie() throws Exception {
-        String email = "normal.convert@streetask.com";
+                mockMvc.perform(post("/api/v1/auth/signup/basic")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                                validBasicPayload("second.user@streetask.com", duplicatedUserName))))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.message").value("Error: Username is already taken!"));
+        }
 
-        mockMvc.perform(post("/api/v1/auth/signup/basic")
-                .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validBasicPayload(email, "normalConvertUser"))))
-                .andExpect(status().isOk());
+        @Test
+        void signupBasicShouldReturnBadRequestWhenRequiredFieldIsMissing() throws Exception {
+                Map<String, Object> invalidPayload = new HashMap<>();
+                invalidPayload.put("email", "invalid.payload@streetask.com");
+                invalidPayload.put("password", "123456");
+                invalidPayload.put("firstName", "Invalid");
+                invalidPayload.put("lastName", "Payload");
 
-        mockMvc.perform(post("/api/v1/auth/signup/normal")
-                .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(Map.of("email", email))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Normal user registered successfully!"));
+                mockMvc.perform(post("/api/v1/auth/signup/basic")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(invalidPayload)))
+                                .andExpect(status().isBadRequest());
+        }
 
-        User storedUser = userRepository.findByEmail(email).orElseThrow();
-        assertThat(storedUser).isInstanceOf(UsuarioAPie.class);
-        assertThat(storedUser.getAuthority().getAuthority()).isEqualTo("USER");
-        assertThat(storedUser.getActivo()).isTrue();
-    }
+        @Test
+        void signupRegularShouldConvertBasicUserToRegularUser() throws Exception {
+                String email = "regular.convert@streetask.com";
 
-    @Test
-    void signupNormalShouldReturnBadRequestWhenBasicUserDoesNotExist() throws Exception {
-        mockMvc.perform(post("/api/v1/auth/signup/normal")
-                .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(Map.of("email", "missing.user@streetask.com"))))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Error: User not found or already completed!"));
-    }
+                mockMvc.perform(post("/api/v1/auth/signup/basic")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper
+                                                .writeValueAsString(validBasicPayload(email, "regularConvertUser"))))
+                                .andExpect(status().isOk());
 
-    @Test
-    void signupBusinessShouldConvertBasicUserToCuentaEmpresa() throws Exception {
-        String email = "business.convert@streetask.com";
-        String nif = "B12345678";
+                mockMvc.perform(post("/api/v1/auth/signup/regular")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(Map.of("email", email))))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.message").value("Regular user registered successfully!"));
 
-        mockMvc.perform(post("/api/v1/auth/signup/basic")
-                .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validBasicPayload(email, "businessUser1"))))
-                .andExpect(status().isOk());
+                User storedUser = userRepository.findByEmail(email).orElseThrow();
+                assertThat(storedUser).isInstanceOf(RegularUser.class);
+                assertThat(storedUser.getAuthority().getAuthority()).isEqualTo("USER");
+                assertThat(storedUser.getActive()).isTrue();
+        }
 
-        mockMvc.perform(post("/api/v1/auth/signup/business")
-                .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validBusinessPayload(email, nif, "Gran Via 1"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message")
-                        .value("Business account registered successfully! Your account is pending admin verification."));
+        @Test
+        void signupRegularShouldReturnBadRequestWhenBasicUserDoesNotExist() throws Exception {
+                mockMvc.perform(post("/api/v1/auth/signup/regular")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper
+                                                .writeValueAsString(Map.of("email", "missing.user@streetask.com"))))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.message").value("Error: User not found or already completed!"));
+        }
 
-        User storedUser = userRepository.findByEmail(email).orElseThrow();
-        assertThat(storedUser).isInstanceOf(CuentaEmpresa.class);
-        CuentaEmpresa empresa = (CuentaEmpresa) storedUser;
+        @Test
+        void signupBusinessShouldConvertBasicUserToBusinessAccount() throws Exception {
+                String email = "business.convert@streetask.com";
+                String taxId = "B12345678";
 
-        assertThat(empresa.getCif()).isEqualTo(nif);
-        assertThat(empresa.getDireccion()).isEqualTo("Gran Via 1");
-        assertThat(empresa.getAuthority().getAuthority()).isEqualTo("BUSINESS");
-        assertThat(empresa.getActivo()).isFalse();
-    }
+                mockMvc.perform(post("/api/v1/auth/signup/basic")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(validBasicPayload(email, "businessUser1"))))
+                                .andExpect(status().isOk());
 
-    @Test
-    void signupBusinessShouldReturnBadRequestWhenNifAlreadyExists() throws Exception {
-        String duplicatedNif = "B87654321";
+                mockMvc.perform(post("/api/v1/auth/signup/business")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper
+                                                .writeValueAsString(validBusinessPayload(email, taxId, "Gran Via 1"))))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.message")
+                                                .value("Business account registered successfully! Your account is pending admin verification."));
 
-        mockMvc.perform(post("/api/v1/auth/signup/basic")
-                .contentType(APPLICATION_JSON)
-                .content(objectMapper
-                        .writeValueAsString(validBasicPayload("business.one@streetask.com", "businessOne"))))
-                .andExpect(status().isOk());
+                User storedUser = userRepository.findByEmail(email).orElseThrow();
+                assertThat(storedUser).isInstanceOf(BusinessAccount.class);
+                BusinessAccount businessAccount = (BusinessAccount) storedUser;
 
-        mockMvc.perform(post("/api/v1/auth/signup/business")
-                .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(
-                        validBusinessPayload("business.one@streetask.com", duplicatedNif, "Address 1"))))
-                .andExpect(status().isOk());
+                assertThat(businessAccount.getTaxId()).isEqualTo(taxId);
+                assertThat(businessAccount.getAddress()).isEqualTo("Gran Via 1");
+                assertThat(businessAccount.getAuthority().getAuthority()).isEqualTo("BUSINESS");
+                assertThat(businessAccount.getActive()).isFalse();
+        }
 
-        mockMvc.perform(post("/api/v1/auth/signup/basic")
-                .contentType(APPLICATION_JSON)
-                .content(objectMapper
-                        .writeValueAsString(validBasicPayload("business.two@streetask.com", "businessTwo"))))
-                .andExpect(status().isOk());
+        @Test
+        void signupBusinessShouldReturnBadRequestWhenTaxIdAlreadyExists() throws Exception {
+                String duplicatedTaxId = "B87654321";
 
-        mockMvc.perform(post("/api/v1/auth/signup/business")
-                .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(
-                        validBusinessPayload("business.two@streetask.com", duplicatedNif, "Address 2"))))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Error: NIF is already registered!"));
-    }
+                mockMvc.perform(post("/api/v1/auth/signup/basic")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper
+                                                .writeValueAsString(validBasicPayload("business.one@streetask.com",
+                                                                "businessOne"))))
+                                .andExpect(status().isOk());
 
-    private Map<String, Object> validBasicPayload(String email, String userName) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("email", email);
-        payload.put("userName", userName);
-        payload.put("password", "123456");
-        payload.put("firstName", "Test");
-        payload.put("lastName", "User");
-        return payload;
-    }
+                mockMvc.perform(post("/api/v1/auth/signup/business")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                                validBusinessPayload("business.one@streetask.com", duplicatedTaxId,
+                                                                "Address 1"))))
+                                .andExpect(status().isOk());
 
-    private Map<String, Object> validBusinessPayload(String email, String nif, String address) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("email", email);
-        payload.put("nif", nif);
-        payload.put("address", address);
-        return payload;
-    }
+                mockMvc.perform(post("/api/v1/auth/signup/basic")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper
+                                                .writeValueAsString(validBasicPayload("business.two@streetask.com",
+                                                                "businessTwo"))))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(post("/api/v1/auth/signup/business")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                                validBusinessPayload("business.two@streetask.com", duplicatedTaxId,
+                                                                "Address 2"))))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.message").value("Error: Tax ID is already registered!"));
+        }
+
+        private Map<String, Object> validBasicPayload(String email, String userName) {
+                Map<String, Object> payload = new HashMap<>();
+                payload.put("email", email);
+                payload.put("userName", userName);
+                payload.put("password", "123456");
+                payload.put("firstName", "Test");
+                payload.put("lastName", "User");
+                return payload;
+        }
+
+        private Map<String, Object> validBusinessPayload(String email, String taxId, String address) {
+                Map<String, Object> payload = new HashMap<>();
+                payload.put("email", email);
+                payload.put("taxId", taxId);
+                payload.put("address", address);
+                return payload;
+        }
 }
