@@ -7,7 +7,7 @@
 //TODO: Mover la carpeta presentations a carpeta Sprint 1 cuando se cree 
 ## 📝 Change Log
 
-### 24/02/2026  
+### 25/02/2026  
 **Author**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
 - Estructura y arreglos, contenido, enlaces entre diapositivas, etc.
 
