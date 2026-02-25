@@ -7,6 +7,11 @@
 //TODO: Mover la carpeta presentations a carpeta Sprint 1 cuando se cree 
 ## 📝 Change Log
 
+### 26/02/2026
+**Author**: José Egido Carnerero ([josegicar](https://github.com/josegicar))
+- Diseño y contenido de las diapositivas del apartado 7, el de Calidad.
+- Explicación de la sección de Calidad en los respectivos comentarios en las diapositivas de dicho apartado.
+
 ### 25/02/2026  
 **Author**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10)), Sergio Terrazas Lobato ([Sergiootl](https://github.com/Sergiootl))
 - Estructura y arreglos, contenido, enlaces entre diapositivas, etc.
