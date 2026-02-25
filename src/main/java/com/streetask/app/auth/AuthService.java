@@ -116,7 +116,10 @@ public class AuthService {
 		businessAccount.setCreatedAt(basicUser.getCreatedAt());
 
 		businessAccount.setTaxId(request.getTaxId());
+		businessAccount.setCompanyName(request.getCompanyName());
 		businessAccount.setAddress(request.getAddress());
+		businessAccount.setWebsite(request.getWebsite());
+		businessAccount.setDescription(request.getDescription());
 
 		businessAccount.setVerified(false);
 		businessAccount.setRating(0.0f);

@@ -3,7 +3,6 @@ package com.streetask.app.user;
 import java.util.UUID;
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
