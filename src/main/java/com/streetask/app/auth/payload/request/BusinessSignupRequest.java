@@ -15,7 +15,7 @@ public class BusinessSignupRequest {
     private String email;
 
     @NotBlank
-    private String nif;
+    private String taxId;
 
     private String address;
 

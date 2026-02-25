@@ -16,14 +16,14 @@ import java.time.LocalDateTime;
 @Table(name = "appusers")
 public class User extends BaseEntity {
 
-	// Email para autenticación
+	// Email for authentication
 	@NotBlank
 	@Email
 	@Column(unique = true)
 	private String email;
 
-	// Nombre de usuario elegido por el usuario
 	@NotBlank
+	@Column(unique = true)
 	private String userName;
 
 	private String password;
@@ -35,13 +35,13 @@ public class User extends BaseEntity {
 	private String lastName;
 
 	@Enumerated(EnumType.STRING)
-	private TipoCuenta tipo_cuenta;
+	private AccountType accountType;
 
-	private Boolean activo;
+	private Boolean active;
 
-	private LocalDateTime fecha_registro;
+	private LocalDateTime createdAt;
 
-	private LocalDateTime ultima_conexion;
+	private LocalDateTime lastLogin;
 
 	@NotNull
 	@ManyToOne(optional = false)

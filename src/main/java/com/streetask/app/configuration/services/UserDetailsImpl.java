@@ -3,6 +3,7 @@ package com.streetask.app.configuration.services;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 import com.streetask.app.user.User;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,7 +16,7 @@ public class UserDetailsImpl implements UserDetails {
 
 	private static final long serialVersionUID = 1L;
 
-	private Integer id;
+	private UUID id;
 
 	private String username;
 
@@ -24,7 +25,7 @@ public class UserDetailsImpl implements UserDetails {
 
 	private Collection<? extends GrantedAuthority> authorities;
 
-	public UserDetailsImpl(Integer id, String username, String password,
+	public UserDetailsImpl(UUID id, String username, String password,
 			Collection<? extends GrantedAuthority> authorities) {
 		this.id = id;
 		this.username = username;
@@ -45,7 +46,7 @@ public class UserDetailsImpl implements UserDetails {
 		return authorities;
 	}
 
-	public Integer getId() {
+	public UUID getId() {
 		return id;
 	}
 

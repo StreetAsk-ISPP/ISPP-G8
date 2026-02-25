@@ -2,6 +2,7 @@ package com.streetask.app.configuration;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import jakarta.persistence.EntityManager;
 
@@ -28,14 +29,13 @@ public final class GenericIdToEntityConverter implements ConditionalGenericConve
 
     public Set<ConvertiblePair> getConvertibleTypes() {
     	Set<ConvertiblePair> result=new HashSet<>();
-        result.add(new ConvertiblePair(Number.class, BaseEntity.class));
         result.add(new ConvertiblePair(CharSequence.class, BaseEntity.class));
         return result;
     }
 
     public boolean matches(TypeDescriptor sourceType, TypeDescriptor targetType) {
         return BaseEntity.class.isAssignableFrom(targetType.getType())
-        && this.conversionService.canConvert(sourceType, TypeDescriptor.valueOf(Integer.class));
+        && this.conversionService.canConvert(sourceType, TypeDescriptor.valueOf(UUID.class));
     }
 
     public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
@@ -43,7 +43,7 @@ public final class GenericIdToEntityConverter implements ConditionalGenericConve
             return null;
         }
 
-        Integer id = (Integer) this.conversionService.convert(source, sourceType, TypeDescriptor.valueOf(Integer.class));
+        UUID id = (UUID) this.conversionService.convert(source, sourceType, TypeDescriptor.valueOf(UUID.class));
 
         Object entity = entityManager.find(targetType.getType(), id);
         if (entity == null) {

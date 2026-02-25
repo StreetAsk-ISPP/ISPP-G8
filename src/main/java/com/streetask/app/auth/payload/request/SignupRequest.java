@@ -10,7 +10,6 @@ import lombok.Setter;
 @Setter
 public class SignupRequest {
 
-	// Email (username en la BD para autenticación)
 	@NotBlank
 	@Email
 	private String email;
@@ -21,7 +20,7 @@ public class SignupRequest {
 	@NotBlank
 	private String password;
 
-	// Datos personales
+	// Personal data
 	@NotBlank
 	private String firstName;
 

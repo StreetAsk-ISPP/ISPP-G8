@@ -15,7 +15,7 @@ import com.streetask.app.auth.payload.response.JwtResponse;
 import com.streetask.app.auth.payload.response.MessageResponse;
 import com.streetask.app.configuration.jwt.JwtUtils;
 import com.streetask.app.configuration.services.UserDetailsImpl;
-import com.streetask.app.user.CuentaEmpresaRepository;
+import com.streetask.app.user.BusinessAccountRepository;
 import com.streetask.app.user.UserService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -41,16 +41,16 @@ public class AuthController {
 	private final UserService userService;
 	private final JwtUtils jwtUtils;
 	private final AuthService authService;
-	private final CuentaEmpresaRepository cuentaEmpresaRepository;
+	private final BusinessAccountRepository businessAccountRepository;
 
 	@Autowired
 	public AuthController(AuthenticationManager authenticationManager, UserService userService, JwtUtils jwtUtils,
-			AuthService authService, CuentaEmpresaRepository cuentaEmpresaRepository) {
+			AuthService authService, BusinessAccountRepository businessAccountRepository) {
 		this.userService = userService;
 		this.jwtUtils = jwtUtils;
 		this.authenticationManager = authenticationManager;
 		this.authService = authService;
-		this.cuentaEmpresaRepository = cuentaEmpresaRepository;
+		this.businessAccountRepository = businessAccountRepository;
 	}
 
 	@PostMapping("/signin")
@@ -81,20 +81,25 @@ public class AuthController {
 
 	@PostMapping("/signup/basic")
 	public ResponseEntity<MessageResponse> registerBasicUser(@Valid @RequestBody SignupRequest signUpRequest) {
-		// Verificar si el email ya existe
+		// Check whether email already exists
 		if (userService.existsUser(signUpRequest.getEmail()).equals(true)) {
 			return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already registered!"));
+		}
+		// Check whether username already exists
+		if (userService.existsByUserName(signUpRequest.getUserName()).equals(true)) {
+			return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
 		}
 		authService.createBasicUser(signUpRequest);
 		return ResponseEntity.ok(new MessageResponse("Basic user data saved! Complete your registration."));
 	}
 
-	@PostMapping("/signup/normal")
-	public ResponseEntity<MessageResponse> completeNormalUser(@Valid @RequestBody CompleteSignupRequest signUpRequest) {
-		// Verificar que el usuario básico existe
+	@PostMapping("/signup/regular")
+	public ResponseEntity<MessageResponse> completeRegularUser(
+			@Valid @RequestBody CompleteSignupRequest signUpRequest) {
+		// Check whether the basic user exists
 		try {
-			authService.createNormalUser(signUpRequest);
-			return ResponseEntity.ok(new MessageResponse("Normal user registered successfully!"));
+			authService.createRegularUser(signUpRequest);
+			return ResponseEntity.ok(new MessageResponse("Regular user registered successfully!"));
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().body(new MessageResponse("Error: User not found or already completed!"));
 		}
@@ -103,11 +108,11 @@ public class AuthController {
 	@PostMapping("/signup/business")
 	public ResponseEntity<MessageResponse> completeBusinessUser(
 			@Valid @RequestBody BusinessSignupRequest signUpRequest) {
-		// Verificar si el NIF ya existe
-		if (cuentaEmpresaRepository.existsByCif(signUpRequest.getNif()).equals(true)) {
-			return ResponseEntity.badRequest().body(new MessageResponse("Error: NIF is already registered!"));
+		// Check whether tax ID already exists
+		if (businessAccountRepository.existsByTaxId(signUpRequest.getTaxId()).equals(true)) {
+			return ResponseEntity.badRequest().body(new MessageResponse("Error: Tax ID is already registered!"));
 		}
-		// Completar con datos business
+		// Complete business account data
 		try {
 			authService.convertToBusinessUser(signUpRequest);
 			return ResponseEntity.ok(new MessageResponse(

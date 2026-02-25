@@ -15,6 +15,7 @@
  */
 package com.streetask.app.user;
 
+import java.util.UUID;
 import java.util.Optional;
 
 import jakarta.validation.Valid;
@@ -51,7 +52,7 @@ public class UserService {
 	}
 
 	@Transactional(readOnly = true)
-	public User findUser(Integer id) {
+	public User findUser(UUID id) {
 		return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 	}
 
@@ -83,7 +84,7 @@ public class UserService {
 	}
 
 	@Transactional
-	public User updateUser(@Valid User user, Integer idToUpdate) {
+	public User updateUser(@Valid User user, UUID idToUpdate) {
 		User toUpdate = findUser(idToUpdate);
 		BeanUtils.copyProperties(user, toUpdate, "id");
 		userRepository.save(toUpdate);
@@ -92,7 +93,7 @@ public class UserService {
 	}
 
 	@Transactional
-	public void deleteUser(Integer id) {
+	public void deleteUser(UUID id) {
 		User toDelete = findUser(id);
 		this.userRepository.delete(toDelete);
 	}

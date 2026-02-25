@@ -1,12 +1,13 @@
 package com.streetask.app.user;
 
+import java.util.UUID;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
-public interface UserRepository extends CrudRepository<User, Integer> {
+public interface UserRepository extends CrudRepository<User, UUID> {
 
 	// @Modifying
 	// @Query("DELETE FROM Owner o WHERE o.user.email = :email")
@@ -22,7 +23,7 @@ public interface UserRepository extends CrudRepository<User, Integer> {
 
 	Boolean existsByUserName(String userName);
 
-	Optional<User> findById(Integer id);
+	Optional<User> findById(UUID id);
 
 	@Query("SELECT u FROM User u WHERE u.authority.authority = :auth")
 	Iterable<User> findAllByAuthority(String auth);
