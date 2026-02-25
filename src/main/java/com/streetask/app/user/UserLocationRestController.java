@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * REST Controller para gestionar ubicaciones de usuarios
@@ -75,7 +76,7 @@ public class UserLocationRestController {
      */
     @GetMapping("/user/{userId}")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<UserLocation> getUserLocation(@PathVariable Integer userId) {
+    public ResponseEntity<UserLocation> getUserLocation(@PathVariable UUID userId) {
         return locationService.getUserLatestPublicLocation(userId)
                 .map(location -> new ResponseEntity<>(location, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));

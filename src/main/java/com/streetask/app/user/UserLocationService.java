@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Servicio para gestionar ubicaciones de usuarios
@@ -34,14 +35,14 @@ public class UserLocationService {
     /**
      * Obtiene la ubicación más reciente de un usuario
      */
-    public Optional<UserLocation> getUserLatestLocation(Integer userId) {
+    public Optional<UserLocation> getUserLatestLocation(UUID userId) {
         return locationRepository.findFirstByUserIdOrderByTimestampDesc(userId);
     }
 
     /**
      * Obtiene la ubicación más reciente pública de un usuario
      */
-    public Optional<UserLocation> getUserLatestPublicLocation(Integer userId) {
+    public Optional<UserLocation> getUserLatestPublicLocation(UUID userId) {
         return getUserLatestLocation(userId)
                 .filter(location -> location.getIsPublic() != null && location.getIsPublic());
     }
@@ -64,7 +65,7 @@ public class UserLocationService {
     /**
      * Cambia la privacidad de la ubicación más reciente del usuario
      */
-    public UserLocation toggleLocationPrivacy(Integer userId) {
+    public UserLocation toggleLocationPrivacy(UUID userId) {
         Optional<UserLocation> location = getUserLatestLocation(userId);
         if (location.isPresent()) {
             UserLocation userLocation = location.get();
@@ -77,7 +78,7 @@ public class UserLocationService {
     /**
      * Elimina la ubicación más reciente del usuario
      */
-    public void deleteUserLocation(Integer userId) {
+    public void deleteUserLocation(UUID userId) {
         Optional<UserLocation> location = getUserLatestLocation(userId);
         location.ifPresent(locationRepository::delete);
     }
@@ -85,7 +86,7 @@ public class UserLocationService {
     /**
      * Obtiene todas las ubicaciones de un usuario
      */
-    public List<UserLocation> getUserLocations(Integer userId) {
+    public List<UserLocation> getUserLocations(UUID userId) {
         return locationRepository.findByUserIdOrderByTimestampDesc(userId);
     }
 }

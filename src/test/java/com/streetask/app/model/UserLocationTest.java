@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,13 +23,13 @@ class UserLocationTest {
     @BeforeEach
     void setUp() {
         user = new User();
-        user.setId(1);
-        user.setUsername("testuser");
+        user.setId(UUID.randomUUID());
+        user.setUserName("testuser");
         
         now = LocalDateTime.now();
         
         userLocation = new UserLocation();
-        userLocation.setId(1);
+        userLocation.setId(UUID.randomUUID());
         userLocation.setUser(user);
         userLocation.setLatitude(40.4168);
         userLocation.setLongitude(-3.7038);
@@ -41,7 +42,7 @@ class UserLocationTest {
     @DisplayName("Should create UserLocation with all fields")
     void testUserLocationCreation() {
         assertNotNull(userLocation);
-        assertEquals(1, userLocation.getId());
+        assertNotNull(userLocation.getId());
         assertEquals(user, userLocation.getUser());
         assertEquals(40.4168, userLocation.getLatitude());
         assertEquals(-3.7038, userLocation.getLongitude());
@@ -79,8 +80,8 @@ class UserLocationTest {
     @DisplayName("Should set and get user")
     void testSetGetUser() {
         User newUser = new User();
-        newUser.setId(2);
-        newUser.setUsername("newuser");
+        newUser.setId(UUID.randomUUID());
+        newUser.setUserName("newuser");
         
         userLocation.setUser(newUser);
         assertEquals(newUser, userLocation.getUser());
