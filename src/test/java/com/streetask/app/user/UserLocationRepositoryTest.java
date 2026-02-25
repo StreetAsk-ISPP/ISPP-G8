@@ -7,10 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test cases for UserLocationRepository
  */
 @DataJpaTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @DisplayName("UserLocationRepository Tests")
 class UserLocationRepositoryTest {
 
@@ -36,19 +39,28 @@ class UserLocationRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        // Create test authority
+        // Clear the persistence context before each test
+        entityManager.clear();
+        
+        // Create test authority with unique name
         authority = new Authorities();
-        authority.setAuthority("USER");
+        authority.setAuthority("USER_" + UUID.randomUUID().toString().substring(0, 8));
         entityManager.persistAndFlush(authority);
 
         // Create test users
         user1 = new User();
-        user1.setUsername("user1");
+        user1.setUserName("user1");
+        user1.setFirstName("Test");
+        user1.setLastName("User1");
+        user1.setEmail("user1@test.com");
         user1.setAuthority(authority);
         entityManager.persistAndFlush(user1);
 
         user2 = new User();
-        user2.setUsername("user2");
+        user2.setUserName("user2");
+        user2.setFirstName("Test");
+        user2.setLastName("User2");
+        user2.setEmail("user2@test.com");
         user2.setAuthority(authority);
         entityManager.persistAndFlush(user2);
 
@@ -97,7 +109,10 @@ class UserLocationRepositoryTest {
     @DisplayName("Should return empty when user has no locations")
     void testFindFirstByUserIdOrderByTimestampDesc_NoLocations() {
         User userWithoutLocations = new User();
-        userWithoutLocations.setUsername("nolocations");
+        userWithoutLocations.setUserName("nolocations");
+        userWithoutLocations.setFirstName("No");
+        userWithoutLocations.setLastName("Locations");
+        userWithoutLocations.setEmail("nolocations@test.com");
         userWithoutLocations.setAuthority(authority);
         entityManager.persistAndFlush(userWithoutLocations);
 
@@ -154,7 +169,10 @@ class UserLocationRepositoryTest {
     @DisplayName("Should return empty list when user has no locations")
     void testFindByUserIdOrderByTimestampDesc_NoLocations() {
         User userWithoutLocations = new User();
-        userWithoutLocations.setUsername("nolocations2");
+        userWithoutLocations.setUserName("nolocations2");
+        userWithoutLocations.setFirstName("No");
+        userWithoutLocations.setLastName("Locations2");
+        userWithoutLocations.setEmail("nolocations2@test.com");
         userWithoutLocations.setAuthority(authority);
         entityManager.persistAndFlush(userWithoutLocations);
 
@@ -168,7 +186,10 @@ class UserLocationRepositoryTest {
     @DisplayName("Should persist and retrieve UserLocation")
     void testSaveAndRetrieve() {
         User testUser = new User();
-        testUser.setUsername("testuser");
+        testUser.setUserName("testuser");
+        testUser.setFirstName("Test");
+        testUser.setLastName("User");
+        testUser.setEmail("testuser@test.com");
         testUser.setAuthority(authority);
         entityManager.persistAndFlush(testUser);
 
@@ -193,7 +214,7 @@ class UserLocationRepositoryTest {
     @Test
     @DisplayName("Should delete UserLocation")
     void testDelete() {
-        Integer locationIdToDelete = location1.getId();
+        UUID locationIdToDelete = location1.getId();
         userLocationRepository.deleteById(locationIdToDelete);
         entityManager.flush();
 

@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -51,8 +52,8 @@ class UserLocationRestControllerTest {
     @BeforeEach
     void setUp() {
         user = new User();
-        user.setId(1);
-        user.setUsername("testuser");
+        user.setId(UUID.randomUUID());
+        user.setUserName("testuser");
 
         now = LocalDateTime.now();
 
@@ -63,7 +64,7 @@ class UserLocationRestControllerTest {
         locationDTO.setIsPublic(true);
 
         userLocation = new UserLocation();
-        userLocation.setId(1);
+        userLocation.setId(UUID.randomUUID());
         userLocation.setUser(user);
         userLocation.setLatitude(40.4168);
         userLocation.setLongitude(-3.7038);
@@ -85,7 +86,7 @@ class UserLocationRestControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(locationDTO)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.latitude").value(40.4168))
                 .andExpect(jsonPath("$.longitude").value(-3.7038))
                 .andExpect(jsonPath("$.accuracy").value(5.0))
@@ -121,7 +122,7 @@ class UserLocationRestControllerTest {
         mockMvc.perform(get("/api/v1/locations/me")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.latitude").value(40.4168))
                 .andExpect(jsonPath("$.longitude").value(-3.7038));
 
@@ -153,7 +154,7 @@ class UserLocationRestControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].id").exists())
                 .andExpect(jsonPath("$[0].latitude").value(40.4168));
 
         verify(locationService, times(1)).getPublicLocations();
@@ -195,25 +196,27 @@ class UserLocationRestControllerTest {
     @DisplayName("Should get user location by userId")
     @WithMockUser(username = "testuser")
     void testGetUserLocation() throws Exception {
-        when(locationService.getUserLatestPublicLocation(2))
+        UUID userId = UUID.randomUUID();
+        when(locationService.getUserLatestPublicLocation(userId))
                 .thenReturn(Optional.of(userLocation));
 
-        mockMvc.perform(get("/api/v1/locations/user/2")
+        mockMvc.perform(get("/api/v1/locations/user/" + userId)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1));
+                .andExpect(jsonPath("$.latitude").value(40.4168));
 
-        verify(locationService, times(1)).getUserLatestPublicLocation(2);
+        verify(locationService, times(1)).getUserLatestPublicLocation(userId);
     }
 
     @Test
     @DisplayName("Should return 404 when user location not found")
     @WithMockUser(username = "testuser")
     void testGetUserLocation_NotFound() throws Exception {
-        when(locationService.getUserLatestPublicLocation(999))
+        UUID userId = UUID.randomUUID();
+        when(locationService.getUserLatestPublicLocation(userId))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/api/v1/locations/user/999")
+        mockMvc.perform(get("/api/v1/locations/user/" + userId)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -231,7 +234,7 @@ class UserLocationRestControllerTest {
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.isPublic").value(false));
 
         verify(userService, times(1)).findCurrentUser();
@@ -329,7 +332,7 @@ class UserLocationRestControllerTest {
     @WithMockUser(username = "testuser", roles = "USER")
     void testGetPublicLocations_Multiple() throws Exception {
         UserLocation location2 = new UserLocation();
-        location2.setId(2);
+        location2.setId(UUID.randomUUID());
         location2.setLatitude(51.5074);
         location2.setLongitude(-0.1278);
 
@@ -340,7 +343,7 @@ class UserLocationRestControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[1].id").value(2));
+                .andExpect(jsonPath("$[0].id").exists())
+                .andExpect(jsonPath("$[1].id").exists());
     }
 }

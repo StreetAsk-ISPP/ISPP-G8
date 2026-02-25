@@ -9,17 +9,18 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Repositorio para gestionar ubicaciones de usuarios.
  */
 @Repository
-public interface UserLocationRepository extends JpaRepository<UserLocation, Integer> {
+public interface UserLocationRepository extends JpaRepository<UserLocation, UUID> {
 
     /**
      * Obtiene la ubicación más reciente de un usuario específico
      */
-    Optional<UserLocation> findFirstByUserIdOrderByTimestampDesc(Integer userId);
+    Optional<UserLocation> findFirstByUserIdOrderByTimestampDesc(UUID userId);
 
     /**
      * Obtiene todas las ubicaciones públicas más recientes (últimas 100)
@@ -36,5 +37,5 @@ public interface UserLocationRepository extends JpaRepository<UserLocation, Inte
     /**
      * Obtiene todas las ubicaciones de un usuario (ordenadas por fecha descendente)
      */
-    List<UserLocation> findByUserIdOrderByTimestampDesc(Integer userId);
+    List<UserLocation> findByUserIdOrderByTimestampDesc(UUID userId);
 }

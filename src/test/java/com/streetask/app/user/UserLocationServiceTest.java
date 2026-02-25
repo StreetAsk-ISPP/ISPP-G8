@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -39,8 +40,8 @@ class UserLocationServiceTest {
     @BeforeEach
     void setUp() {
         user = new User();
-        user.setId(1);
-        user.setUsername("testuser");
+        user.setId(UUID.randomUUID());
+        user.setUserName("testuser");
 
         now = LocalDateTime.now();
 
@@ -51,7 +52,7 @@ class UserLocationServiceTest {
         locationDTO.setIsPublic(true);
 
         userLocation = new UserLocation();
-        userLocation.setId(1);
+        userLocation.setId(UUID.randomUUID());
         userLocation.setUser(user);
         userLocation.setLatitude(40.4168);
         userLocation.setLongitude(-3.7038);
@@ -82,7 +83,7 @@ class UserLocationServiceTest {
         locationDTO.setIsPublic(null);
         when(locationRepository.save(any(UserLocation.class))).thenAnswer(invocation -> {
             UserLocation arg = invocation.getArgument(0);
-            arg.setId(1);
+            arg.setId(UUID.randomUUID());
             return arg;
         });
 
@@ -98,7 +99,7 @@ class UserLocationServiceTest {
         when(locationRepository.save(any(UserLocation.class))).thenAnswer(invocation -> {
             UserLocation arg = invocation.getArgument(0);
             assertNotNull(arg.getTimestamp());
-            arg.setId(1);
+            arg.setId(UUID.randomUUID());
             return arg;
         });
 
