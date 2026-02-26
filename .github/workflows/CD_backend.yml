@@ -42,4 +42,4 @@ jobs:
               --name sprint1-backend \
               --resource-group sprint1-recursos \
               --image streetask/backend:latest \
-              --max-replicas 3
+              --scale-max-replicas 4
