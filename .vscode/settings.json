@@ -1,5 +1,6 @@
 {
   "typescript.validate.enable": false,
   "javascript.validate.enable": false,
-  "typescript.tsserver.experimental.enableProjectDiagnostics": false
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "maven.view": "hierarchical"
 }
