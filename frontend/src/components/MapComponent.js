@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-    View, 
-    Text, 
-    StyleSheet, 
+import {
+    View,
+    Text,
+    StyleSheet,
     ScrollView,
     TouchableOpacity,
     ActivityIndicator,
@@ -31,6 +31,8 @@ if (Platform.OS === 'web') {
 
 // Función para crear iconos SVG personalizados
 const createCustomIcon = (color) => {
+    if (!L) return undefined;
+
     const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
         <path fill="${color}" d="M16 0C9.383 0 4 5.383 4 12c0 8 12 28 12 28s12-20 12-28c0-6.617-5.383-12-12-12z"/>
         <circle fill="white" cx="16" cy="12" r="4"/>
@@ -44,7 +46,37 @@ const createCustomIcon = (color) => {
     });
 };
 
-export default function MapComponent() {
+const toNum = (v) => {
+  if (typeof v === 'number') return v;
+  if (typeof v === 'string') {
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : undefined;
+  }
+  return undefined;
+};
+
+const getQuestionCoords = (q) => {
+    const loc = q?.location ?? {};
+    const lat =
+        toNum(loc.latitude) ??
+        toNum(loc.lat) ??
+        toNum(loc.y) ??
+        toNum(q?.latitude) ??
+        toNum(q?.lat);
+
+    const lng =
+        toNum(loc.longitude) ??
+        toNum(loc.lng) ??
+        toNum(loc.lon) ??
+        toNum(loc.x) ??
+        toNum(q?.longitude) ??
+        toNum(q?.lng);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    return { lat, lng };
+};
+
+export default function MapComponent({ questions = [], onQuestionPress }) {
     const [location, setLocation] = useState(null);
     const [publicLocations, setPublicLocations] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -106,7 +138,7 @@ export default function MapComponent() {
         try {
             const response = await locationService.getPublicLocationsSince(30);
             // Asegurar que siempre es un array
-            const locations = Array.isArray(response) ? response : 
+            const locations = Array.isArray(response) ? response :
                             Array.isArray(response?.data) ? response.data : [];
             setPublicLocations(locations);
         } catch (err) {
@@ -190,7 +222,7 @@ export default function MapComponent() {
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
                     {/* Marcador de tu ubicación */}
-                    <Marker 
+                    <Marker
                         position={[location.latitude, location.longitude]}
                         icon={createCustomIcon('#007AFF')}
                     >
@@ -202,6 +234,35 @@ export default function MapComponent() {
                             </div>
                         </Popup>
                     </Marker>
+                    
+                    {/* Question Markers */}
+                    {(Array.isArray(questions) ? questions : []).map((q) => {
+                        const coords = getQuestionCoords(q);
+                        const { lat, lng } = coords;
+
+                        return (
+                            <Marker
+                            key={q.id}
+                            position={[lat, lng]}
+                            icon={createCustomIcon('#FF9500')}
+                            eventHandlers={{
+                                click: () => onQuestionPress?.(q.id),
+                            }}
+                            >
+                            <Popup>
+                                <div style={{ fontSize: '12px' }}>
+                                <strong>{q.title || 'Question'}</strong><br />
+                                <span style={{ opacity: 0.8 }}>
+                                    {lat.toFixed(5)}, {lng.toFixed(5)}
+                                </span><br />
+                                <span style={{ color: '#007AFF', fontWeight: 600 }}>
+                                    Click to open
+                                </span>
+                                </div>
+                            </Popup>
+                            </Marker>
+                        );
+                    })}
 
                     {/* Marcadores de ubicaciones públicas */}
                     {publicLocations && publicLocations.map((pubLocation) => (
@@ -222,7 +283,7 @@ export default function MapComponent() {
                 </MapContainer>
 
                 {/* Botón flotante para publicar */}
-                <button 
+                <button
                     style={{
                         ...webStyles.publishButton,
                         ...(publishing ? webStyles.publishButtonDisabled : {})
@@ -260,7 +321,7 @@ export default function MapComponent() {
                     </Text>
                 </View>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={[styles.publishButton, publishing && styles.publishButtonDisabled]}
                     onPress={handlePublishLocation}
                     disabled={publishing}

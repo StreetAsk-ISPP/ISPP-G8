@@ -163,7 +163,7 @@ export default function CreateQuestionScreen({ navigation }) {
         Alert.alert('OK', 'Question created');
 
         if (created?.id) {
-            navigation.navigate('QuestionThread', { questionId: created.id });
+            navigation.goBack();
         } else {
             navigation.goBack();
         }
