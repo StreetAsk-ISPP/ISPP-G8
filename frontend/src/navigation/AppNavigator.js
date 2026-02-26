@@ -7,6 +7,7 @@ import SignUpScreen from '../screens/SignUpScreen';
 import BusinessSignupScreen from '../screens/BusinessSignupScreen';
 import PaymentGatewayPlaceholderScreen from '../screens/PaymentGatewayPlaceholderScreen';
 import HomeScreen from '../screens/HomeScreen';
+import CreateQuestionScreen from '../screens/CreateQuestionScreen';
 
 import { useAuth } from '../context/AuthContext';
 import { theme } from '../constants/theme';
@@ -34,7 +35,10 @@ export default function AppNavigator() {
                     <Stack.Screen name="PaymentGatewayPlaceholder" component={PaymentGatewayPlaceholderScreen} />
                 </>
             ) : (
-                <Stack.Screen name="Home" component={HomeScreen} />
+                <>
+                    <Stack.Screen name="Home" component={HomeScreen} />
+                    <Stack.Screen name="CreateQuestion" component={CreateQuestionScreen} />
+                </>
             )}
         </Stack.Navigator>
     );

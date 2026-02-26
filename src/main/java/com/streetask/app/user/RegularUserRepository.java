@@ -9,4 +9,6 @@ public interface RegularUserRepository extends CrudRepository<RegularUser, UUID>
 
     Optional<RegularUser> findById(UUID id);
 
+    Optional<RegularUser> findByEmail(String email);
+
 }

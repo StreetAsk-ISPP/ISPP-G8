@@ -105,6 +105,12 @@ public class SecurityConfiguration {
 						.requestMatchers(HttpMethod.GET, "/api/v1/vets/**").authenticated()
 						.requestMatchers("/api/v1/vets/**").hasAnyAuthority(ADMIN, "VET", CLINIC_OWNER)
 
+						// StreetAsk questions
+						.requestMatchers(HttpMethod.POST, "/api/v1/questions/**").hasAnyAuthority("USER", "ADMIN")
+						.requestMatchers(HttpMethod.GET,  "/api/v1/questions/**").hasAnyAuthority("USER", "ADMIN")
+						.requestMatchers(HttpMethod.PUT,  "/api/v1/questions/**").hasAnyAuthority("USER", "ADMIN")
+						.requestMatchers(HttpMethod.DELETE,"/api/v1/questions/**").hasAnyAuthority("USER", "ADMIN")
+
 						// Deny everything else
 						.anyRequest().denyAll())
 
