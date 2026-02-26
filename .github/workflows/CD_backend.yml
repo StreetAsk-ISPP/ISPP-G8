@@ -33,7 +33,6 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # 5. Desplegar la actualización en Container Apps
       - name: Deploy to Container App
         uses: azure/CLI@v1
         with:
@@ -42,4 +41,5 @@ jobs:
             az containerapp update \
               --name sprint1-backend \
               --resource-group sprint1-recursos \
-              --image streetask/backend:latest
+              --image streetask/backend:latest \
+              --max-replicas 3
