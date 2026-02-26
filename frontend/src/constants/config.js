@@ -7,3 +7,7 @@ export const APP_CONFIG = {
   apiBaseUrl,
   requestTimeoutMs: Number.isFinite(configuredTimeoutMs) && configuredTimeoutMs > 0 ? configuredTimeoutMs : 10000,
 };
+
+// Exportar también de forma individual para compatibilidad
+export const API_BASE_URL = apiBaseUrl;
+export const API_TIMEOUT_MS = APP_CONFIG.requestTimeoutMs;
