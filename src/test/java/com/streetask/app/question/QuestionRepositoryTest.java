@@ -42,14 +42,14 @@ class QuestionRepositoryTest {
 		// Create test creators
 		creator1 = new RegularUser();
 		creator1.setEmail("creator1@streetask.com");
-		creator1.setUsername("creator1");
+		creator1.setUserName("creator1");
 		creator1.setFirstName("Creator");
 		creator1.setLastName("One");
 		entityManager.persist(creator1);
 
 		creator2 = new RegularUser();
 		creator2.setEmail("creator2@streetask.com");
-		creator2.setUsername("creator2");
+		creator2.setUserName("creator2");
 		creator2.setFirstName("Creator");
 		creator2.setLastName("Two");
 		entityManager.persist(creator2);

@@ -59,7 +59,7 @@ class QuestionRestControllerTest {
 		// Create a test user
 		testCreator = new RegularUser();
 		testCreator.setEmail("testcreator@streetask.com");
-		testCreator.setUsername("testcreator");
+		testCreator.setUserName("testcreator");
 		testCreator.setFirstName("Test");
 		testCreator.setLastName("Creator");
 		testCreator = userRepository.save(testCreator);

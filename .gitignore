@@ -30,6 +30,3 @@ target/
 # Test reports
 allure-results/
 allure-report/
-
-package-lock.json
-settings.json
