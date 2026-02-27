@@ -29,4 +29,5 @@ jobs:
         with:
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - run: npx eas update --channel trunk --non-interactive --message "trunk: ${{ github.sha }}"
+      - run: |
+          npx eas update --channel trunk --non-interactive --message "trunk: ${{ github.sha }}"
