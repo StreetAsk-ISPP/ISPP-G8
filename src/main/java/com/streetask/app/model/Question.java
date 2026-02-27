@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,8 +29,10 @@ public class Question extends BaseEntity {
     @JoinColumn(name = "event_id")
     private Event event;
 
+    @NotBlank
     private String title;
 
+    @NotBlank
     private String content;
 
     @Embedded

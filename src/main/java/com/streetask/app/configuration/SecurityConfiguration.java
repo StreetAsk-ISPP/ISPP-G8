@@ -105,7 +105,7 @@ public class SecurityConfiguration {
 			.requestMatchers("/api/v1/clinics/**").hasAnyAuthority(CLINIC_OWNER, ADMIN)
 			.requestMatchers(HttpMethod.GET, "/api/v1/vets/**").authenticated()
 			.requestMatchers("/api/v1/vets/**").hasAnyAuthority(ADMIN, "VET", CLINIC_OWNER)
-
+			
 			// StreetAsk questions
 			.requestMatchers(HttpMethod.POST, "/api/v1/questions/**").hasAnyAuthority("USER", "ADMIN")
 			.requestMatchers(HttpMethod.GET,  "/api/v1/questions/**").hasAnyAuthority("USER", "ADMIN")
@@ -114,7 +114,6 @@ public class SecurityConfiguration {
 
 			// Deny everything else
 			.anyRequest().denyAll())
-
 
 			.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 		return http.build();
