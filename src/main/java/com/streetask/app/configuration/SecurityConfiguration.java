@@ -106,6 +106,9 @@ public class SecurityConfiguration {
 			.requestMatchers(HttpMethod.GET, "/api/v1/vets/**").authenticated()
 			.requestMatchers("/api/v1/vets/**").hasAnyAuthority(ADMIN, "VET", CLINIC_OWNER)
 
+            // Questions API
+            .requestMatchers("/api/v1/questions/**").authenticated()
+
             // El resto denegado
              .anyRequest().denyAll())
 
