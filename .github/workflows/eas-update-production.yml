@@ -29,4 +29,4 @@ jobs:
         with:
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - run: npx eas update --channel production --non-interactive --message "production: $GITHUB_SHA"
+      - run: npx eas update --channel production --non-interactive --message "production: ${{ github.sha }}"
