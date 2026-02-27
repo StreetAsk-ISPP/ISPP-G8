@@ -1,4 +1,4 @@
-package com.streetask.auth;
+package com.streetask.app.auth;
 
 import java.util.List;
 import java.util.stream.Collectors;
