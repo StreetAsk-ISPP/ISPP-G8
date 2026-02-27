@@ -47,7 +47,6 @@ public class SecurityConfiguration {
 
 	@Bean
 	protected SecurityFilterChain configure(HttpSecurity http) throws Exception {
-
 		http
 			.cors(withDefaults())
 			.csrf(AbstractHttpConfigurer::disable)
@@ -80,9 +79,9 @@ public class SecurityConfiguration {
 				.requestMatchers("/api/v1/clinics").permitAll()
 				.requestMatchers("/api/v1/developers").permitAll()
 
-				// ✅ Locations public endpoints (añadido)
+				// Locations public endpoints
 				.requestMatchers("/api/v1/locations/public/**").permitAll()
-				// ✅ Si queréis que sea público SOLO el GET de user locations
+				// público SOLO el GET de user locations
 				.requestMatchers(HttpMethod.GET, "/api/v1/locations/user/**").permitAll()
 
 				// Restricted API for pet owners:
@@ -106,8 +105,11 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.GET, "/api/v1/vets/**").authenticated()
 				.requestMatchers("/api/v1/vets/**").hasAnyAuthority(ADMIN, "VET", CLINIC_OWNER)
 
-				// ✅ Answers requiere auth (se mantenía en una de las ramas)
+				// Answers requiere auth
 				.requestMatchers("/api/v1/answers", "/api/v1/answers/**").authenticated()
+
+				// Questions API (añadido)
+				.requestMatchers("/api/v1/questions/**").authenticated()
 
 				// Deny everything else
 				.anyRequest().denyAll()
@@ -149,5 +151,4 @@ public class SecurityConfiguration {
 		source.registerCorsConfiguration("/**", configuration);
 		return source;
 	}
-
 }

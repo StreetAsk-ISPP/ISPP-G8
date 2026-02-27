@@ -14,6 +14,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import com.streetask.app.model.Event;
 import com.streetask.app.model.Question;
+import com.streetask.app.user.Authorities;
+import com.streetask.app.user.BusinessAccount;
 import com.streetask.app.user.RegularUser;
 
 /**
@@ -39,12 +41,17 @@ class QuestionRepositoryTest {
 
 	@BeforeEach
 	void setUp() {
+		// Find existing authority from data.sql
+		Authorities userAuthority = entityManager.find(Authorities.class,
+				java.util.UUID.fromString("22222222-2222-2222-2222-222222222222"));
+
 		// Create test creators
 		creator1 = new RegularUser();
 		creator1.setEmail("creator1@streetask.com");
 		creator1.setUserName("creator1");
 		creator1.setFirstName("Creator");
 		creator1.setLastName("One");
+		creator1.setAuthority(userAuthority);
 		entityManager.persist(creator1);
 
 		creator2 = new RegularUser();
@@ -52,17 +59,33 @@ class QuestionRepositoryTest {
 		creator2.setUserName("creator2");
 		creator2.setFirstName("Creator");
 		creator2.setLastName("Two");
+		creator2.setAuthority(userAuthority);
 		entityManager.persist(creator2);
+
+		// Create a business account for events
+		Authorities businessAuthority = entityManager.find(Authorities.class,
+				java.util.UUID.fromString("33333333-3333-3333-3333-333333333333"));
+		BusinessAccount businessCreator = new BusinessAccount();
+		businessCreator.setEmail("business@streetask.com");
+		businessCreator.setUserName("business1");
+		businessCreator.setFirstName("Business");
+		businessCreator.setLastName("Owner");
+		businessCreator.setCompanyName("Test Company");
+		businessCreator.setTaxId("B12345678");
+		businessCreator.setAuthority(businessAuthority);
+		entityManager.persist(businessCreator);
 
 		// Create test events
 		event1 = new Event();
 		event1.setTitle("Event 1");
 		event1.setDescription("First Event");
+		event1.setCreator(businessCreator);
 		entityManager.persist(event1);
 
 		event2 = new Event();
 		event2.setTitle("Event 2");
 		event2.setDescription("Second Event");
+		event2.setCreator(businessCreator);
 		entityManager.persist(event2);
 
 		// Create test questions
