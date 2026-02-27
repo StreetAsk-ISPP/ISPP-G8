@@ -13,10 +13,7 @@
 
   "eslintConfig": {
     "plugins": ["react-hooks"],
-    "extends": ["plugin:react-hooks/recommended"],
-    "rules": {
-      "react-hooks/exhaustive-deps": "off"
-    }
+    "extends": ["plugin:react-hooks/recommended"]
   },
   
   "dependencies": {
@@ -43,7 +40,7 @@
     "eas-cli": "^18.0.5",
     "eslint": "^8.57.1",
     "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^7.0.1"
+    "eslint-plugin-react-hooks": "^4.6.2"
   },
   "private": true
 }
