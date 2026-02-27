@@ -12,28 +12,33 @@ jobs:
     steps:
 
       - name: Checkout source code
-        uses: actions/checkout@v3
+        # Reemplazado @v3 por el SHA de la versión 3.6.0
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v3.6.0
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
+        # Reemplazado @v2 por el SHA de la versión 2.2.0
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # v2.2.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v4
+        # Reemplazado @v4 por el SHA de la versión 4.0.0
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671 # v4.0.0
         with:
           context: .
           push: true
           tags: streetask/backend:latest # Usamos 'latest' para el despliegue continuo
 
       - name: Azure Login
-        uses: azure/login@v1
+        # Reemplazado @v1 por el SHA de la versión 1.4.6
+        uses: azure/login@92a5484dfaf04ca78a94597f4f19fea633851fa2 # v1.4.6
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy to Container App
-        uses: azure/CLI@v1
+        # Reemplazado @v1 por el SHA de la versión 1.0.8
+        uses: azure/CLI@a23b9d6a2f4cfa18608d0e53a3ebf501b44ec93e # v1.0.8
         with:
           inlineScript: |
             az config set extension.use_dynamic_install=yes_without_prompt

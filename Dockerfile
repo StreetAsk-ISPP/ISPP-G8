@@ -16,6 +16,18 @@ WORKDIR /app
 # Copiamos el archivo .jar generado en la etapa anterior
 COPY --from=build /app/target/*.jar app.jar
 
+# 1. Creamos un grupo llamado 'appgroup' y un usuario 'appuser' sin privilegios de root.
+# (Usamos addgroup y adduser porque Alpine Linux funciona así)
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# 2. Copiamos el archivo .jar generado en la etapa anterior.
+# Usamos --chown para que el nuevo usuario sea el dueño del archivo y pueda ejecutarlo.
+COPY --chown=appuser:appgroup --from=build /app/target/*.jar app.jar
+
+# 3. Le decimos a Docker que, de aquí en adelante, use nuestro usuario sin privilegios.
+USER appuser
+
+
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
