@@ -1,9 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TextInput, Pressable, Alert, Platform  } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiClient from '../services/apiClient';
 import { globalStyles } from '../styles/globalStyles';
-import { theme } from '../constants/theme';
 import MapPickerWeb from '../components/MapPickerWeb';
 
 const addHoursISO = (hours) => {
@@ -17,7 +15,7 @@ export default function CreateQuestionScreen({ navigation }) {
     const [content, setContent] = useState('');
 
     const hours = 2; // Fixed time in MVP
-    const [radiusKm, setRadiusKm] = useState(1);
+    const [radiusKm] = useState(1);
 
     // placeholder hasta meter mapa real
     const [latitude, setLatitude] = useState(null);
