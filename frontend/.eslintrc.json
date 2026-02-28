@@ -1,7 +1,11 @@
 {
   "root": true,
-  "extends": ["eslint:recommended", "plugin:react/recommended"],
-  "plugins": ["react"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended"
+  ],
+  "plugins": ["react", "react-hooks"],
   "env": {
     "es2021": true,
     "node": true,
