@@ -52,67 +52,71 @@ public class SecurityConfiguration {
 	protected SecurityFilterChain configure(HttpSecurity http) throws Exception {
 
 		http
-			.cors(withDefaults())
-			.csrf(AbstractHttpConfigurer::disable)
-			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-			.headers((headers) -> headers.frameOptions((frameOptions) -> frameOptions.disable()))
-			.exceptionHandling((exepciontHandling) -> exepciontHandling.authenticationEntryPoint(unauthorizedHandler))
+.cors(withDefaults())
+.csrf(AbstractHttpConfigurer::disable)
+.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
+.exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedHandler))
 
-            .authorizeHttpRequests(auth -> auth
-            // Recursos estáticos comunes (css, js, images, webjars…) públicos
-            .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-            // H2 Console accesible
-            .requestMatchers(PathRequest.toH2Console()).permitAll()
-            .requestMatchers("/h2-console/**").permitAll()
+.authorizeHttpRequests(auth -> auth
+	// Public common static resources (css, js, images, webjars...)
+	.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 
-            // Raíz / páginas públicas
-            .requestMatchers("/", "/oups").permitAll()
+	// Accessible H2 Console
+	.requestMatchers(PathRequest.toH2Console()).permitAll()
+	.requestMatchers("/h2-console/**").permitAll()
 
-            // Swagger / OpenAPI accesible
-            .requestMatchers(
-                "/v3/api-docs/**",
-                "/swagger-ui.html",
-                "/swagger-ui/**",
-                "/swagger-resources/**"
-            ).permitAll()
+	// Root / public pages
+	.requestMatchers("/", "/oups").permitAll()
 
-            // API pública
-            .requestMatchers("/api/v1/auth/**").permitAll()
-            .requestMatchers("/api/v1/developers").permitAll()
-            .requestMatchers("/api/v1/plan").permitAll()
-            .requestMatchers("/api/v1/clinics").permitAll()
-            .requestMatchers("/api/v1/developers").permitAll()
-            .requestMatchers("/api/v1/locations/public/**").permitAll()
-            .requestMatchers(HttpMethod.GET, "/api/v1/locations/user/**").permitAll()
+	// Accessible Swagger / OpenAPI
+	.requestMatchers(
+		"/v3/api-docs/**",
+		"/swagger-ui.html",
+		"/swagger-ui/**",
+		"/swagger-resources/**"
+	).permitAll()
 
-            // API restringida para propietarios de mascotas:
-            .requestMatchers("/api/v1/plan").hasAuthority("OWNER")
+	// Public API
+	.requestMatchers("/api/v1/auth/**").permitAll()
+	.requestMatchers("/api/v1/developers").permitAll()
+	.requestMatchers("/api/v1/clinics").permitAll()
 
-            // API restringida para administradores
-            .requestMatchers("/api/v1/users/**").hasAuthority(ADMIN)
-            .requestMatchers("/api/v1/clinicOwners/all").hasAuthority(ADMIN)
-            .requestMatchers(HttpMethod.DELETE, "/api/v1/consultations/**").hasAuthority(ADMIN)
-            .requestMatchers("/api/v1/owners/**").hasAuthority(ADMIN)
-            .requestMatchers("/api/v1/pets/stats").hasAuthority(ADMIN)
-            .requestMatchers("/api/v1/vets/stats").hasAuthority(ADMIN)
+	// Locations public/user endpoints
+	.requestMatchers("/api/v1/locations/public/**").permitAll()
+	.requestMatchers(HttpMethod.GET, "/api/v1/locations/user/**").permitAll()
 
-			// Otras reglas de control de acceso:
-			.requestMatchers("/api/v1/clinicOwners/**").hasAnyAuthority(ADMIN, CLINIC_OWNER)
-			.requestMatchers("/api/v1/visits/**").authenticated()
-			.requestMatchers("/api/v1/pets").authenticated()
-			.requestMatchers("/api/v1/pets/**").authenticated()
-            .requestMatchers("/api/v1/consultations/**").authenticated()
-			.requestMatchers("/api/v1/clinics/**").hasAnyAuthority(CLINIC_OWNER, ADMIN)
-			.requestMatchers(HttpMethod.GET, "/api/v1/vets/**").authenticated()
-			.requestMatchers("/api/v1/vets/**").hasAnyAuthority(ADMIN, "VET", CLINIC_OWNER)
+	// Restricted API for pet owners:
+	.requestMatchers("/api/v1/plan").hasAuthority("OWNER")
 
+	// Restricted API for administrators
+	.requestMatchers("/api/v1/users/**").hasAuthority(ADMIN)
+	.requestMatchers("/api/v1/clinicOwners/all").hasAuthority(ADMIN)
+	.requestMatchers(HttpMethod.DELETE, "/api/v1/consultations/**").hasAuthority(ADMIN)
+	.requestMatchers("/api/v1/owners/**").hasAuthority(ADMIN)
+	.requestMatchers("/api/v1/pets/stats").hasAuthority(ADMIN)
+	.requestMatchers("/api/v1/vets/stats").hasAuthority(ADMIN)
+
+	// Other access-control rules:
+	.requestMatchers("/api/v1/clinicOwners/**").hasAnyAuthority(ADMIN, CLINIC_OWNER)
+	.requestMatchers("/api/v1/visits/**").authenticated()
+	.requestMatchers("/api/v1/pets").authenticated()
+	.requestMatchers("/api/v1/pets/**").authenticated()
+	.requestMatchers("/api/v1/consultations/**").authenticated()
+	.requestMatchers("/api/v1/clinics/**").hasAnyAuthority(CLINIC_OWNER, ADMIN)
+	.requestMatchers(HttpMethod.GET, "/api/v1/vets/**").authenticated()
+	.requestMatchers("/api/v1/vets/**").hasAnyAuthority(ADMIN, "VET", CLINIC_OWNER)
             // Questions API
-            .requestMatchers("/api/v1/questions/**").authenticated()
+    .requestMatchers("/api/v1/questions/**").authenticated()
 
-            // El resto denegado
-             .anyRequest().denyAll())
+	// Answers
+	.requestMatchers("/api/v1/answers", "/api/v1/answers/**").authenticated()
 
-			.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+	// Deny everything else
+	.anyRequest().denyAll()
+)
+
+.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 		return http.build();
 	}
 
