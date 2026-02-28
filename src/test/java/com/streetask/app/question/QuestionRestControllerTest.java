@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.streetask.app.model.Question;
+import com.streetask.app.user.Authorities;
 import com.streetask.app.user.RegularUser;
 import com.streetask.app.user.UserRepository;
 
@@ -51,17 +52,25 @@ class QuestionRestControllerTest {
 	@Autowired
 	private UserRepository userRepository;
 
+	@Autowired
+	private jakarta.persistence.EntityManager entityManager;
+
 	private RegularUser testCreator;
 	private Question testQuestion;
 
 	@BeforeEach
 	void setUp() {
+		// Find existing authority from data.sql
+		Authorities userAuthority = entityManager.find(Authorities.class,
+				java.util.UUID.fromString("22222222-2222-2222-2222-222222222222"));
+
 		// Create a test user
 		testCreator = new RegularUser();
 		testCreator.setEmail("testcreator@streetask.com");
-		testCreator.setUsername("testcreator");
+		testCreator.setUserName("testcreator");
 		testCreator.setFirstName("Test");
 		testCreator.setLastName("Creator");
+		testCreator.setAuthority(userAuthority);
 		testCreator = userRepository.save(testCreator);
 
 		// Create a test question

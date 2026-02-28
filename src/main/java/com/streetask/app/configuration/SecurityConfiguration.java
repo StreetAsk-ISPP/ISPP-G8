@@ -106,6 +106,8 @@ public class SecurityConfiguration {
 	.requestMatchers("/api/v1/clinics/**").hasAnyAuthority(CLINIC_OWNER, ADMIN)
 	.requestMatchers(HttpMethod.GET, "/api/v1/vets/**").authenticated()
 	.requestMatchers("/api/v1/vets/**").hasAnyAuthority(ADMIN, "VET", CLINIC_OWNER)
+            // Questions API
+    .requestMatchers("/api/v1/questions/**").authenticated()
 
 	// Answers
 	.requestMatchers("/api/v1/answers", "/api/v1/answers/**").authenticated()
