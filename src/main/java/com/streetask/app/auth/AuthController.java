@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import com.streetask.app.auth.payload.request.BusinessSignupRequest;
 import com.streetask.app.auth.payload.request.CompleteSignupRequest;
@@ -20,6 +21,7 @@ import com.streetask.app.user.UserService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,8 +31,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import org.springframework.security.authentication.BadCredentialsException;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -55,9 +55,17 @@ public class AuthController {
 
 	@PostMapping("/signin")
 	public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+		String normalizedIdentifier = loginRequest.getEmail().trim();
+		String rawPassword = loginRequest.getPassword();
+
+		if (normalizedIdentifier.isBlank() || rawPassword == null || rawPassword.isBlank()) {
+			return ResponseEntity.badRequest()
+					.body(new MessageResponse("Error: Email/username and password are required."));
+		}
+
 		try {
 			Authentication authentication = authenticationManager.authenticate(
-					new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
+					new UsernamePasswordAuthenticationToken(normalizedIdentifier, rawPassword));
 
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 			String jwt = jwtUtils.generateJwtToken(authentication);
@@ -68,8 +76,9 @@ public class AuthController {
 
 			return ResponseEntity.ok()
 					.body(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), roles));
-		} catch (BadCredentialsException exception) {
-			return ResponseEntity.badRequest().body("Bad Credentials!");
+		} catch (AuthenticationException exception) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+					.body(new MessageResponse("Error: Invalid email or password."));
 		}
 	}
 

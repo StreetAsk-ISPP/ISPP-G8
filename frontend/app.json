@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "frontend",
-    "slug": "frontend",
+    "slug": "streetask",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,7 +13,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.streetask.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -28,9 +32,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "fe0caaad-1789-4a2f-bfbd-8e027e0c2ab3"
+        "projectId": "36639f05-39c6-44da-8e11-e1e4997bb3d9"
       }
     },
-    "owner": "manumnzz"
+    "owner": "streetasks-organization"
   }
 }
