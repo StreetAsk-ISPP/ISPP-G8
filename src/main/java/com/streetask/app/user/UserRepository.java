@@ -18,6 +18,10 @@ public interface UserRepository extends CrudRepository<User, UUID> {
 
 	Optional<User> findByEmail(String email);
 
+	Optional<User> findByEmailIgnoreCase(String email);
+
+	Optional<User> findByUserNameIgnoreCase(String userName);
+
 	Boolean existsByEmail(String email);
 
 	Boolean existsByUserName(String userName);
