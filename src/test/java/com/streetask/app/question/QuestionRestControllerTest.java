@@ -158,7 +158,7 @@ class QuestionRestControllerTest {
 	// =============== CREATE QUESTION TESTS ===============
 
 	@Test
-	@WithMockUser
+	@WithMockUser(username = "testcreator@streetask.com")
 	void create_shouldCreateQuestionWhenPayloadIsValid() throws Exception {
 		Map<String, Object> questionPayload = createValidQuestionPayload();
 
@@ -178,7 +178,7 @@ class QuestionRestControllerTest {
 	}
 
 	@Test
-	@WithMockUser
+	@WithMockUser(username = "testcreator@streetask.com")
 	void create_shouldApplyDefaultValues() throws Exception {
 		Map<String, Object> questionPayload = new HashMap<>();
 		questionPayload.put("title", "Question Without Defaults");
@@ -196,7 +196,7 @@ class QuestionRestControllerTest {
 	}
 
 	@Test
-	@WithMockUser
+	@WithMockUser(username = "testcreator@streetask.com")
 	void create_shouldReturnBadRequestWhenTitleIsMissing() throws Exception {
 		Map<String, Object> invalidPayload = new HashMap<>();
 		invalidPayload.put("content", "Content without title");
@@ -209,7 +209,7 @@ class QuestionRestControllerTest {
 	}
 
 	@Test
-	@WithMockUser
+	@WithMockUser(username = "testcreator@streetask.com")
 	void create_shouldReturnBadRequestWhenContentIsMissing() throws Exception {
 		Map<String, Object> invalidPayload = new HashMap<>();
 		invalidPayload.put("title", "Title without content");
