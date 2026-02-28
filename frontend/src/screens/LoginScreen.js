@@ -76,7 +76,6 @@ export default function LoginScreen({ navigation }) {
           </TouchableOpacity>
 
         </View>
-
         <View style={styles.footer}>
           <Text style={styles.signUpPrompt}>Don’t have an account?</Text>
           <TouchableOpacity onPress={() => navigation.navigate('SignUp')} activeOpacity={0.8}>
@@ -174,3 +173,4 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xs,
   },
 });
+
