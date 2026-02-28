@@ -1,13 +1,34 @@
-import React from 'react';
+import { React, useCallback , useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import CustomButton from '../components/CustomButton';
 import MapComponent from '../components/MapComponent';
 import { useAuth } from '../context/AuthContext';
 import { globalStyles } from '../styles/globalStyles';
 import { theme } from '../constants/theme';
+import apiClient from '../services/apiClient';
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
     const { logout } = useAuth();
+    const [questions, setQuestions] = useState([]);
+
+    useFocusEffect(
+        useCallback(() => {
+            const loadQuestions = async () => {
+            try {
+                const res = await apiClient.get('/api/v1/questions');
+                const raw = res.data;
+
+                const list = Array.isArray(raw) ? raw : [];
+                setQuestions(list);
+            } catch (e) {
+                console.warn('Failed to load questions', e);
+            }
+            };
+
+            loadQuestions();
+        }, [])
+        );
 
     return (
         <SafeAreaView style={globalStyles.screen}>
@@ -18,21 +39,23 @@ export default function HomeScreen() {
                 </View>
 
                 <View style={styles.mapContainer}>
-                    <MapComponent />
+                    <MapComponent
+                        questions={questions}
+                        onQuestionPress={(questionId) =>
+                            navigation.navigate('QuestionThread', { questionId })
+                        }
+                    />
                 </View>
 
                 <View style={styles.footer}>
-                    <CustomButton 
-                        label="Ask a question" 
-                        onPress={() => console.log('Open question modal')} 
+                    <CustomButton
+                        label="Ask a question"
+                        onPress={() => navigation.navigate('CreateQuestion')}
                     />
                     
                     <View style={{ height: 12 }} />
 
-                    <CustomButton 
-                        label="Sign out" 
-                        onPress={logout} 
-                    />
+                    <CustomButton label="Sign out" onPress={logout}/>
                 </View>
             </View>
         </SafeAreaView>
