@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import com.streetask.app.auth.payload.response.MessageResponse;
-import com.streetask.app.model.*;
+import com.streetask.app.model.Question;
 import com.streetask.app.util.RestPreconditions;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;

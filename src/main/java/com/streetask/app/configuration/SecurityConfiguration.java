@@ -115,6 +115,7 @@ public class SecurityConfiguration {
 			// Deny everything else
 			.anyRequest().denyAll())
 
+
 			.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 		return http.build();
 	}

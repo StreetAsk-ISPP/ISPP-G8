@@ -6,7 +6,6 @@ import java.util.UUID;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +17,6 @@ import com.streetask.app.user.RegularUserRepository;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
-
 
 import jakarta.validation.Valid;
 
@@ -32,7 +30,6 @@ public class QuestionService {
 	public QuestionService(QuestionRepository questionRepository, RegularUserRepository regularUserRepository) {
 		this.questionRepository = questionRepository;
 		this.regularUserRepository = regularUserRepository;
-
 	}
 
 	@Transactional
