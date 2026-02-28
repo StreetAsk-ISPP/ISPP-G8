@@ -52,11 +52,12 @@ public class SecurityConfiguration {
 			.csrf(AbstractHttpConfigurer::disable)
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
-			.exceptionHandling(exepciontHandling -> exepciontHandling.authenticationEntryPoint(unauthorizedHandler))
+			.exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedHandler))
 
 			.authorizeHttpRequests(auth -> auth
 				// Public common static resources (css, js, images, webjars...)
 				.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+
 				// Accessible H2 Console
 				.requestMatchers(PathRequest.toH2Console()).permitAll()
 				.requestMatchers("/h2-console/**").permitAll()
@@ -77,14 +78,13 @@ public class SecurityConfiguration {
 				.requestMatchers("/api/v1/developers").permitAll()
 				.requestMatchers("/api/v1/plan").permitAll()
 				.requestMatchers("/api/v1/clinics").permitAll()
-				.requestMatchers("/api/v1/developers").permitAll()
 
 				// Locations public endpoints
 				.requestMatchers("/api/v1/locations/public/**").permitAll()
-				// público SOLO el GET de user locations
+				// Public only GET of user locations
 				.requestMatchers(HttpMethod.GET, "/api/v1/locations/user/**").permitAll()
 
-				// Restricted API for pet owners:
+				// Restricted API for owners
 				.requestMatchers("/api/v1/plan").hasAuthority("OWNER")
 
 				// Restricted API for administrators
@@ -95,7 +95,7 @@ public class SecurityConfiguration {
 				.requestMatchers("/api/v1/pets/stats").hasAuthority(ADMIN)
 				.requestMatchers("/api/v1/vets/stats").hasAuthority(ADMIN)
 
-				// Other access-control rules:
+				// Other access-control rules
 				.requestMatchers("/api/v1/clinicOwners/**").hasAnyAuthority(ADMIN, CLINIC_OWNER)
 				.requestMatchers("/api/v1/visits/**").authenticated()
 				.requestMatchers("/api/v1/pets").authenticated()
@@ -105,11 +105,9 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.GET, "/api/v1/vets/**").authenticated()
 				.requestMatchers("/api/v1/vets/**").hasAnyAuthority(ADMIN, "VET", CLINIC_OWNER)
 
-				// Answers requiere auth
-				.requestMatchers("/api/v1/answers", "/api/v1/answers/**").authenticated()
-
-				// Questions API (añadido)
+				// Questions & Answers require auth
 				.requestMatchers("/api/v1/questions/**").authenticated()
+				.requestMatchers("/api/v1/answers", "/api/v1/answers/**").authenticated()
 
 				// Deny everything else
 				.anyRequest().denyAll()
