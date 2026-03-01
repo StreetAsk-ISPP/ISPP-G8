@@ -111,11 +111,12 @@ public class QuestionService {
         LocalDateTime now = LocalDateTime.now();
         Iterable<Question> expiredQuestions = questionRepository.findAllByActiveTrueAndExpiresAtBefore(now);
         
-        expiredQuestions.forEach(question -> {
-            question.setActive(false);
-        });
-        
-        questionRepository.saveAll(expiredQuestions);
+        if (expiredQuestions.iterator().hasNext()) {
+			expiredQuestions.forEach(question -> {
+				question.setActive(false);
+			});
+			questionRepository.saveAll(expiredQuestions);
+		}
     }
 
 	private void applyDefaults(Question question) {

@@ -405,4 +405,45 @@ class QuestionServiceTest {
 		verify(questionRepository, times(0)).delete(any(Question.class));
 	}
 
+	// =============== EXPIRATION CRON TESTS ===============
+
+    @Test
+    void executeExpirationCron_shouldDeactivateExpiredQuestions() {
+        // Arrange
+        Question expired1 = new Question();
+        expired1.setId(UUID.randomUUID());
+        expired1.setActive(true);
+        expired1.setTitle("Expired 1");
+
+        Question expired2 = new Question();
+        expired2.setId(UUID.randomUUID());
+        expired2.setActive(true);
+        expired2.setTitle("Expired 2");
+        when(questionRepository.findAllByActiveTrueAndExpiresAtBefore(any(LocalDateTime.class)))
+                .thenReturn(Arrays.asList(expired1, expired2));
+
+        // Act
+        questionService.executeExpirationCron();
+
+        // Assert
+        assertThat(expired1.getActive()).isFalse();
+        assertThat(expired2.getActive()).isFalse();
+        verify(questionRepository, times(1)).findAllByActiveTrueAndExpiresAtBefore(any(LocalDateTime.now().getClass()));
+        verify(questionRepository, times(1)).saveAll(any());
+    }
+
+    @Test
+    void executeExpirationCron_shouldDoNothingWhenNoQuestionsExpired() {
+        // Arrange
+        when(questionRepository.findAllByActiveTrueAndExpiresAtBefore(any(LocalDateTime.class)))
+                .thenReturn(Arrays.asList());
+
+        // Act
+        questionService.executeExpirationCron();
+
+        // Assert
+        verify(questionRepository, times(1)).findAllByActiveTrueAndExpiresAtBefore(any(LocalDateTime.class));
+        verify(questionRepository, times(0)).saveAll(any());
+    }
+
 }
