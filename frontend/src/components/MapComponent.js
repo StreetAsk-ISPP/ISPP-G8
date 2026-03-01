@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { locationService } from '../services/locationService';
+import { CountdownText } from './CountdownText';
 
 // Para web: importar Leaflet y CSS
 let MapContainer, TileLayer, Marker, Popup;
@@ -83,6 +84,7 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
     const [error, setError] = useState(null);
     const [publishing, setPublishing] = useState(false);
     const mapRef = useRef(null);
+    const [visibleQuestions, setVisibleQuestions] = useState([]);
 
     useEffect(() => {
         let locationSubscription;
@@ -145,6 +147,22 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
             console.warn('Error loading public locations:', err);
             setPublicLocations([]); // Asegurar array vacío en caso de error
         }
+    };
+
+    useEffect(() => {
+        const ahora = new Date().getTime();
+        
+        // Filtramos las preguntas que ya vencieron antes de guardarlas en el estado
+        const preguntasActivas = questions.filter(q => {
+            const fechaExpiracion = new Date(q.expiresAt).getTime();
+            return fechaExpiracion > ahora; // Solo dejamos las que expiran en el futuro
+        });
+
+        setVisibleQuestions(preguntasActivas);
+    }, [questions]);
+
+    const handleQuestionExpire = (questionId) => {
+        setVisibleQuestions(prev => prev.filter(q => q.id !== questionId));
     };
 
     const handlePublishLocation = async () => {
@@ -236,7 +254,7 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                     </Marker>
                     
                     {/* Question Markers */}
-                    {(Array.isArray(questions) ? questions : []).map((q) => {
+                    {(Array.isArray(visibleQuestions) ? visibleQuestions : []).map((q) => {
                         const coords = getQuestionCoords(q);
                         const { lat, lng } = coords;
 
@@ -252,6 +270,12 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                             <Popup>
                                 <div style={{ fontSize: '12px' }}>
                                 <strong>{q.title || 'Question'}</strong><br />
+                                <div style={{ marginBottom: '8px' }}>
+                                    <CountdownText
+                                        expiresAt={q.expiresAt}
+                                        onExpire={() => handleQuestionExpire(q.id)}
+                                    />
+                                </div>
                                 <span style={{ opacity: 0.8 }}>
                                     {lat.toFixed(5)}, {lng.toFixed(5)}
                                 </span><br />

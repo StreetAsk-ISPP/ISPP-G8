@@ -1,5 +1,6 @@
 package com.streetask.app.question;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.data.repository.CrudRepository;
@@ -21,5 +22,7 @@ public interface QuestionRepository extends CrudRepository<Question, UUID> {
 	Iterable<Question> findByCreatorIdAndEventId(UUID creatorId, UUID eventId);
 
 	Iterable<Question> findByCreatorIdAndEventIdAndActive(UUID creatorId, UUID eventId, Boolean active);
+
+	Iterable<Question> findAllByActiveTrueAndExpiresAtBefore(LocalDateTime now);
 
 }

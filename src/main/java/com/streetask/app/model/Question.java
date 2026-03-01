@@ -3,6 +3,7 @@ package com.streetask.app.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.streetask.app.user.RegularUser;
 
 import jakarta.persistence.Embedded;
@@ -42,8 +43,10 @@ public class Question extends BaseEntity {
 
     private Boolean active;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
     private LocalDateTime expiresAt;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
     private LocalDateTime createdAt;
 
     private Integer answerCount;
