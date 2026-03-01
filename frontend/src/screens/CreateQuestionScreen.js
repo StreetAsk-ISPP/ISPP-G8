@@ -5,8 +5,9 @@ import { globalStyles } from '../styles/globalStyles';
 import MapPickerWeb from '../components/MapPickerWeb';
 
 const addHoursISO = (hours) => {
-    const d = new Date(Date.now() + hours * 60 * 60 * 1000);
-    return d.toISOString().slice(0, 19);
+    const nowMs = Date.now(); 
+    const futureMs = nowMs + (hours * 60 * 60 * 1000);
+    return new Date(futureMs).toISOString(); 
 };
 
 export default function CreateQuestionScreen({ navigation }) {

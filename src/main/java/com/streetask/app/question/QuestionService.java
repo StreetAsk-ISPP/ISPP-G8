@@ -6,6 +6,9 @@ import java.util.UUID;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,9 +17,6 @@ import com.streetask.app.exceptions.ResourceNotFoundException;
 import com.streetask.app.model.Question;
 import com.streetask.app.user.RegularUser;
 import com.streetask.app.user.RegularUserRepository;
-
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import jakarta.validation.Valid;
 
@@ -34,15 +34,12 @@ public class QuestionService {
 
 	@Transactional
 	public Question saveQuestion(@Valid Question question) throws DataAccessException {
-		applyDefaults(question);
-
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    String email = auth.getName();
-
-    RegularUser ru = regularUserRepository.findByEmail(email)
-        .orElseThrow(() -> new AccessDeniedException("Only regular users can create questions"));
-
-    question.setCreator(ru);
+    	String email = auth.getName();
+    	RegularUser ru = regularUserRepository.findByEmail(email)
+        	.orElseThrow(() -> new AccessDeniedException("Only regular users can create questions"));
+    	question.setCreator(ru);
+		applyDefaults(question);
 		questionRepository.save(question);
 		return question;
 	}
@@ -108,6 +105,19 @@ public class QuestionService {
 		questionRepository.delete(toDelete);
 	}
 
+	@Transactional
+    @Scheduled(cron = "0 * * * * *") 
+    public void executeExpirationCron() {
+        LocalDateTime now = LocalDateTime.now();
+        Iterable<Question> expiredQuestions = questionRepository.findAllByActiveTrueAndExpiresAtBefore(now);
+        
+        expiredQuestions.forEach(question -> {
+            question.setActive(false);
+        });
+        
+        questionRepository.saveAll(expiredQuestions);
+    }
+
 	private void applyDefaults(Question question) {
 		if (question.getCreatedAt() == null) {
 			question.setCreatedAt(LocalDateTime.now());
@@ -121,5 +131,7 @@ public class QuestionService {
 		if (question.getExpiresAt() == null) {
 			question.setExpiresAt(question.getCreatedAt().plusHours(2));
 		}
+		// Para próximo sprint cuando pongamos planes de usuario regular, añadir: 
+		// if (question.getCreator().getPlan() == PREMIUM) {...}
 	}
 }
