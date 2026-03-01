@@ -93,6 +93,79 @@ Given that there are coordination/monitoring/support tasks not reflected as issu
 | Individual dedication | **10 h/week** |
 | Total project duration | **11 weeks** (4 sprints) |
 
+### 1.1 Cost Classification & Key Definitions
+
+#### CAPEX vs OPEX
+
+The cost structure of the ISPP-G8 project falls under different categories:
+
+- **CAPEX (Capital Expenditure):** Initial infrastructure investment required to set up the project. Includes:
+  - Cloud Platform Setup (PostgreSQL with PostGIS, application server)
+  - CI/CD Pipeline Infrastructure
+  - Development Tools and Licenses
+  - Initial Database Design and Configuration
+
+- **OPEX (Operational Expenditure):** Recurring costs associated with running and maintaining the project. Includes:
+  - Team labor costs (developers and project managers) — **primary component of this estimation**
+  - Cloud hosting and database maintenance
+  - Continuous integration/deployment services
+  - Monitoring, logging, and security services
+  - External API integrations (geolocation services, payment gateway)
+
+**Note:** This document focuses primarily on **OPEX costs related to team labor** (€28,512.00), which represents the effort investment. Infrastructure and external service costs should be evaluated separately based on cloud provider pricing and scale requirements.
+
+#### Gross Salary vs Net Salary vs Hiring Cost
+
+The hourly rates used in this estimation (€12.50/h for developers, €14.80/h for project managers) represent the **true economic cost to the company** of retaining each team member:
+
+- **Gross Salary:** The amount paid directly to the employee (what appears on their contract). For example, if a developer earns €2,000/month gross.
+
+- **Hiring and Employment Cost (Total Cost of Employment - TCE):** The actual cost to the company includes:
+  - Gross salary
+  - Employer social security contributions (~30-35% of gross in Spain)
+  - Occupational risk insurance
+  - Training and development
+  - Equipment and workspace
+  - Other employment benefits
+
+- **Practical Application in This Estimate:** The hourly rates (€12.50/h and €14.80/h) incorporated in this document already include the **full cost of employment**, not just gross salary. This ensures the budget reflects the true economic impact and is realistic for cost forecasting and resource allocation decisions.
+
+**Example:** A developer with a gross monthly salary of €2,000 might have a true employment cost of €2,600-€2,700/month when including social contributions and benefits. This translates to approximately €15-17 per hour (€2,600 / 160 hours), which would inform the actual billing rates for resource planning.
+
+#### Estimated Net Salary Calculation
+
+Based on the cost structure used in this project, here is a breakdown of estimated monthly compensation for each role (assuming 160 working hours/month = 10 h/week × 4 weeks):
+
+**Full-Stack Developer (€12.50/h):**
+| Concept | Calculation | Amount |
+|---|---|---|
+| Monthly working hours | 10 h/week × 4 weeks | 160 h |
+| **Total Cost of Employment (TCE)** | 160 h × €12.50 | **€2,000.00** |
+| Employer social contributions (~35%) | €2,000 / 1.35 | — |
+| **Gross Monthly Salary** | — | **€1,481.48** |
+| Employee social security deduction (~6.35%) | €1,481.48 × 6.35% | €94.07 |
+| Income tax withholding (IRPF ~19%) | €1,481.48 × 19% | €281.48 |
+| **Estimated Net Monthly Salary** | €1,481.48 - €94.07 - €281.48 | **€1,105.93** |
+
+**Project Manager (€14.80/h):**
+| Concept | Calculation | Amount |
+|---|---|---|
+| Monthly working hours | 10 h/week × 4 weeks | 160 h |
+| **Total Cost of Employment (TCE)** | 160 h × €14.80 | **€2,368.00** |
+| Employer social contributions (~35%) | €2,368 / 1.35 | — |
+| **Gross Monthly Salary** | — | **€1,754.81** |
+| Employee social security deduction (~6.35%) | €1,754.81 × 6.35% | €111.43 |
+| Income tax withholding (IRPF ~20%) | €1,754.81 × 20% | €350.96 |
+| **Estimated Net Monthly Salary** | €1,754.81 - €111.43 - €350.96 | **€1,292.42** |
+
+**Note:** These calculations are based on Spanish tax regulations (2026) with standard percentages. Actual net salary will vary depending on:
+- Individual tax filing status and deductions
+- Additional social security contributions (unemployment insurance, accident insurance)
+- Regional variations in taxation
+- Company benefits or deductions
+
+The calculations above assume a single employee with no additional deductions and are provided for budgeting and resource planning purposes.
+
 ### Sprint Schedule
 
 | Sprint | Period | Weeks | Main Objective |
