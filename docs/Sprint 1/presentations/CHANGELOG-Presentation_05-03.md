@@ -9,3 +9,7 @@
 ### 28/02/2026  
 **Author**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
 - Correcciones en estructura y contenido para seguir el feedback del 26/02
+
+### 01/03/2026 
+**Author**: Santiago Fernández Román ([sfernandez07](https://github.com/sfernandez07))
+- Correcciones en el apartado de riesgos.
