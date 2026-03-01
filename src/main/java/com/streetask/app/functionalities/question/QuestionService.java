@@ -5,12 +5,14 @@ import java.util.UUID;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.streetask.app.exceptions.ResourceNotFoundException;
+import com.streetask.app.functionalities.notifications.events.QuestionCreatedEvent;
 import com.streetask.app.model.Question;
 import com.streetask.app.user.RegularUser;
 import com.streetask.app.user.RegularUserRepository;
@@ -25,11 +27,16 @@ public class QuestionService {
 
 	private final QuestionRepository questionRepository;
 	private final RegularUserRepository regularUserRepository;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Autowired
-	public QuestionService(QuestionRepository questionRepository, RegularUserRepository regularUserRepository) {
+	public QuestionService(
+			QuestionRepository questionRepository,
+			RegularUserRepository regularUserRepository,
+			ApplicationEventPublisher eventPublisher) {
 		this.questionRepository = questionRepository;
 		this.regularUserRepository = regularUserRepository;
+		this.eventPublisher = eventPublisher;
 	}
 
 	@Transactional
@@ -37,13 +44,14 @@ public class QuestionService {
 		applyDefaults(question);
 
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    String email = auth.getName();
+		String email = auth.getName();
 
-    RegularUser ru = regularUserRepository.findByEmail(email)
-        .orElseThrow(() -> new AccessDeniedException("Only regular users can create questions"));
+		RegularUser ru = regularUserRepository.findByEmail(email)
+				.orElseThrow(() -> new AccessDeniedException("Only regular users can create questions"));
 
-    question.setCreator(ru);
+		question.setCreator(ru);
 		questionRepository.save(question);
+		eventPublisher.publishEvent(new QuestionCreatedEvent(question.getId()));
 		return question;
 	}
 

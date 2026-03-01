@@ -5,11 +5,13 @@ import java.util.UUID;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.streetask.app.exceptions.ResourceNotFoundException;
+import com.streetask.app.functionalities.notifications.events.AnswerCreatedEvent;
 import com.streetask.app.model.Answer;
 import com.streetask.app.model.GeoPoint;
 import com.streetask.app.model.Question;
@@ -20,10 +22,12 @@ import jakarta.validation.Valid;
 public class AnswerService {
 
 	private final AnswerRepository answerRepository;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Autowired
-	public AnswerService(AnswerRepository answerRepository) {
+	public AnswerService(AnswerRepository answerRepository, ApplicationEventPublisher eventPublisher) {
 		this.answerRepository = answerRepository;
+		this.eventPublisher = eventPublisher;
 	}
 
 	@Transactional
@@ -32,6 +36,7 @@ public class AnswerService {
 		validateAnswerLocation(answer, question);
 		applyDefaults(answer);
 		answerRepository.save(answer);
+		eventPublisher.publishEvent(new AnswerCreatedEvent(answer.getId()));
 		return answer;
 	}
 

@@ -1,9 +1,9 @@
-package com.streetask.app.model;
+package com.streetask.app.functionalities.notifications.model;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import com.streetask.app.model.enums.NotificationType;
+import com.streetask.app.model.BaseEntity;
 import com.streetask.app.user.RegularUser;
 
 import jakarta.persistence.Entity;

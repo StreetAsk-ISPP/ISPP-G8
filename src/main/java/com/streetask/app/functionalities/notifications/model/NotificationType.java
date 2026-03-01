@@ -1,4 +1,4 @@
-package com.streetask.app.model.enums;
+package com.streetask.app.functionalities.notifications.model;
 
 public enum NotificationType {
     NEARBY_QUESTION,

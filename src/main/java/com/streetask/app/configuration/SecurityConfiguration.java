@@ -7,6 +7,7 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,6 +43,9 @@ public class SecurityConfiguration {
 	@Autowired
 	DataSource dataSource;
 
+	@Value("${streetask.websocket.endpoint:/ws}")
+	private String websocketEndpoint;
+
 	private static final String ADMIN = "ADMIN";
 	private static final String CLINIC_OWNER = "CLINIC_OWNER";
 
@@ -72,6 +76,9 @@ public class SecurityConfiguration {
 					"/swagger-ui/**",
 					"/swagger-resources/**"
 				).permitAll()
+
+				// WebSocket handshake (SockJS uses /{endpoint}/** paths like /ws/info)
+				.requestMatchers(webSocketHandshakePattern()).permitAll()
 
 				// Public API
 				.requestMatchers("/api/v1/auth/**").permitAll()
@@ -148,5 +155,16 @@ public class SecurityConfiguration {
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);
 		return source;
+	}
+
+	private String webSocketHandshakePattern() {
+		String normalized = websocketEndpoint == null ? "/ws" : websocketEndpoint.trim();
+		if (!normalized.startsWith("/")) {
+			normalized = "/" + normalized;
+		}
+		if (normalized.endsWith("/")) {
+			normalized = normalized.substring(0, normalized.length() - 1);
+		}
+		return normalized + "/**";
 	}
 }

@@ -1,34 +1,47 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import CustomButton from '../../../shared/components/CustomButton';
 import MapComponent from './components/MapComponent';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { useNotifications } from '../../../app/providers/NotificationProvider';
+import { useWebSocket } from '../../../app/providers/WebSocketProvider';
 import { globalStyles } from '../../../shared/ui/theme/globalStyles';
 import { theme } from '../../../shared/ui/theme/theme';
 import apiClient from '../../../shared/services/http/apiClient';
 
 export default function HomeScreen({ navigation }) {
     const { logout } = useAuth();
+    const { currentZoneKey, ephemeralNotification, observeNotifications } = useNotifications();
+    const { isConnected } = useWebSocket();
     const [questions, setQuestions] = useState([]);
+
+    const loadQuestions = useCallback(async () => {
+        try {
+            const res = await apiClient.get('/api/v1/questions');
+            const raw = res.data;
+
+            const list = Array.isArray(raw) ? raw : [];
+            setQuestions(list);
+        } catch (e) {
+            console.warn('Failed to load questions', e);
+        }
+    }, []);
 
     useFocusEffect(
         useCallback(() => {
-            const loadQuestions = async () => {
-            try {
-                const res = await apiClient.get('/api/v1/questions');
-                const raw = res.data;
-
-                const list = Array.isArray(raw) ? raw : [];
-                setQuestions(list);
-            } catch (e) {
-                console.warn('Failed to load questions', e);
-            }
-            };
-
             loadQuestions();
-        }, [])
+        }, [loadQuestions])
         );
+
+    useEffect(() => {
+        const unsubscribe = observeNotifications((notification) => {
+            if (notification?.type === 'NEARBY_QUESTION') {
+                loadQuestions();
+            }
+        });
+        return unsubscribe;
+    }, [loadQuestions, observeNotifications]);
 
     return (
         <SafeAreaView style={globalStyles.screen}>
@@ -36,7 +49,22 @@ export default function HomeScreen({ navigation }) {
                 <View style={styles.header}>
                     <Text style={globalStyles.title}>StreetAsk</Text>
                     <Text style={globalStyles.subtitle}>Questions around you</Text>
+                    <Text style={styles.zoneText}>
+                        {currentZoneKey ? `Listening zone: ${currentZoneKey}` : 'Listening zone: --'}
+                    </Text>
+                    <Text style={styles.zoneText}>
+                        {`WebSocket: ${isConnected ? 'connected' : 'disconnected'}`}
+                    </Text>
                 </View>
+
+                {ephemeralNotification ? (
+                    <View style={styles.notificationsPanel}>
+                        <View style={styles.notificationItem}>
+                            <Text style={styles.notificationTitle}>{ephemeralNotification.title || 'Notification'}</Text>
+                            <Text style={styles.notificationText}>{ephemeralNotification.message || ''}</Text>
+                        </View>
+                    </View>
+                ) : null}
 
                 <View style={styles.mapContainer}>
                     <MapComponent
@@ -68,7 +96,34 @@ const styles = StyleSheet.create({
         padding: theme.spacing?.md || 16,
     },
     header: {
-        marginBottom: 20,
+        marginBottom: 12,
+    },
+    zoneText: {
+        marginTop: 6,
+        color: theme.colors?.textSecondary || '#64748B',
+        fontSize: 12,
+    },
+    notificationsPanel: {
+        gap: 8,
+        marginBottom: 12,
+    },
+    notificationItem: {
+        backgroundColor: '#FFF7E6',
+        borderColor: '#FCD34D',
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 10,
+    },
+    notificationTitle: {
+        color: '#92400E',
+        fontSize: 13,
+        fontWeight: '700',
+    },
+    notificationText: {
+        marginTop: 2,
+        color: '#78350F',
+        fontSize: 13,
     },
     mapContainer: {
         flex: 1,

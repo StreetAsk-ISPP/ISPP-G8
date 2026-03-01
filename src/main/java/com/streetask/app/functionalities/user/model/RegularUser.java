@@ -6,9 +6,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.streetask.app.model.Answer;
 import com.streetask.app.model.CoinTransaction;
 import com.streetask.app.model.EventAttendance;
-import com.streetask.app.model.Notification;
 import com.streetask.app.model.Question;
 import com.streetask.app.model.Report;
+import com.streetask.app.functionalities.notifications.model.Notification;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
