@@ -2,6 +2,7 @@ package com.streetask.app.user;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.streetask.app.model.Answer;
 import com.streetask.app.model.CoinTransaction;
 import com.streetask.app.model.EventAttendance;
@@ -33,6 +34,7 @@ public class RegularUser extends User {
 
     private Boolean verified;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "creator")
     private List<Question> questions;
 

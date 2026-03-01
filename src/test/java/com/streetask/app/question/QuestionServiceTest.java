@@ -3,6 +3,7 @@ package com.streetask.app.question;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,15 +14,20 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.streetask.app.exceptions.ResourceNotFoundException;
 import com.streetask.app.model.Question;
 import com.streetask.app.user.RegularUser;
+import com.streetask.app.user.RegularUserRepository;
 
 /**
  * Unit tests for QuestionService
@@ -33,24 +39,41 @@ class QuestionServiceTest {
 	@Mock
 	private QuestionRepository questionRepository;
 
+	@Mock
+	private RegularUserRepository regularUserRepository;
+
 	@InjectMocks
 	private QuestionService questionService;
 
 	private Question testQuestion;
 	private UUID testId;
 	private RegularUser testCreator;
+	private static final String TEST_EMAIL = "creator@test.com";
 
 	@BeforeEach
 	void setUp() {
 		testId = UUID.randomUUID();
 		testCreator = new RegularUser();
 		testCreator.setId(UUID.randomUUID());
+		testCreator.setEmail(TEST_EMAIL);
 
 		testQuestion = new Question();
 		testQuestion.setId(testId);
 		testQuestion.setTitle("Test Question");
 		testQuestion.setContent("Test Content");
 		testQuestion.setCreator(testCreator);
+
+		SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+		Authentication authentication = org.mockito.Mockito.mock(Authentication.class);
+		lenient().when(authentication.getName()).thenReturn(TEST_EMAIL);
+		securityContext.setAuthentication(authentication);
+		SecurityContextHolder.setContext(securityContext);
+		lenient().when(regularUserRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(testCreator));
+	}
+
+	@AfterEach
+	void tearDown() {
+		SecurityContextHolder.clearContext();
 	}
 
 	// =============== SAVE QUESTION TESTS ===============

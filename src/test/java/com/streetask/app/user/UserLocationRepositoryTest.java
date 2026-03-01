@@ -41,6 +41,8 @@ class UserLocationRepositoryTest {
     void setUp() {
         // Clear the persistence context before each test
         entityManager.clear();
+
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
         
         // Create test authority with unique name
         authority = new Authorities();
@@ -49,18 +51,18 @@ class UserLocationRepositoryTest {
 
         // Create test users
         user1 = new User();
-        user1.setUserName("user1");
+        user1.setUserName("user1_" + suffix);
         user1.setFirstName("Test");
         user1.setLastName("User1");
-        user1.setEmail("user1@test.com");
+        user1.setEmail("user1_" + suffix + "@test.com");
         user1.setAuthority(authority);
         entityManager.persistAndFlush(user1);
 
         user2 = new User();
-        user2.setUserName("user2");
+        user2.setUserName("user2_" + suffix);
         user2.setFirstName("Test");
         user2.setLastName("User2");
-        user2.setEmail("user2@test.com");
+        user2.setEmail("user2_" + suffix + "@test.com");
         user2.setAuthority(authority);
         entityManager.persistAndFlush(user2);
 
