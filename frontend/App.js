@@ -2,8 +2,8 @@ import { StatusBar } from 'expo-status-bar';
 import { Platform, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AuthProvider } from './src/context/AuthContext';
-import AppNavigator from './src/navigation/AppNavigator';
+import { AuthProvider } from './src/app/providers/AuthProvider';
+import AppNavigator from './src/app/navigation/AppNavigator';
 
 const isWeb = Platform.OS === 'web';
 

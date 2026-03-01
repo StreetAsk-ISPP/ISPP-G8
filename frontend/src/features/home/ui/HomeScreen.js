@@ -1,12 +1,12 @@
-import { React, useCallback , useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
-import CustomButton from '../components/CustomButton';
-import MapComponent from '../components/MapComponent';
-import { useAuth } from '../context/AuthContext';
-import { globalStyles } from '../styles/globalStyles';
-import { theme } from '../constants/theme';
-import apiClient from '../services/apiClient';
+import CustomButton from '../../../shared/components/CustomButton';
+import MapComponent from './components/MapComponent';
+import { useAuth } from '../../../app/providers/AuthProvider';
+import { globalStyles } from '../../../shared/ui/theme/globalStyles';
+import { theme } from '../../../shared/ui/theme/theme';
+import apiClient from '../../../shared/services/http/apiClient';
 
 export default function HomeScreen({ navigation }) {
     const { logout } = useAuth();

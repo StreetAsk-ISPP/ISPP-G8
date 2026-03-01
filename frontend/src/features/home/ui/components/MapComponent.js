@@ -10,7 +10,7 @@ import {
     Platform
 } from 'react-native';
 import * as Location from 'expo-location';
-import { locationService } from '../services/locationService';
+import { locationService } from '../../../../shared/services/location/locationService';
 
 // Para web: importar Leaflet y CSS
 let MapContainer, TileLayer, Marker, Popup;

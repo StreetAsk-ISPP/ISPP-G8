@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Text, TextInput, View, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../context/AuthContext';
-import { globalStyles } from '../styles/globalStyles';
-import apiClient from '../services/apiClient';
+import { useAuth } from '../../../app/providers/AuthProvider';
+import { globalStyles } from '../../../shared/ui/theme/globalStyles';
+import apiClient from '../../../shared/services/http/apiClient';
 
 export default function SignUpScreen({ navigation }) {
 	const { login } = useAuth();
@@ -138,11 +138,11 @@ export default function SignUpScreen({ navigation }) {
 				</View>
 				{/* Logo/Icon */}
 				<View style={styles.logoContainer}>
-					<Image 
-						source={require('../../assets/logo.png')} 
-						style={styles.logoImage}
-						resizeMode="contain"
-					/>
+						<Image 
+							source={require('../../../../assets/logo.png')} 
+							style={styles.logoImage}
+							resizeMode="contain"
+						/>
 				</View>
 
 				<Text style={styles.title}>Sign Up</Text>

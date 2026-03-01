@@ -2,15 +2,15 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
 
-import LoginScreen from '../screens/LoginScreen';
-import SignUpScreen from '../screens/SignUpScreen';
-import BusinessSignupScreen from '../screens/BusinessSignupScreen';
-import PaymentGatewayPlaceholderScreen from '../screens/PaymentGatewayPlaceholderScreen';
-import HomeScreen from '../screens/HomeScreen';
-import CreateQuestionScreen from '../screens/CreateQuestionScreen';
+import LoginScreen from '../../features/auth/ui/LoginScreen';
+import SignUpScreen from '../../features/auth/ui/SignUpScreen';
+import BusinessSignupScreen from '../../features/auth/ui/BusinessSignupScreen';
+import PaymentGatewayPlaceholderScreen from '../../features/payments/ui/PaymentGatewayPlaceholderScreen';
+import HomeScreen from '../../features/home/ui/HomeScreen';
+import CreateQuestionScreen from '../../features/questions/ui/CreateQuestionScreen';
 
-import { useAuth } from '../context/AuthContext';
-import { theme } from '../constants/theme';
+import { useAuth } from '../providers/AuthProvider';
+import { theme } from '../../shared/ui/theme/theme';
 
 const Stack = createNativeStackNavigator();
 

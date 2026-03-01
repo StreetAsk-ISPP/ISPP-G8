@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TextInput, Pressable, Alert, Platform  } from 'react-native';
-import apiClient from '../services/apiClient';
-import { globalStyles } from '../styles/globalStyles';
-import MapPickerWeb from '../components/MapPickerWeb';
+import apiClient from '../../../shared/services/http/apiClient';
+import { globalStyles } from '../../../shared/ui/theme/globalStyles';
+import MapPickerWeb from '../../home/ui/components/MapPickerWeb';
 
 const addHoursISO = (hours) => {
     const d = new Date(Date.now() + hours * 60 * 60 * 1000);

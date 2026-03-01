@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { globalStyles } from '../styles/globalStyles';
+import { globalStyles } from '../../../shared/ui/theme/globalStyles';
 
 export default function PaymentGatewayPlaceholderScreen({ navigation }) {
 	return (

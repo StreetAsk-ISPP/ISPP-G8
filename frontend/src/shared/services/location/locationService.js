@@ -1,6 +1,6 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL, API_TIMEOUT_MS } from '../constants/config';
+import { API_BASE_URL, API_TIMEOUT_MS } from '../../../app/config/config';
 
 const API_CLIENT = axios.create({
     baseURL: `${API_BASE_URL}/api/v1/locations`,

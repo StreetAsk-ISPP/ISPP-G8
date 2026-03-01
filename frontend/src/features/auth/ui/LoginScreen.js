@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-import apiClient from '../services/apiClient';
-import { useAuth } from '../context/AuthContext';
-import { theme } from '../constants/theme';
+import apiClient from '../../../shared/services/http/apiClient';
+import { useAuth } from '../../../app/providers/AuthProvider';
+import { theme } from '../../../shared/ui/theme/theme';
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
@@ -38,7 +38,7 @@ export default function LoginScreen({ navigation }) {
   return (
     <View style={styles.screen}>
       <View style={styles.container}>
-        <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
+        <Image source={require('../../../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
 
         <Text style={styles.title}>Login</Text>
 
@@ -173,4 +173,3 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xs,
   },
 });
-

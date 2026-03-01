@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { theme } from '../constants/theme';
+import { theme } from '../ui/theme/theme';
 
 export default function CustomButton({ label, onPress, variant = 'primary', disabled = false, style, textStyle }) {
   return (

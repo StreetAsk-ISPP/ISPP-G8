@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Text, TextInput, View, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { globalStyles } from '../styles/globalStyles';
-import apiClient from '../services/apiClient';
+import { globalStyles } from '../../../shared/ui/theme/globalStyles';
+import apiClient from '../../../shared/services/http/apiClient';
 
 export default function BusinessSignupScreen({ navigation, route }) {
 	const { email } = route.params;
@@ -84,7 +84,7 @@ export default function BusinessSignupScreen({ navigation, route }) {
 				{/* Header with logo and title */}
 				<View style={styles.header}>
 					<Image 
-						source={require('../../assets/logo.png')} 
+						source={require('../../../../assets/logo.png')} 
 						style={styles.logoImage}
 						resizeMode="contain"
 					/>
