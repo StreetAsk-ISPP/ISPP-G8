@@ -13,3 +13,7 @@
 ### 01/03/2026 
 **Author**: Santiago Fernández Román ([sfernandez07](https://github.com/sfernandez07))
 - Correcciones en el apartado de riesgos.
+
+### 01/03/2026 
+**Author**: Santiago Fernández Román ([sfernandez07](https://github.com/sfernandez07))
+-  Actualización del apartado de métricas con el nuevo workflow.
