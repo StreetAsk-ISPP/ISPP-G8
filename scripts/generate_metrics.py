@@ -1,6 +1,5 @@
 import json
 import os
-import subprocess  # nosec B404
 import time
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
@@ -145,31 +144,6 @@ def classify_ratio(ratio: float):
     if ratio >= 1:
         return "🟢 Good", ">= 1"
     return "🔴 Poor", "< 1"
-
-
-
-def run_git_command(args: list[str]):
-    completed = subprocess.run(args, check=False, capture_output=True, text=True)  # nosec B603,B607
-    if completed.returncode != 0:
-        raise RuntimeError(f"Command failed: {' '.join(args)}\n{completed.stderr}")
-    return completed.stdout.strip()
-
-
-
-def commit_and_push_report():
-    run_git_command(["git", "config", "user.name", "github-actions[bot]"])
-    run_git_command(["git", "config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"])
-    run_git_command(["git", "add", "metrics/metrics-report.md"])
-
-    diff_check = subprocess.run(["git", "diff", "--cached", "--quiet"], check=False)  # nosec B603,B607
-    if diff_check.returncode == 0:
-        print("No report changes detected. Skipping commit/push.")
-        return False
-
-    run_git_command(["git", "commit", "-m", "chore(metrics): update weekly agile metrics report"])
-    run_git_command(["git", "push"])
-    print("Metrics report committed and pushed.")
-    return True
 
 
 
@@ -374,11 +348,6 @@ def main():
         report_file.write(report)
 
     print("Generated metrics report at metrics/metrics-report.md")
-
-    try:
-        commit_and_push_report()
-    except Exception as err:
-        raise RuntimeError(f"Report was generated but commit/push failed: {err}") from err
 
 
 if __name__ == "__main__":
