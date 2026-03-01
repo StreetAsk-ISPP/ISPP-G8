@@ -6,11 +6,17 @@ import java.util.UUID;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.streetask.app.exceptions.ResourceNotFoundException;
 import com.streetask.app.model.Question;
+import com.streetask.app.user.RegularUser;
+import com.streetask.app.user.RegularUserRepository;
+
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 
 import jakarta.validation.Valid;
 
@@ -18,15 +24,25 @@ import jakarta.validation.Valid;
 public class QuestionService {
 
 	private final QuestionRepository questionRepository;
+	private final RegularUserRepository regularUserRepository;
 
 	@Autowired
-	public QuestionService(QuestionRepository questionRepository) {
+	public QuestionService(QuestionRepository questionRepository, RegularUserRepository regularUserRepository) {
 		this.questionRepository = questionRepository;
+		this.regularUserRepository = regularUserRepository;
 	}
 
 	@Transactional
 	public Question saveQuestion(@Valid Question question) throws DataAccessException {
 		applyDefaults(question);
+
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    String email = auth.getName();
+
+    RegularUser ru = regularUserRepository.findByEmail(email)
+        .orElseThrow(() -> new AccessDeniedException("Only regular users can create questions"));
+
+    question.setCreator(ru);
 		questionRepository.save(question);
 		return question;
 	}
@@ -106,5 +122,4 @@ public class QuestionService {
 			question.setExpiresAt(question.getCreatedAt().plusHours(2));
 		}
 	}
-
 }
