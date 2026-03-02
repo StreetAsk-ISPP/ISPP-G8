@@ -22,7 +22,7 @@ jobs:
       - name: ⚙️ Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: 🛠️ Configurar Expo y EAS CLI
         uses: expo/expo-github-action@v8
