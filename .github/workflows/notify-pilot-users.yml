@@ -1,0 +1,49 @@
+name: Notify pilot users
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  envio-correos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: send email via SendGrid
+        uses: dawidd6/action-send-mail@v3
+        with:
+
+          server_address: smtp.sendgrid.net
+          server_port: 465
+          username: apikey 
+          password: ${{ secrets.SENDGRID_API_KEY }}
+          
+          
+          to: ${{ secrets.PILOT_EMAILS }}
+          
+          
+          from: "streetask0@gmail.com"
+          
+          subject: "Nueva actualización disponible: ${{ github.event.release.tag_name }}"
+          
+          body: |
+            ¡Hola equipo piloto! 
+            
+            Hay novedades en el proyecto. Hemos publicado la versión **${{ github.event.release.name }}** y ya está lista para que la probéis.
+            
+            Vuestro feedback es clave para detectar errores y mejorar la aplicación en cada paso que damos.
+            
+            
+             **PASOS PARA EL TESTING:**
+            
+            1. **Prueba la versión:** Los detalles de la nueva versión: 
+                ${{ github.event.release.body }}
+            
+
+            2. **Danos tu Feedback:** Tras trastear con las nuevas funciones, cuéntanos qué te han parecido en este enlace (solo toma 3 min):
+                [https://forms.gle/C9d8ncHBC1WPT3KZA]
+            
+            
+            Si encontráis cualquier fallo o tenéis una idea de mejora, no dudéis en reflejarlo en el formulario. ¡Gracias por vuestro tiempo!
+            
+            Atentamente,
+            El Equipo de Desarrollo 
