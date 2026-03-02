@@ -38,7 +38,7 @@ jobs:
 
       - name: Deploy to Container App
         # Reemplazado @v1 por el SHA de la versión 1.0.8
-        uses: azure/CLI@9c0e6a9c0f0cbb77eb8aad66ec189c3a8b8d0af2 # v1.0.8
+        uses: azure/login@v1 # v1.0.8
         with:
           inlineScript: |
             az config set extension.use_dynamic_install=yes_without_prompt
