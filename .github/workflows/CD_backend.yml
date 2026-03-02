@@ -41,4 +41,9 @@ jobs:
               --name sprint1-backend \
               --resource-group sprint1-recursos \
               --image streetask/backend:latest \
-              --max-replicas 4
+              --max-replicas 4 \
+              --set-env-vars \
+                SPRING_PROFILES_ACTIVE=mysql \
+                MYSQL_URL=${{ secrets.MYSQL_URL }} \
+                MYSQL_USER=${{ secrets.MYSQL_USER }} \
+                MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
