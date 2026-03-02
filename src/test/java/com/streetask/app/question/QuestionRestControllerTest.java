@@ -197,6 +197,19 @@ class QuestionRestControllerTest {
 
 	@Test
 	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldAcceptDateTimeWithoutTimezone() throws Exception {
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("expiresAt", "2026-03-02T17:37:32");
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.expiresAt").exists());
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
 	void create_shouldReturnBadRequestWhenTitleIsMissing() throws Exception {
 		Map<String, Object> invalidPayload = new HashMap<>();
 		invalidPayload.put("content", "Content without title");
