@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.streetask.app.model.Answer;
 import com.streetask.app.model.GeoPoint;
@@ -22,6 +23,9 @@ class AnswerServiceTest {
 
     @Mock
     private AnswerRepository answerRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private AnswerService answerService;
