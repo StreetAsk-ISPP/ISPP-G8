@@ -5,7 +5,28 @@
 
 ---
 
-## 💰 PROJECT BUDGET AT A GLANCE
+## � HOURLY RATE METHODOLOGY
+
+**Rates applied:**
+- **Developers:** €12.50/h (full TCE included)
+- **Project Managers:** €14.80/h (full TCE included)
+
+**Source & Justification:**
+These rates are based on **junior/academic profile benchmarks** in the Spanish market for university-led software projects (ISPP program context). They include:
+- Gross salary equivalents for entry-level positions (€1,200-€1,500/month)
+- Employer social contributions (~35%)
+- Equipment and indirect costs
+
+**Market comparison:**
+- Junior developers (Spain, 2026): €10-€15/h (academic/internship context)
+- Mid-level professionals: €20-€35/h
+- Senior consultants: €40-€60/h
+
+**Reference:** Aligned with ISPP project standards and Spanish labor cost structures for educational/research initiatives.
+
+---
+
+## �💰 PROJECT BUDGET AT A GLANCE
 
 | Category | Cost |
 |---|---:|
