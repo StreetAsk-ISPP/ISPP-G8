@@ -1,8 +1,9 @@
--- One admin user, named admin1 with password 4dm1n and authority admin
+-- Authorities seed data
 INSERT INTO authorities(id, authority) VALUES ('11111111-1111-1111-1111-111111111111', 'ADMIN');
 INSERT INTO authorities(id, authority) VALUES ('22222222-2222-2222-2222-222222222222', 'USER');
 INSERT INTO authorities(id, authority) VALUES ('33333333-3333-3333-3333-333333333333', 'BUSINESS');
 
+-- Admin user: admin1 / password: 4dm1n
 INSERT INTO appusers(id, email, user_name, password, first_name, last_name, authority)
 VALUES (
 	'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -14,7 +15,7 @@ VALUES (
 	'11111111-1111-1111-1111-111111111111'
 );
 
--- One admin user, email user1@streetask.com with password 4dm1n and authority admin
+-- Regular user: user1@streetask.com / password: 4dm1n
 INSERT INTO appusers (id, email, user_name, password, first_name, last_name, authority, account_type, active, created_at)
 VALUES (
 	'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
@@ -29,7 +30,7 @@ VALUES (
 	CURRENT_TIMESTAMP
 );
 
--- OJO: regular_users.id debe existir también en appusers.id (FK regular_users -> appusers)
+-- RegularUser profile for user1
 INSERT INTO regular_users (id, coin_balance, rating, verified, visibility_radius_km, phone, profile_photo)
 VALUES (
 	'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
