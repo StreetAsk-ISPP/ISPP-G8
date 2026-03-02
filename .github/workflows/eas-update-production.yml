@@ -27,7 +27,8 @@ jobs:
 
       - uses: expo/expo-github-action@v8
         with:
+          eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - run: |
-          npx eas update --channel production --non-interactive --message "production: ${{ github.sha }}"
+      - name: Publish update
+        run: npx eas-cli update --channel production --non-interactive --message "production:${{ github.sha }}"

@@ -146,7 +146,8 @@ public class SecurityConfiguration {
 		configuration.setAllowedOrigins(List.of(
 			"http://localhost:8080",
 			"http://localhost:8081",
-			"http://localhost:19006"
+			"http://localhost:19006",
+				"https://streetask.expo.app"
 		));
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("*"));

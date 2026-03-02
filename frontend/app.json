@@ -27,9 +27,7 @@
       "edgeToEdgeEnabled": true,
       "package": "com.streetask.app"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
+    "web": { "output": "single" },
     "extra": {
       "eas": {
         "projectId": "36639f05-39c6-44da-8e11-e1e4997bb3d9"
