@@ -67,6 +67,13 @@ git checkout -b feature/<issue-name>
 ```
 
 Example: `feature/user-authentication`
+ 
+If your work targets the backend, include the word `backend` in the branch name following `feature/` so CI/workflows detect backend work. For example:
+
+- `feature/backend/add-user-authentication`
+- `feature/add-user-authentication-backend`
+
+The branch name must contain the substring `backend` (anywhere after `feature/`) for backend workflows to be triggered.
 
 #### Documentation Issue (type: documentation)
 
