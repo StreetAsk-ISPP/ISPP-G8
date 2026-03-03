@@ -28,15 +28,41 @@ These rates are based on **junior/academic profile benchmarks** in the Spanish m
 
 ## �💰 PROJECT BUDGET AT A GLANCE
 
-| Category | Cost |
-|---|---:|
-| **Labor (Dev + PM)** | €26,308.00 |
-| **Infrastructure (Azure)** | €122.50 |
-| **🎯 TOTAL PROJECT** | **€26,430.50** |
-| ✅ **Completed (Sprint 0 & 1)** | €10,791.50 |
-| 📋 **Remaining (Sprint 2 & 3)** | €15,639.00 |
+### Development Costs (Sprint 0 → Sprint 3)
 
-**Status:** 40.3% budget consumed | 4/11 weeks elapsed | ✅ **On track (slightly ahead)**
+| Phase | Development Cost | Deployment Cost (Azure) | Subtotal |
+|---|---:|---:|---:|
+| **Sprint 0** (Completed) | €5,572.00 | €17.50 | €5,589.50 |
+| **Sprint 1** (Completed) | €5,184.00 | €17.50 | €5,201.50 |
+| **Sprint 2** (Estimated) | €7,776.00 | €35.00 | €7,811.00 |
+| **Sprint 3** (Estimated) | €7,776.00 | €52.50 | €7,828.50 |
+| **TOTAL** | **€26,308.00** | **€122.50** | **€26,430.50** |
+
+---
+
+### Total Project Cost Breakdown
+
+**Development & Deployment Summary:**
+> The total **development cost** of the project from Sprint 0 through Sprint 3 would be approximately **€26,308.00**. Adding the **deployment costs** across all sprints (assuming we pay monthly Azure subscription costs for infrastructure during development), the total would be:
+> 
+> **€26,308.00 (development) + €122.50 (deployment infrastructure) = €26,430.50**
+
+| Category | Cost | Description |
+|---|---:|---|
+| **Total Labor (Dev + PM)** | €26,308.00 | Team salaries for all sprints |
+| **Total Infrastructure (Azure)** | €122.50 | Virtual machines & services (Sprints 0–3) |
+| **🎯 TOTAL PROJECT COST** | **€26,430.50** | Complete project through Sprint 3 |
+
+---
+
+### Budget Status
+
+| Metric | Value |
+|---|---:|
+| ✅ **Completed (Sprint 0 & 1)** | €10,791.50 (40.3%) |
+| 📋 **Remaining (Sprint 2 & 3)** | €15,639.00 (59.7%) |
+| **Timeline Elapsed** | 4/11 weeks (36%) |
+| **Status** | ✅ On track (slightly ahead) |
 
 ---
 
