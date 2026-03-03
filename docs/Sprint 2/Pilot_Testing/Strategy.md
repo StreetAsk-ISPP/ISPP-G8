@@ -27,17 +27,17 @@ Validate 9 critical use cases (MVP) with 2 internal pilot user groups before rel
 
 ### Pilot User Groups
 
-#### Group 1: Technical (3-4 testers)
-- **Role:** Developers, QA
-- **Duration:** 3h
-- **Focus:** Bugs, API behavior, data integrity, performance
-- **Deliverable:** Technical issues with reproducible steps
+#### Group 1: Pilot Users (3-4 people)
+- **Access Level:** App users only (no developer/code access)
+- **Duration:** ~1h testing
+- **Task:** Use app as regular users, report bugs/feedback via questionnaire
+- **Deliverable:** Bug reports + usability feedback form
 
-#### Group 2: Non-Technical (2-3 testers)
-- **Role:** Product managers, designers
-- **Duration:** 3h
-- **Focus:** UX clarity, navigation, requirement alignment
-- **Deliverable:** Usability feedback and improvements
+#### Group 2: Pilot Users (2-3 people)
+- **Access Level:** App users only (no developer/code access)
+- **Duration:** ~1h testing
+- **Task:** Use app as regular users, report bugs/feedback via questionnaire
+- **Deliverable:** Bug reports + usability feedback form
 
 
 
@@ -46,50 +46,57 @@ Validate 9 critical use cases (MVP) with 2 internal pilot user groups before rel
 
 ### Pre-Testing Checklist
 
-**Backend/Frontend:**
-- [ ] Staging environment deployed + healthy
-- [ ] Frontend APK/ESC builds ready
-- [ ] Test accounts created (8-10 accounts)
-- [ ] Test data seeded (5+ questions, 3+ events)
-- [ ] Swagger API docs accessible
+**App & Environment:**
+- [ ] APK/ESC build ready for distribution
+- [ ] Test accounts created (one per tester or shared)
+- [ ] Test data seeded (5+ questions, 3+ events, business accounts)
+- [ ] App tested on Android/iOS locally first
 
 **Communication:**
+- [ ] Bug report questionnaire (DOCX) prepared
+- [ ] Email templates ready
 - [ ] Slack channel #ispp-pilot-testing created
-- [ ] Testing guidelines distributed to testers
-- [ ] Google Form feedback ready (or printed)
-- [ ] Calendar invites sent (4 sessions)
+- [ ] Pilot users identified and email addresses collected
 
-**Testers:**
-- [ ] Each tester knows when + what to test
-- [ ] Test account credentials shared
-- [ ] APK/build accessible for download
+**Tester Setup:**
+- [ ] APK/ESC build uploaded and link ready
+- [ ] Test account credentials prepared
+- [ ] Installation instructions prepared
+- [ ] Questionnaire template ready to send
 
 ### Reference Documents
 
-1. **Testing_Guidelines.md** (for testers)
+1. **Bug Report Questionnaire** (sent via email)
 2. **Feedback_Form.md** (during testing)
 
 ---
 
 ## Phase 3️⃣: Execution
 
-### 4 Testing Sessions
+### Feedback Collection Timeline
 
-| Session | Group | Duration | Activity |
-|---------|-------|----------|----------|
-| 1 | Group 1 (Tech) | 1.5h | Testing core scenarios |
-| 2 | Group 2 (UX) | 1.5h | Testing core scenarios |
-| 3 | Both | 1.5h | Bug triage + clarification |
-| 4 | Group 1 | 1h | [Opt] Re-test hotfixes |
+| Phase | Duration | Activity |
+|-------|----------|----------|
+| **Day 0** | 2h | Send app + test accounts to Group 1 + Group 2 |
+| **Days 1-2** | Self-paced | Testers use app (~1h each), complete questionnaire |
+| **Day 3** | 1h | Collect all questionnaires, start triage |
+| **Days 4-5** | - | Consolidate findings, create GitHub issues |
 
-**Total: 5.5 hours** (within 6h limit)
+**Total feedback collection: ~3-4 days** (testers work async)
 
-### Issue Reporting Protocol
+### Feedback Collection & Response
 
-**During testing, report immediately (Slack):**
-- 🔴 **CRITICAL:** App crash / complete feature failure
-- 🟠 **MAJOR:** Partial feature failure / significant UX friction
-- 🟡 **MINOR:** Cosmetic / polish
+**Tester Submission (via email questionnaire):**
+- Testers complete DOCX form during/after app testing
+- Report bugs with severity: 🔴 CRITICAL / 🟠 MAJOR / 🟡 MINOR
+- Include steps to reproduce + screenshots if possible
+- Submit forms via email to Pilot Coordinator
+
+**Team Response Plan:**
+1. **Consolidation (Day T+1):** Compile all responses, identify duplicates
+2. **GitHub Issues (Day T+1):** Create issues for each bug/feedback item
+3. **Triage Meeting (Day T+2):** Severity review, estimate fixes, commit to Sprint 2
+4. **Dev Reaction (Days T+3-7):** Fix critical/major items, track in sprint
 
 ---
 
@@ -200,13 +207,13 @@ Day T+2-7:  Fix critical issues + [Opt] Session 4
 
 - [ ] All documents created + reviewed
 - [ ] Roles assigned + confirmed
-- [ ] Testing guidelines sent to testers
+- [ ] Bug report questionnaire prepared
 - [ ] Staging environment healthy
 - [ ] Test accounts created
-- [ ] Feedback form ready (Google Form or printed)
+- [ ] Feedback form ready (email questionnaire + Google Form)
 - [ ] Slack channel created
-- [ ] Calendar invites sent
-- [ ] 24h reminder queued
+- [ ] Email invites sent to pilot users
+- [ ] Email reminders with questionnaire link queued
 
 ---
 
