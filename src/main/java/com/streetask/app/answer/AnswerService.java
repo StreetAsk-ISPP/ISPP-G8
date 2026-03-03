@@ -104,19 +104,29 @@ public class AnswerService {
 	}
 
 	/**
-	 * Validates that the answer is posted from a location within the question's radius.
+	 * Validates that the answer is posted from a location within the question's
+	 * radius.
+	 * Only validates if the question has a location and a radius > 0.
 	 * 
-	 * @param answer The answer to validate
+	 * @param answer   The answer to validate
 	 * @param question The question the answer is replying to
-	 * @throws IllegalArgumentException if the user location is not within the allowed radius
+	 * @throws IllegalArgumentException if the user location is not within the
+	 *                                  allowed radius
 	 */
 	private void validateAnswerLocation(Answer answer, Question question) {
-		if (answer.getUserLocation() == null || question.getLocation() == null) {
-			throw new IllegalArgumentException("User location and question location must not be null");
+		// Only validate location if question has a location and a positive radius
+		if (question.getLocation() == null || question.getRadiusKm() == null || question.getRadiusKm() <= 0) {
+			// No location validation required
+			return;
+		}
+
+		// Location validation is required for this question
+		if (answer.getUserLocation() == null) {
+			throw new IllegalArgumentException("User location must not be null for questions with location radius");
 		}
 
 		double distance = calculateDistance(answer.getUserLocation(), question.getLocation());
-		double allowedRadius = question.getRadiusKm() != null ? question.getRadiusKm() : 0;
+		double allowedRadius = question.getRadiusKm();
 
 		if (distance > allowedRadius) {
 			throw new IllegalArgumentException(

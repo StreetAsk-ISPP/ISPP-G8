@@ -72,9 +72,8 @@ public class AnswerRestController {
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	@Operation(summary = "Create a new answer to a question", 
-		description = "Post an answer to a question. The user's location must be within the question's radius. The answer will be stored with location validation.")
-	public ResponseEntity<Answer> create(@RequestBody @Valid Answer answer) {
+	@Operation(summary = "Create a new answer to a question", description = "Post an answer to a question. The user's location must be within the question's radius. The answer will be stored with location validation.")
+	public ResponseEntity<?> create(@RequestBody @Valid Answer answer) {
 		// Validate that the question exists and get it
 		RestPreconditions.checkNotNull(answer.getQuestion(), "Answer", "question", answer.getQuestion());
 		Question question = answer.getQuestion();
@@ -85,14 +84,14 @@ public class AnswerRestController {
 			Answer savedAnswer = answerService.saveAnswer(answer, question);
 			return new ResponseEntity<>(savedAnswer, HttpStatus.CREATED);
 		} catch (IllegalArgumentException e) {
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
 	}
 
 	@PutMapping(value = "{answerId}")
 	@ResponseStatus(HttpStatus.OK)
 	@Operation(summary = "Update an answer")
-	public ResponseEntity<Answer> update(@PathVariable("answerId") UUID id,
+	public ResponseEntity<?> update(@PathVariable("answerId") UUID id,
 			@RequestBody @Valid Answer answer) {
 		// Validate that the answer exists
 		Answer existingAnswer = answerService.findAnswer(id);
@@ -106,7 +105,7 @@ public class AnswerRestController {
 		try {
 			return new ResponseEntity<>(answerService.updateAnswer(answer, id, question), HttpStatus.OK);
 		} catch (IllegalArgumentException e) {
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
 	}
 

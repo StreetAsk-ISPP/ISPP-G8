@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, FlatList, TextInput, KeyboardAvoidingView, Platform, Pressable, ActivityIndicator } from 'react-native';
+import * as Location from 'expo-location';
 import { theme } from '../../../shared/ui/theme/theme';
 import { globalStyles } from '../../../shared/ui/theme/globalStyles';
 import apiClient from '../../../shared/services/http/apiClient';
+import { useAuth } from '../../../app/providers/AuthProvider';
 
 const SendIcon = () => <Text style={styles.sendIcon}>➤</Text>;
 const pad2 = (n) => String(n).padStart(2, '0');
@@ -17,16 +19,18 @@ const formatHms = (totalSeconds) => {
 
 export default function QuestionThreadScreen({ route }) {
     const { questionId } = route?.params || {};
+    const { user } = useAuth(); // Obtener usuario autenticado
 
     const [question, setQuestion] = useState(null);
     const [answers, setAnswers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const [myVotes, setMyVotes] = useState({}); // myVotes[answerId] = 'LIKE' | 'DISLIKE' | undefined
+    const [myVotes, setMyVotes] = useState({}); // myVotes[answerId] = 'LIKE' | 'DISLIKE' | undefined (LOCAL ONLY)
 
     const [draft, setDraft] = useState('');
     const [sendingAnswer, setSendingAnswer] = useState(false);
+    const [userLocation, setUserLocation] = useState(null);
     const inputRef = useRef(null);
 
     // Función auxiliar para calcular minutos anteriores
@@ -44,6 +48,27 @@ export default function QuestionThreadScreen({ route }) {
     };
 
     const canSend = useMemo(() => draft.trim().length > 0 && !sendingAnswer, [draft, sendingAnswer]);
+
+    // Obtener ubicación del usuario al montar el componente
+    useEffect(() => {
+        const requestLocationPermission = async () => {
+            try {
+                const { status } = await Location.requestForegroundPermissionsAsync();
+                if (status === 'granted') {
+                    const location = await Location.getCurrentPositionAsync({
+                        accuracy: Location.Accuracy.High,
+                    });
+                    setUserLocation(location.coords);
+                } else {
+                    console.warn('Location permission not granted');
+                }
+            } catch (err) {
+                console.warn('Error getting user location:', err);
+            }
+        };
+
+        requestLocationPermission();
+    }, []);
 
     // Cargar pregunta y respuestas al montar el componente
     useEffect(() => {
@@ -128,12 +153,45 @@ export default function QuestionThreadScreen({ route }) {
         setSendingAnswer(true);
 
         try {
-            // Enviar respuesta al backend
-            const response = await apiClient.post('/api/v1/answers', {
+            // Validar que tenemos la ubicación del usuario
+            let currentLocation = userLocation;
+            if (!currentLocation) {
+                // Intentar obtener ubicación si no la tenemos
+                try {
+                    const { status } = await Location.requestForegroundPermissionsAsync();
+                    if (status === 'granted') {
+                        const location = await Location.getCurrentPositionAsync({
+                            accuracy: Location.Accuracy.High,
+                        });
+                        currentLocation = location.coords;
+                        setUserLocation(currentLocation);
+                    } else {
+                        throw new Error('Location permission required to post an answer');
+                    }
+                } catch (locErr) {
+                    alert('Error: Cannot get your location. Please enable location permissions.');
+                    setAnswers(prev => prev.filter(a => a.id !== optimistic.id));
+                    setDraft(content);
+                    setSendingAnswer(false);
+                    return;
+                }
+            }
+
+            // Construir el payload con la ubicación real del usuario
+            const payload = {
                 content: content,
                 question: { id: question.id },
-                userLocation: question.location || { latitude: 0, longitude: 0 }, // Se debe obtener la ubicación real del usuario
-            });
+                user: { id: user?.id }, // Enviar ID del usuario autenticado
+                userLocation: {
+                    latitude: currentLocation.latitude,
+                    longitude: currentLocation.longitude,
+                },
+            };
+
+            console.log('Sending answer payload:', JSON.stringify(payload, null, 2));
+
+            // Enviar respuesta al backend con usuario autenticado
+            const response = await apiClient.post('/api/v1/answers', payload);
 
             // Reemplazar respuesta optimista con la respuesta del servidor
             const savedAnswer = response.data;
@@ -157,10 +215,36 @@ export default function QuestionThreadScreen({ route }) {
             );
         } catch (e) {
             console.error('Error sending answer:', e);
+            console.error('Error response status:', e.response?.status);
+            console.error('Error response data:', e.response?.data);
+            console.error('Full error:', e);
+
             // Quitar la respuesta optimista si falla
             setAnswers(prev => prev.filter(a => a.id !== optimistic.id));
-            // Mostrar mensaje de error (opcional)
-            alert('Error sending answer: ' + (e.response?.data?.message || e.message));
+
+            // Mostrar mensaje de error detallado
+            let errorMessage = 'Error sending answer';
+            if (e.response) {
+                const status = e.response.status;
+                const data = e.response.data;
+                if (status === 400) {
+                    errorMessage = `Bad Request: ${data?.message || JSON.stringify(data) || 'Invalid data'}`;
+                } else if (status === 401) {
+                    errorMessage = 'Unauthorized: Please log in again';
+                } else if (status === 403) {
+                    errorMessage = 'Forbidden: You don\'t have permission';
+                } else if (status === 404) {
+                    errorMessage = 'Not found: Question or resource not found';
+                } else if (status >= 500) {
+                    errorMessage = `Server error (${status}): ${data?.message || 'Please try again later'}`;
+                } else {
+                    errorMessage = `Error (${status}): ${data?.message || e.message}`;
+                }
+            } else {
+                errorMessage = `Network error: ${e.message}`;
+            }
+
+            alert(errorMessage);
             // Restaurar el draft
             setDraft(content);
         } finally {
@@ -168,29 +252,27 @@ export default function QuestionThreadScreen({ route }) {
         }
     };
 
-    const vote = (answerId, nextType /* 'LIKE' | 'DISLIKE' */) => {
+    // Función local de voto (sin guardar en backend)
+    const vote = (answerId, nextType) => {
         setMyVotes((prevVotes) => {
-            const current = prevVotes[answerId]; // 'LIKE' | 'DISLIKE' | undefined
+            const current = prevVotes[answerId];
 
+            // Actualizar UX localmente
             setAnswers((prevAnswers) =>
                 prevAnswers.map((a) => {
                     if (a.id !== answerId) return a;
 
-                    let likes = a.likes;
-                    let dislikes = a.dislikes;
+                    let likes = a.likes || 0;
+                    let dislikes = a.dislikes || 0;
 
-                    // Si pulsa el mismo voto -> quitarlo
                     if (current === nextType) {
                         if (nextType === 'LIKE') likes = Math.max(0, likes - 1);
                         else dislikes = Math.max(0, dislikes - 1);
-
                         return { ...a, likes, dislikes };
                     }
 
-                    // Si cambia de voto o vota por primera vez:
                     if (current === 'LIKE') likes = Math.max(0, likes - 1);
                     if (current === 'DISLIKE') dislikes = Math.max(0, dislikes - 1);
-
                     if (nextType === 'LIKE') likes += 1;
                     else dislikes += 1;
 
@@ -198,37 +280,13 @@ export default function QuestionThreadScreen({ route }) {
                 })
             );
 
-            // actualizar myVotes
             if (current === nextType) {
                 const copy = { ...prevVotes };
                 delete copy[answerId];
                 return copy;
             }
-
             return { ...prevVotes, [answerId]: nextType };
         });
-
-        // Enviar voto al backend
-        sendVoteToBackend(answerId, nextType);
-    };
-
-    const sendVoteToBackend = async (answerId, voteType) => {
-        try {
-            // Encontrar la respuesta actual para enviar los votos actualizados
-            const answer = answers.find(a => a.id === answerId);
-            if (!answer || answer.id.startsWith('tmp-')) return; // No enviar votos de respuestas no guardadas
-
-            // Enviar PUT con upvotes y downvotes actualizados
-            await apiClient.put(`/api/v1/answers/${answerId}`, {
-                content: answer.text,
-                upvotes: answer.likes,
-                downvotes: answer.dislikes,
-                question: { id: question?.id },
-            });
-        } catch (e) {
-            console.error('Error sending vote:', e);
-            // Opcional: mostrar mensaje de error
-        }
     };
 
     const renderAnswer = ({ item }) => {
@@ -249,14 +307,14 @@ export default function QuestionThreadScreen({ route }) {
                         style={[styles.voteBtn, myVote === 'DISLIKE' && styles.voteBtnDimmed]}
                     >
                         <Text style={styles.voteIcon}>👍</Text>
-                        <Text style={styles.voteCount}>{item.likes}</Text>
+                        <Text style={styles.voteCount}>{item.likes || 0}</Text>
                     </Pressable>
 
                     <Pressable onPress={() => vote(item.id, 'DISLIKE')}
                         style={[styles.voteBtn, myVote === 'LIKE' && styles.voteBtnDimmed]}
                     >
                         <Text style={styles.voteIcon}>👎</Text>
-                        <Text style={styles.voteCount}>{item.dislikes}</Text>
+                        <Text style={styles.voteCount}>{item.dislikes || 0}</Text>
                     </Pressable>
                 </View>
             </View>

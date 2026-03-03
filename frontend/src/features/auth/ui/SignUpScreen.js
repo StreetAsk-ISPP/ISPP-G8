@@ -47,7 +47,7 @@ export default function SignUpScreen({ navigation }) {
 
 		try {
 			setIsSubmitting(true);
-			
+
 			// Step 1: Create basic user
 			await apiClient.post('/api/v1/auth/signup/basic', {
 				email,
@@ -67,14 +67,18 @@ export default function SignUpScreen({ navigation }) {
 				email,
 				password,
 			});
-			
-			// Save token and redirect to Home
-			await login(loginResponse.data.token);
+
+			// Save token and user data, then redirect to Home
+			await login(loginResponse.data.token, {
+				id: loginResponse.data.id,
+				username: loginResponse.data.username,
+				roles: loginResponse.data.roles,
+			});
 		} catch (err) {
 			let errorMessage = err.response?.data?.message || err.response?.data || err.message || 'Registration failed. Please try again.';
-			
+
 			errorMessage = typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage);
-			
+
 			if (errorMessage.toLowerCase().includes('username')) {
 				setError('This username is already taken. Please choose a different username.');
 			} else if (errorMessage.toLowerCase().includes('email')) {
@@ -113,9 +117,9 @@ export default function SignUpScreen({ navigation }) {
 			});
 		} catch (err) {
 			let errorMessage = err.response?.data?.message || err.response?.data || err.message || 'Registration failed. Please try again.';
-			
+
 			errorMessage = typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage);
-			
+
 			if (errorMessage.toLowerCase().includes('username')) {
 				setError('This username is already taken. Please choose a different username.');
 			} else if (errorMessage.toLowerCase().includes('email')) {
@@ -138,11 +142,11 @@ export default function SignUpScreen({ navigation }) {
 				</View>
 				{/* Logo/Icon */}
 				<View style={styles.logoContainer}>
-						<Image 
-							source={require('../../../../assets/logo.png')} 
-							style={styles.logoImage}
-							resizeMode="contain"
-						/>
+					<Image
+						source={require('../../../../assets/logo.png')}
+						style={styles.logoImage}
+						resizeMode="contain"
+					/>
 				</View>
 
 				<Text style={styles.title}>Sign Up</Text>
@@ -225,47 +229,47 @@ export default function SignUpScreen({ navigation }) {
 
 						<View style={styles.buttonsRow}>
 							<View style={styles.buttonContainer}>
-							<TouchableOpacity
-								onPress={handleBusinessSignup}
-								disabled={isSubmitting}
-								activeOpacity={0.8}
-							>
-								<LinearGradient
-									colors={['#F59E0B', '#EF4444', '#8B5CF6']}
-									start={{ x: 0, y: 0 }}
-									end={{ x: 1, y: 1 }}
-									style={styles.businessButton}
+								<TouchableOpacity
+									onPress={handleBusinessSignup}
+									disabled={isSubmitting}
+									activeOpacity={0.8}
 								>
-									<View style={styles.businessButtonContent}>
-									<Text style={styles.businessButtonStar}>⭐</Text>
-									<View style={styles.businessButtonTextContainer}>
-										<Text style={styles.businessButtonText}>Business</Text>
-										<Text style={styles.businessButtonText}>account</Text>
-									</View>
-									</View>
-								</LinearGradient>
-							</TouchableOpacity>
-						</View>
+									<LinearGradient
+										colors={['#F59E0B', '#EF4444', '#8B5CF6']}
+										start={{ x: 0, y: 0 }}
+										end={{ x: 1, y: 1 }}
+										style={styles.businessButton}
+									>
+										<View style={styles.businessButtonContent}>
+											<Text style={styles.businessButtonStar}>⭐</Text>
+											<View style={styles.businessButtonTextContainer}>
+												<Text style={styles.businessButtonText}>Business</Text>
+												<Text style={styles.businessButtonText}>account</Text>
+											</View>
+										</View>
+									</LinearGradient>
+								</TouchableOpacity>
+							</View>
 
-					<View style={styles.buttonContainer}>
-					<TouchableOpacity
-						onPress={handleRegularSignup}
-						disabled={isSubmitting}
-						activeOpacity={0.8}
-					>
-						<LinearGradient
-							colors={['#94A3B8', '#64748B', '#475569']}
-							start={{ x: 0, y: 0 }}
-							end={{ x: 1, y: 1 }}
-							style={styles.normalButton}
-						>
-						<View style={styles.normalButtonTextContainer}>
-							<Text style={styles.normalButtonText}>Regular</Text>
-							<Text style={styles.normalButtonText}>account</Text>
-						</View>
-						</LinearGradient>
-					</TouchableOpacity>
-					</View>
+							<View style={styles.buttonContainer}>
+								<TouchableOpacity
+									onPress={handleRegularSignup}
+									disabled={isSubmitting}
+									activeOpacity={0.8}
+								>
+									<LinearGradient
+										colors={['#94A3B8', '#64748B', '#475569']}
+										start={{ x: 0, y: 0 }}
+										end={{ x: 1, y: 1 }}
+										style={styles.normalButton}
+									>
+										<View style={styles.normalButtonTextContainer}>
+											<Text style={styles.normalButtonText}>Regular</Text>
+											<Text style={styles.normalButtonText}>account</Text>
+										</View>
+									</LinearGradient>
+								</TouchableOpacity>
+							</View>
 						</View>
 					</View>
 				</View>
