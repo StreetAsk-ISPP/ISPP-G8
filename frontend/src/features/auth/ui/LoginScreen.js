@@ -27,7 +27,12 @@ export default function LoginScreen({ navigation }) {
         email: identifier,
         password,
       });
-      await login(response.data.token);
+      // Pasar tanto el token como los datos del usuario
+      await login(response.data.token, {
+        id: response.data.id,
+        username: response.data.username,
+        roles: response.data.roles,
+      });
     } catch {
       setError('Login failed. Please check your credentials.');
     } finally {
