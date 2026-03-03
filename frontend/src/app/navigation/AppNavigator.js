@@ -8,6 +8,7 @@ import BusinessSignupScreen from '../../features/auth/ui/BusinessSignupScreen';
 import PaymentGatewayPlaceholderScreen from '../../features/payments/ui/PaymentGatewayPlaceholderScreen';
 import HomeScreen from '../../features/home/ui/HomeScreen';
 import CreateQuestionScreen from '../../features/questions/ui/CreateQuestionScreen';
+import QuestionThreadScreen from '../../features/answers/ui/QuestionThreadScreen';
 
 import { useAuth } from '../providers/AuthProvider';
 import { theme } from '../../shared/ui/theme/theme';
@@ -38,6 +39,7 @@ export default function AppNavigator() {
                 <>
                     <Stack.Screen name="Home" component={HomeScreen} />
                     <Stack.Screen name="CreateQuestion" component={CreateQuestionScreen} />
+                    <Stack.Screen name="QuestionThread" component={QuestionThreadScreen} />
                 </>
             )}
         </Stack.Navigator>
