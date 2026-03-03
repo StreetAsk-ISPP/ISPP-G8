@@ -87,6 +87,53 @@ class GitHubClient:
         return data
 
 
+class CodacyClient:
+    def __init__(self, token: str | None):
+        self.token = token
+
+    def get_quality_metrics(self, provider: str, org: str, repo: str):
+        """
+        Fetch Codacy metrics for repository-level quality indicators.
+
+        TODO: API CALL
+        Endpoint candidate (Codacy API v3, adjust to your Codacy account type):
+          GET https://api.codacy.com/api/v3/analysis/organizations/{provider}/{org}/repositories/{repo}
+        Extract from JSON response (or nested endpoints if your tenant differs):
+          - quality gate pass rate (% of successful quality checks)
+          - duplication in new code (%)
+          - coverage on new/changed code (%)
+          - open security issues (critical/high)
+
+        Notes:
+          - Some Codacy plans expose these values in dedicated endpoints for pull requests/commits.
+          - If your workspace uses Codacy Cloud or Self-hosted, endpoint path may vary.
+        """
+        if not self.token:
+            return None
+
+        query = urlencode({"provider": provider, "organization": org, "repository": repo})
+        url = f"https://api.codacy.com/api/v3/repositories/quality?{query}"
+        headers = {
+            "Accept": "application/json",
+            "api-token": self.token,
+            "User-Agent": "agile-metrics-bot",
+        }
+
+        req = Request(url, headers=headers, method="GET")
+        try:
+            with urlopen(req, timeout=60) as response:  # nosec B310
+                data = response.read().decode("utf-8")
+                parsed = json.loads(data) if data else {}
+                return {
+                    "quality_gate_pass_rate": parsed.get("qualityGatePassRate"),
+                    "duplication_new_code": parsed.get("duplicationInNewCode"),
+                    "coverage_new_code": parsed.get("coverageOnNewCode"),
+                    "open_security_critical_high": parsed.get("openSecurityIssuesCriticalHigh"),
+                }
+        except Exception:
+            return None
+
+
 
 def parse_dt(value: str | None):
     if not value:
@@ -146,14 +193,180 @@ def classify_ratio(ratio: float):
     return "🔴 Poor", "< 1"
 
 
+def classify_codacy_quality_gate(pass_rate: float):
+    if pass_rate >= 95:
+        return "🟢 Good", ">= 95%"
+    if pass_rate >= 85:
+        return "🟡 Acceptable", "85-94%"
+    return "🔴 Poor", "< 85%"
 
-def build_report(repo: str, generated_at: datetime, metrics_rows: list[tuple[str, str, str, str]]):
+
+def classify_codacy_duplication(duplication_pct: float):
+    if duplication_pct < 3:
+        return "🟢 Good", "< 3%"
+    if duplication_pct <= 5:
+        return "🟡 Acceptable", "3-5%"
+    return "🔴 Poor", "> 5%"
+
+
+def classify_codacy_coverage(coverage_pct: float):
+    if coverage_pct >= 80:
+        return "🟢 Good", ">= 80%"
+    if coverage_pct >= 70:
+        return "🟡 Acceptable", "70-79%"
+    return "🔴 Poor", "< 70%"
+
+
+def classify_codacy_security(open_critical_high: int):
+    if open_critical_high == 0:
+        return "🟢 Good", "0"
+    if open_critical_high == 1:
+        return "🟡 Acceptable", "1"
+    return "🔴 Poor", "> 1"
+
+
+def classify_individual_throughput(closed_week: int, closed_prev_week: int):
+    if closed_week >= 2:
+        return "🟢 Good", ">= 2"
+    if closed_week == 1:
+        return "🟡 Acceptable", "= 1"
+    if closed_week == 0 and closed_prev_week == 0:
+        return "🔴 Poor", "= 0 for 2 consecutive weeks"
+    return "🟡 Acceptable", "= 0 for 1 week"
+
+
+def classify_individual_cycle_time(days: float):
+    if days <= 4:
+        return "🟢 Good", "<= 4 days"
+    if days <= 7:
+        return "🟡 Acceptable", "4-7 days"
+    return "🔴 Poor", "> 7 days"
+
+
+def classify_pr_merge_effectiveness(ratio_pct: float):
+    if ratio_pct >= 80:
+        return "🟢 Good", ">= 80%"
+    if ratio_pct >= 60:
+        return "🟡 Acceptable", "60-79%"
+    return "🔴 Poor", "< 60%"
+
+
+def classify_rework_rate(rework_pct: float):
+    if rework_pct < 20:
+        return "🟢 Good", "< 20%"
+    if rework_pct <= 35:
+        return "🟡 Acceptable", "20-35%"
+    return "🔴 Poor", "> 35%"
+
+
+def format_metric_value(value, suffix: str = ""):
+    if value is None:
+        return "N/A"
+    if isinstance(value, float):
+        return f"{value:.2f}{suffix}"
+    return f"{value}{suffix}"
+
+
+def pick_codacy_metrics_from_env():
+    quality_gate_pass_rate = os.getenv("CODACY_QUALITY_GATE_PASS_RATE")
+    duplication_new_code = os.getenv("CODACY_DUPLICATION_NEW_CODE")
+    coverage_new_code = os.getenv("CODACY_COVERAGE_NEW_CODE")
+    open_security_critical_high = os.getenv("CODACY_OPEN_SECURITY_CRITICAL_HIGH")
+
+    return {
+        "quality_gate_pass_rate": float(quality_gate_pass_rate) if quality_gate_pass_rate is not None else None,
+        "duplication_new_code": float(duplication_new_code) if duplication_new_code is not None else None,
+        "coverage_new_code": float(coverage_new_code) if coverage_new_code is not None else None,
+        "open_security_critical_high": int(open_security_critical_high) if open_security_critical_high is not None else None,
+    }
+
+
+def resolve_team_members(
+    gh: GitHubClient,
+    owner: str,
+    repo_name: str,
+    issues_all: list[dict],
+    pulls_all: list[dict],
+    from_env: str | None,
+):
+    if from_env:
+        members = [member.strip() for member in from_env.split(",") if member.strip()]
+        if members:
+            return sorted(set(members))
+
+    discovered = set()
+    for issue in issues_all:
+        for assignee in issue.get("assignees") or []:
+            login = assignee.get("login")
+            if login:
+                discovered.add(login)
+
+    for pr in pulls_all:
+        user = pr.get("user") or {}
+        login = user.get("login")
+        if login:
+            discovered.add(login)
+
+    # Include contributors with commits even if they never opened PRs/issues.
+    # Endpoint:
+    #   GET /repos/{owner}/{repo}/contributors
+    # Note: anonymous contributors may not provide login and cannot be mapped to individual GitHub metrics.
+    try:
+        contributors = gh.get_paginated(
+            f"/repos/{owner}/{repo_name}/contributors",
+            params={"anon": "true"},
+        )
+        for contributor in contributors:
+            login = contributor.get("login")
+            if login:
+                discovered.add(login)
+    except RuntimeError:
+        pass
+
+    return sorted(discovered)
+
+
+def get_issue_first_assigned_at(gh: GitHubClient, owner: str, repo_name: str, issue_number: int, login: str):
+    """
+    Returns first assignment timestamp of a specific user for an issue.
+
+    TODO: API CALL
+    Endpoint:
+      GET /repos/{owner}/{repo}/issues/{issue_number}/events
+    Extract:
+      - first event with event == "assigned" and assignee.login == login
+      - created_at as assignment timestamp
+    """
+    events = gh.get_paginated(f"/repos/{owner}/{repo_name}/issues/{issue_number}/events")
+    assigned_times = []
+    for event in events:
+        if event.get("event") != "assigned":
+            continue
+        assignee = event.get("assignee") or {}
+        if assignee.get("login") != login:
+            continue
+        assigned_at = parse_dt(event.get("created_at"))
+        if assigned_at:
+            assigned_times.append(assigned_at)
+    return min(assigned_times) if assigned_times else None
+
+
+
+def build_report(
+    repo: str,
+    generated_at: datetime,
+    metrics_rows: list[tuple[str, str, str, str]],
+    codacy_rows: list[tuple[str, str, str, str]],
+    individual_rows: list[tuple[str, str, str, str]],
+):
     lines = [
         "# Agile Metrics Report",
         "",
         f"- Repository: `{repo}`",
         f"- Generated at (UTC): `{generated_at.strftime('%Y-%m-%d %H:%M:%S')}`",
         f"- Lookback window: last `{LOOKBACK_DAYS}` days (weekly metrics use last `{WEEK_DAYS}` days)",
+        "",
+        "## A) Current Repository Metrics",
         "",
         "| Metric | Value | Status | Threshold |",
         "|---|---:|---|---|",
@@ -165,9 +378,38 @@ def build_report(repo: str, generated_at: datetime, metrics_rows: list[tuple[str
     lines.extend(
         [
             "",
+            "## B) Codacy Metrics (Repository Level)",
+            "",
+            "| Metric | Value | Status | Threshold |",
+            "|---|---:|---|---|",
+        ]
+    )
+
+    for metric_name, value, status, threshold in codacy_rows:
+        lines.append(f"| {metric_name} | {value} | {status} | {threshold} |")
+
+    lines.extend(
+        [
+            "",
+            "## C) Individual Performance Metrics",
+            "",
+            "| Member | Metric | Value | Status | Threshold |",
+            "|---|---|---:|---|---|",
+        ]
+    )
+
+    for member, metric_name, value, status_threshold in individual_rows:
+        status, threshold = status_threshold.split("||", 1)
+        lines.append(f"| `{member}` | {metric_name} | {value} | {status} | {threshold} |")
+
+    lines.extend(
+        [
+            "",
             "## Theoretical Justification",
             "",
-            "Thresholds are defined based on agile principles (Scrum/Kanban) and standard DevOps metrics, adapted to team size (20 members) and academic environment.",
+            "Thresholds are defined based on agile principles (Scrum/Kanban) and standard DevOps metrics, adapted to team size and academic environment.",
+            "",
+            "Codacy metrics may require tenant-specific API endpoints. See TODO: API CALL comments in script.",
             "",
         ]
     )
@@ -180,6 +422,7 @@ def main():
     token = os.getenv("GITHUB_TOKEN")
     repository = os.getenv("GITHUB_REPOSITORY")
     team_size = int(os.getenv("TEAM_SIZE", "20"))
+    team_members_env = os.getenv("TEAM_MEMBERS")
 
     if not token:
         raise RuntimeError("Missing GITHUB_TOKEN environment variable.")
@@ -265,6 +508,15 @@ def main():
         },
     )
 
+    pulls_all = gh.get_paginated(
+        f"/repos/{owner}/{repo_name}/pulls",
+        params={
+            "state": "all",
+            "sort": "updated",
+            "direction": "desc",
+        },
+    )
+
     pulls_recent = []
     for pr in pulls_closed:
         closed = parse_dt(pr.get("closed_at"))
@@ -302,6 +554,222 @@ def main():
     total_closed = int(search_closed.get("total_count", 0))
     closed_open_ratio = (total_closed / total_open) if total_open > 0 else float(total_closed)
     ratio_status, ratio_threshold = classify_ratio(closed_open_ratio)
+
+    codacy_data = pick_codacy_metrics_from_env()
+
+    codacy_token = os.getenv("CODACY_API_TOKEN")
+    codacy_provider = os.getenv("CODACY_PROVIDER", "gh")
+    codacy_org = os.getenv("CODACY_ORG")
+    codacy_repo = os.getenv("CODACY_REPO", repo_name)
+
+    if (
+        codacy_data["quality_gate_pass_rate"] is None
+        and codacy_data["duplication_new_code"] is None
+        and codacy_data["coverage_new_code"] is None
+        and codacy_data["open_security_critical_high"] is None
+        and codacy_token
+        and codacy_org
+    ):
+        codacy_client = CodacyClient(codacy_token)
+        api_metrics = codacy_client.get_quality_metrics(codacy_provider, codacy_org, codacy_repo)
+        if api_metrics:
+            codacy_data.update(api_metrics)
+
+    codacy_rows = []
+
+    quality_gate = codacy_data.get("quality_gate_pass_rate")
+    quality_status, quality_threshold = (
+        classify_codacy_quality_gate(quality_gate) if quality_gate is not None else ("🔴 Poor", ">= 95%")
+    )
+    codacy_rows.append(
+        (
+            "Codacy Quality Gate Pass Rate",
+            format_metric_value(quality_gate, "%"),
+            quality_status,
+            quality_threshold,
+        )
+    )
+
+    duplication = codacy_data.get("duplication_new_code")
+    duplication_status, duplication_threshold = (
+        classify_codacy_duplication(duplication) if duplication is not None else ("🔴 Poor", "< 3%")
+    )
+    codacy_rows.append(
+        (
+            "Duplication in New Code",
+            format_metric_value(duplication, "%"),
+            duplication_status,
+            duplication_threshold,
+        )
+    )
+
+    coverage_new = codacy_data.get("coverage_new_code")
+    coverage_status, coverage_threshold = (
+        classify_codacy_coverage(coverage_new) if coverage_new is not None else ("🔴 Poor", ">= 80%")
+    )
+    codacy_rows.append(
+        (
+            "Coverage on New/Changed Code",
+            format_metric_value(coverage_new, "%"),
+            coverage_status,
+            coverage_threshold,
+        )
+    )
+
+    security_open = codacy_data.get("open_security_critical_high")
+    security_status, security_threshold = (
+        classify_codacy_security(security_open) if security_open is not None else ("🔴 Poor", "0")
+    )
+    codacy_rows.append(
+        (
+            "Open Security Issues (Critical/High)",
+            format_metric_value(security_open),
+            security_status,
+            security_threshold,
+        )
+    )
+
+    members = resolve_team_members(gh, owner, repo_name, issues_all, pulls_all, team_members_env)
+    individual_rows: list[tuple[str, str, str, str]] = []
+
+    issues_closed_since_14 = []
+    since_14 = now - timedelta(days=14)
+    for issue in issues_all:
+        if issue.get("state") != "closed":
+            continue
+        closed_at = parse_dt(issue.get("closed_at"))
+        if closed_at and closed_at >= since_14:
+            issues_closed_since_14.append(issue)
+
+    issues_closed_since_30 = []
+    for issue in issues_all:
+        if issue.get("state") != "closed":
+            continue
+        closed_at = parse_dt(issue.get("closed_at"))
+        if closed_at and closed_at >= since_30:
+            issues_closed_since_30.append(issue)
+
+    pulls_recent_all = []
+    for pr in pulls_all:
+        created_at = parse_dt(pr.get("created_at"))
+        if created_at and created_at >= since_30:
+            pulls_recent_all.append(pr)
+
+    for member in members:
+        closed_week = 0
+        closed_prev_week = 0
+        member_cycle_days = []
+
+        for issue in issues_closed_since_14:
+            closed_at = parse_dt(issue.get("closed_at"))
+            if not closed_at:
+                continue
+
+            assignees = issue.get("assignees") or []
+            assignee_logins = {assignee.get("login") for assignee in assignees if assignee.get("login")}
+            if member not in assignee_logins:
+                continue
+
+            if closed_at >= since_7:
+                closed_week += 1
+            elif (now - timedelta(days=14)) <= closed_at < since_7:
+                closed_prev_week += 1
+
+        throughput_status, throughput_threshold = classify_individual_throughput(closed_week, closed_prev_week)
+        individual_rows.append(
+            (
+                member,
+                "Individual Throughput",
+                f"{closed_week} closed issues/week (prev={closed_prev_week})",
+                f"{throughput_status}||{throughput_threshold}",
+            )
+        )
+
+        for issue in issues_closed_since_30:
+            number = issue.get("number")
+            closed_at = parse_dt(issue.get("closed_at"))
+            if not number or not closed_at:
+                continue
+
+            assignees = issue.get("assignees") or []
+            assignee_logins = {assignee.get("login") for assignee in assignees if assignee.get("login")}
+            if member not in assignee_logins:
+                continue
+
+            assigned_at = get_issue_first_assigned_at(gh, owner, repo_name, number, member)
+            if not assigned_at:
+                created_at = parse_dt(issue.get("created_at"))
+                assigned_at = created_at
+
+            if assigned_at and closed_at >= assigned_at:
+                member_cycle_days.append((closed_at - assigned_at).total_seconds() / 86400)
+
+        avg_cycle_days = sum(member_cycle_days) / len(member_cycle_days) if member_cycle_days else None
+        if avg_cycle_days is None:
+            cycle_value = "N/A (n=0)"
+            cycle_status = "⚪ N/A"
+            cycle_threshold = "Insufficient data"
+        else:
+            cycle_status, cycle_threshold = classify_individual_cycle_time(avg_cycle_days)
+            cycle_value = f"{avg_cycle_days:.2f} days (n={len(member_cycle_days)})"
+        individual_rows.append(
+            (
+                member,
+                "Individual Cycle Time",
+                cycle_value,
+                f"{cycle_status}||{cycle_threshold}",
+            )
+        )
+
+        opened_by_member = [pr for pr in pulls_recent_all if (pr.get("user") or {}).get("login") == member]
+        opened_prs = len(opened_by_member)
+        merged_prs = sum(1 for pr in opened_by_member if parse_dt(pr.get("merged_at")))
+        if opened_prs == 0:
+            merge_value = "N/A (opened=0)"
+            merge_status = "⚪ N/A"
+            merge_threshold = "Insufficient data"
+        else:
+            merge_effectiveness = merged_prs / opened_prs * 100
+            merge_status, merge_threshold = classify_pr_merge_effectiveness(merge_effectiveness)
+            merge_value = f"{merge_effectiveness:.2f}% (merged={merged_prs}, opened={opened_prs})"
+        individual_rows.append(
+            (
+                member,
+                "PR Merge Effectiveness",
+                merge_value,
+                f"{merge_status}||{merge_threshold}",
+            )
+        )
+
+        prs_with_rework = 0
+        total_prs_for_rework = 0
+        for pr in opened_by_member:
+            pr_number = pr.get("number")
+            if not pr_number:
+                continue
+
+            total_prs_for_rework += 1
+            reviews = gh.get_paginated(f"/repos/{owner}/{repo_name}/pulls/{pr_number}/reviews")
+            review_rounds = [review for review in reviews if review.get("submitted_at")]
+            if len(review_rounds) >= 2:
+                prs_with_rework += 1
+
+        if total_prs_for_rework == 0:
+            rework_value = "N/A (total_prs=0)"
+            rework_status = "⚪ N/A"
+            rework_threshold = "Insufficient data"
+        else:
+            rework_rate = prs_with_rework / total_prs_for_rework * 100
+            rework_status, rework_threshold = classify_rework_rate(rework_rate)
+            rework_value = f"{rework_rate:.2f}% (>=2 rounds: {prs_with_rework}/{total_prs_for_rework})"
+        individual_rows.append(
+            (
+                member,
+                "Rework Rate",
+                rework_value,
+                f"{rework_status}||{rework_threshold}",
+            )
+        )
 
     metrics_rows = [
         (
@@ -343,7 +811,7 @@ def main():
     ]
 
     os.makedirs("metrics", exist_ok=True)
-    report = build_report(repository, now, metrics_rows)
+    report = build_report(repository, now, metrics_rows, codacy_rows, individual_rows)
     with open("metrics/metrics-report.md", "w", encoding="utf-8") as report_file:
         report_file.write(report)
 
