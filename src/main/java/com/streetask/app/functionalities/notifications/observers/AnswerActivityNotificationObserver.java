@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import com.streetask.app.answer.AnswerRepository;
+import com.streetask.app.functionalities.answer.AnswerRepository;
 import com.streetask.app.functionalities.notifications.events.AnswerCreatedEvent;
 import com.streetask.app.functionalities.notifications.realtime.FrontendNotificationGateway;
 import com.streetask.app.functionalities.notifications.realtime.FrontendNotificationMessage;
