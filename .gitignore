@@ -1,6 +1,13 @@
 # IDE
 .idea/
 *.iml
+bin/
+
+# Java Language Server / Eclipse (IMPORTANTE: no compartir entre compañeros)
+.classpath
+.project
+.settings/
+.factorypath
 
 # OS
 .DS_Store
@@ -33,3 +40,4 @@ allure-report/
 
 package-lock.json
 settings.json
+settings.local.json
