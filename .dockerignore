@@ -1,0 +1,52 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Build outputs
+target/
+*.class
+*.jar
+!src/main/resources/*.jar
+
+# Frontend (separate deployment with Expo)
+frontend/
+node_modules/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Test and coverage reports
+coverage/
+allure-results/
+*.exec
+
+# Logs
+*.log
+logs/
+
+# Environment files (use docker-compose environment vars instead)
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# Scripts (not needed in container)
+scripts/
+
+# Metrics
+metrics/

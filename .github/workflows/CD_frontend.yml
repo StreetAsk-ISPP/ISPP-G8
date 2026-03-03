@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - main
-      - feature/frontend-cd
 
 jobs:
   deploy:
@@ -36,6 +35,8 @@ jobs:
 
       - name: Exportar código web
         run: npx expo export --platform web
+        env:
+          EXPO_PUBLIC_API_BASE_URL: ${{ secrets.EXPO_PUBLIC_API_BASE_URL }}
 
       - name: Desplegar a producción en EAS Hosting
         run: eas deploy --prod --non-interactive
