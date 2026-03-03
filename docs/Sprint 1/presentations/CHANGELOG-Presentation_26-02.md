@@ -17,6 +17,10 @@
 - Estructura y arreglos, contenido, enlaces entre diapositivas, etc.
 
 ### 24/02/2026  
+**Author**: Santiago Fernández Román ([sfernandez07](https://github.com/sfernandez07))
+- Correcciones en el apartado de Stack Tecnológico.
+
+### 24/02/2026  
 **Author**: Guillermo Linares Borrego ([Glinbor10](https://github.com/Glinbor10))
 - Estructura del contenido de la presentación en toda la presentación y parte del contenido ya disponible.
 
