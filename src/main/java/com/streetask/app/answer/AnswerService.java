@@ -1,4 +1,4 @@
-package com.streetask.app.functionalities.answer;
+package com.streetask.app.answer;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

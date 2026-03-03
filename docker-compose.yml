@@ -1,4 +1,31 @@
+# StreetAsk Docker Compose - Development Environment
+# Usage: docker-compose up -d
+# Note: Backend, Frontend and Database are deployed separately on Azure
+#       This file is for local development only
+
 services:
+  # MySQL Database for local development
+  db:
+    image: mysql:8.0
+    container_name: streetask-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-streetask}
+      MYSQL_USER: ${MYSQL_USER:-streetask}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-streetask}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # Spring Boot Backend
   backend:
     build: .
     container_name: streetask-backend
@@ -6,7 +33,27 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: mysql
-      MYSQL_URL: ${MYSQL_URL}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-streetask}?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true&serverTimezone=UTC
+      MYSQL_USER: ${MYSQL_USER:-streetask}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-streetask}
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
+
+  # React Native/Expo Frontend (Web mode for development)
+  frontend:
+    build: ./frontend
+    container_name: streetask-frontend
+    ports:
+      - "8081:8081"
+    environment:
+      EXPO_PUBLIC_API_BASE_URL: http://localhost:8080
+      EXPO_PUBLIC_API_TIMEOUT_MS: 10000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+    driver: local
