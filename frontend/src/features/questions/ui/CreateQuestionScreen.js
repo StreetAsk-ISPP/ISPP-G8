@@ -176,51 +176,68 @@ export default function CreateQuestionScreen({ navigation }) {
     return (
         <SafeAreaView style={globalStyles.screen}>
             <View style={{ flex: 1 }}>
-                {/* MAP */}
-                <View style={styles.mapBg}>
-                    <MapPickerWeb
-                        latitude={latitude}
-                        longitude={longitude}
-                        userLat={userLat}
-                        userLng={userLng}
-                        radiusKm={radiusKm}
-                        pickEnabled={pickMode}
-                        tempLat={tempLat}
-                        tempLng={tempLng}
-                        onPick={(lat, lng) => {
-                            if (!pickMode) return;
+                {/* MAP - Always full background */}
+                {pickMode && (
+                    <View style={styles.mapBg}>
+                        <MapPickerWeb
+                            latitude={latitude}
+                            longitude={longitude}
+                            userLat={userLat}
+                            userLng={userLng}
+                            radiusKm={radiusKm}
+                            pickEnabled={pickMode}
+                            tempLat={tempLat}
+                            tempLng={tempLng}
+                            onPick={(lat, lng) => {
+                                if (!pickMode) return;
                                 setTempLat(lat);
                                 setTempLng(lng);
                             }}
-                    />
+                        />
+                    </View>
+                )}
 
-                    {pickMode ? (
-                        <View style={styles.mapOverlay} pointerEvents="box-none">
-                            {/* hint arriba */}
-                            <View style={styles.mapOverlayTop} pointerEvents="none">
-                            <Text style={styles.mapOverlayText}>Click on the map to choose the center</Text>
-                            <Text style={styles.mapOverlayTextSmall}>
-                                Selected: {tempLat?.toFixed?.(5) ?? '--'}, {tempLng?.toFixed?.(5) ?? '--'}
-                            </Text>
-                            </View>
-
-                            {/* botones siempre visibles abajo */}
-                            <View style={styles.mapOverlayBottom} pointerEvents="auto">
-                            <Pressable style={[styles.overlayBtn, styles.cancelBtn]} onPress={cancelMapPick}>
-                                <Text style={styles.overlayBtnText}>Cancel</Text>
-                            </Pressable>
-
-                            <Pressable style={[styles.overlayBtn, styles.okBtn]} onPress={confirmMapPick}>
-                                <Text style={styles.overlayBtnText}>OK</Text>
-                            </Pressable>
-                            </View>
+                {/* MAP OVERLAY */}
+                {pickMode && (
+                    <View style={styles.mapOverlay} pointerEvents="box-none">
+                        {/* hint arriba */}
+                        <View style={styles.mapOverlayTop} pointerEvents="none">
+                        <Text style={styles.mapOverlayText}>Click on the map to choose the center</Text>
+                        <Text style={styles.mapOverlayTextSmall}>
+                            Selected: {tempLat?.toFixed?.(5) ?? '--'}, {tempLng?.toFixed?.(5) ?? '--'}
+                        </Text>
                         </View>
-                    ) : null}
-                </View>
+
+                        {/* botones siempre visibles abajo */}
+                        <View style={styles.mapOverlayBottom} pointerEvents="auto">
+                        <Pressable style={[styles.overlayBtn, styles.overlayCancelBtn]} onPress={cancelMapPick}>
+                            <Text style={styles.overlayBtnText}>Cancel</Text>
+                        </Pressable>
+
+                        <Pressable style={[styles.overlayBtn, styles.okBtn]} onPress={confirmMapPick}>
+                            <Text style={styles.overlayBtnText}>OK</Text>
+                        </Pressable>
+                        </View>
+                    </View>
+                )}
 
                 {/* Panel rojo */}
-                {!pickMode ? (
-                    <View style={styles.panel}>
+                {!pickMode && (
+                    <>
+                        <View style={styles.mapBgPreview}>
+                            <MapPickerWeb
+                                latitude={latitude}
+                                longitude={longitude}
+                                userLat={userLat}
+                                userLng={userLng}
+                                radiusKm={radiusKm}
+                                pickEnabled={false}
+                                tempLat={tempLat}
+                                tempLng={tempLng}
+                                onPick={() => {}}
+                            />
+                        </View>
+                        <View style={styles.panel}>
                         <Text style={styles.header}>Create a question</Text>
 
                         <Text style={styles.label}>Where:</Text>
@@ -316,22 +333,44 @@ export default function CreateQuestionScreen({ navigation }) {
                             </Text>
                         </View>
 
-                        <Pressable
-                            onPress={onPost}
-                            disabled={!canPost}
-                            style={[styles.postBtn, !canPost && { opacity: 0.5 }]}
-                        >
-                            <Text style={styles.postBtnText}>{isSubmitting ? 'POSTING...' : 'POST'}</Text>
-                        </Pressable>
-                    </View>
-                ) : null}
+                        <View style={styles.buttonsContainer}>
+                            <Pressable
+                                onPress={() => navigation.goBack()}
+                                style={styles.cancelBtn}
+                            >
+                                <Text style={styles.cancelBtnText}>Cancel</Text>
+                            </Pressable>
+                            <Pressable
+                                onPress={onPost}
+                                disabled={!canPost}
+                                style={[styles.postBtn, !canPost && { opacity: 0.5 }]}
+                            >
+                                <Text style={styles.postBtnText}>{isSubmitting ? 'POSTING...' : 'POST'}</Text>
+                            </Pressable>
+                        </View>
+                        </View>
+                    </>
+                )}
             </View>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    mapBg: { flex: 1 },
+    mapBg: { 
+        flex: 1,
+        width: '100%',
+        height: '100%',
+    },
+    mapBgPreview: {
+        flex: 1,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 0,
+    },
     mapBgText: { color: '#888' },
 
     panel: {
@@ -340,86 +379,220 @@ const styles = StyleSheet.create({
         right: 18,
         top: 60,
         backgroundColor: '#D40000',
-        borderRadius: 14,
-        padding: 16,
+        borderRadius: 16,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 12,
+        elevation: 12,
+        zIndex: 10,
     },
 
-    header: { color: '#fff', fontSize: 26, fontWeight: '900', marginBottom: 10 },
+    header: { 
+        color: '#fff', 
+        fontSize: 28, 
+        fontWeight: '900', 
+        marginBottom: 18,
+        letterSpacing: -0.5,
+    },
 
-    label: { color: '#fff', fontWeight: '800', marginTop: 10, marginBottom: 6 },
-    helper: { color: '#fff', fontSize: 12, opacity: 0.9, marginTop: 6, textAlign: 'center' },
-    or: { color: '#fff', textAlign: 'center', fontWeight: '900', marginVertical: 10 },
+    label: { 
+        color: '#fff', 
+        fontWeight: '700', 
+        marginTop: 14, 
+        marginBottom: 8,
+        fontSize: 14,
+        letterSpacing: 0.3,
+    },
+    helper: { 
+        color: '#fff', 
+        fontSize: 11, 
+        opacity: 0.85, 
+        marginTop: 6, 
+        textAlign: 'center',
+        fontWeight: '500',
+    },
+    or: { 
+        color: '#fff', 
+        textAlign: 'center', 
+        fontWeight: '700', 
+        marginVertical: 12,
+        fontSize: 13,
+        opacity: 0.9,
+    },
 
     inputRow: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#fff',
-        borderRadius: 10,
-        paddingHorizontal: 10,
-        height: 44,
-        gap: 8,
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        height: 48,
+        gap: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
-    icon: { fontSize: 16 },
-    input: { flex: 1, height: 44, color: '#111' },
+    icon: { fontSize: 18 },
+    input: { 
+        flex: 1, 
+        height: 48, 
+        color: '#111',
+        fontSize: 15,
+        fontWeight: '500',
+    },
 
     inputFull: {
         backgroundColor: '#fff',
-        borderRadius: 10,
-        paddingHorizontal: 12,
-        height: 44,
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        height: 48,
         color: '#111',
+        fontSize: 15,
+        fontWeight: '500',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
 
     secondaryBtn: {
         backgroundColor: '#fff',
-        borderRadius: 10,
-        paddingVertical: 12,
-        paddingHorizontal: 12,
+        borderRadius: 12,
+        paddingVertical: 13,
+        paddingHorizontal: 14,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
-    secondaryBtnText: { fontWeight: '800', color: '#111' },
+    secondaryBtnText: { 
+        fontWeight: '700', 
+        color: '#111',
+        fontSize: 15,
+        letterSpacing: 0.3,
+    },
 
     resultBtn: {
         backgroundColor: '#fff',
         borderRadius: 10,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
+        paddingVertical: 11,
+        paddingHorizontal: 13,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.08,
+        shadowRadius: 3,
+        elevation: 2,
     },
-    resultText: { color: '#111', fontWeight: '800' },
+    resultText: { 
+        color: '#111', 
+        fontWeight: '600',
+        fontSize: 14,
+    },
 
-    timeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 },
-    timePill: { backgroundColor: '#F5D400', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6 },
-    timePillText: { fontWeight: '900', color: '#111' },
-    timeValue: { color: '#fff', fontWeight: '900' },
+    timeRow: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        marginTop: 14,
+    },
+    timePill: { 
+        backgroundColor: '#F5D400', 
+        borderRadius: 10, 
+        paddingHorizontal: 12, 
+        paddingVertical: 7,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.15,
+        shadowRadius: 3,
+        elevation: 2,
+    },
+    timePillText: { 
+        fontWeight: '900', 
+        color: '#111',
+        fontSize: 13,
+    },
+    timeValue: { 
+        color: '#fff', 
+        fontWeight: '900',
+        fontSize: 16,
+    },
+
+    buttonsContainer: {
+        flexDirection: 'row',
+        gap: 10,
+        marginTop: 18,
+    },
+
+    cancelBtn: {
+        flex: 0.35,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: 12,
+        paddingVertical: 13,
+        alignItems: 'center',
+        borderWidth: 1.5,
+        borderColor: '#fff',
+    },
+    cancelBtnText: { 
+        color: '#fff', 
+        fontWeight: '700', 
+        fontSize: 16,
+        letterSpacing: 0.5,
+    },
 
     postBtn: {
-        marginTop: 14,
+        flex: 0.65,
         backgroundColor: '#8B0000',
-        borderRadius: 10,
-        paddingVertical: 14,
+        borderRadius: 12,
+        paddingVertical: 13,
         alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 5,
     },
-    postBtnText: { color: '#fff', fontWeight: '900', fontSize: 16 },
+    postBtnText: { 
+        color: '#fff', 
+        fontWeight: '900', 
+        fontSize: 16,
+        letterSpacing: 0.5,
+    },
 
     lockedTimeContainer: {
-        marginTop: 10,
+        marginTop: 12,
         backgroundColor: '#F5D400',
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderRadius: 8,
+        paddingVertical: 11,
+        paddingHorizontal: 13,
+        borderRadius: 10,
         alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 3,
     },
 
     lockedTimeText: {
-        fontWeight: '900',
+        fontWeight: '700',
         color: '#111',
+        fontSize: 13,
+        letterSpacing: 0.2,
     },
 
     selectedText: {
         color: '#fff',
         fontSize: 12,
-        opacity: 0.95,
+        opacity: 0.9,
         marginTop: 6,
         textAlign: 'center',
+        fontWeight: '500',
     },
 
     mapOverlay: {
@@ -429,28 +602,36 @@ const styles = StyleSheet.create({
         right: 0,
         bottom: 0,
         padding: 12,
-        zIndex: 999999,
-        elevation: 999999,
+        zIndex: 100,
+        elevation: 100,
     },
 
     mapOverlayTop: {
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        padding: 10,
-        borderRadius: 10,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        padding: 12,
+        borderRadius: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
     },
 
     mapOverlayText: {
         color: '#fff',
-        fontWeight: '900',
+        fontWeight: '800',
         textAlign: 'center',
+        fontSize: 16,
+        letterSpacing: 0.3,
     },
 
     mapOverlayTextSmall: {
         color: '#fff',
-        marginTop: 6,
-        fontSize: 12,
+        marginTop: 8,
+        fontSize: 13,
         textAlign: 'center',
         opacity: 0.9,
+        fontWeight: '500',
     },
 
     mapOverlayBottom: {
@@ -460,18 +641,23 @@ const styles = StyleSheet.create({
         bottom: 12,
         flexDirection: 'row',
         gap: 10,
-        zIndex: 999999,
-        elevation: 999999,
+        zIndex: 101,
+        elevation: 101,
     },
 
     overlayBtn: {
         flex: 1,
         paddingVertical: 14,
-        borderRadius: 10,
+        borderRadius: 12,
         alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+        elevation: 4,
     },
 
-    cancelBtn: {
+    overlayCancelBtn: {
         backgroundColor: 'rgba(0,0,0,0.65)',
     },
 
@@ -481,7 +667,8 @@ const styles = StyleSheet.create({
 
     overlayBtnText: {
         color: '#fff',
-        fontWeight: '900',
+        fontWeight: '800',
         fontSize: 16,
+        letterSpacing: 0.3,
     },
 });

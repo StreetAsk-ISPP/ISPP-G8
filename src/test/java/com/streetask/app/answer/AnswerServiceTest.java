@@ -1,4 +1,4 @@
-package com.streetask.app.answer;
+package com.streetask.app.functionalities.answer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
