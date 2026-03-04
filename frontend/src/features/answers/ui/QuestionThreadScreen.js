@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     View, Text, StyleSheet, SafeAreaView, FlatList, TextInput,
     KeyboardAvoidingView, Platform, Pressable, ActivityIndicator,
@@ -39,7 +39,14 @@ export default function QuestionThreadScreen({ route, navigation }) {
     const getMinutesAgo = (d) => d ? Math.floor((Date.now() - new Date(d)) / 60000) : 0;
 
     const avatarColors = ['#dbeafe', '#fce7f3', '#fef3c7', '#d1fae5', '#ede9fe', '#e0e7ff'];
-    const pickColor = () => avatarColors[Math.floor(Math.random() * avatarColors.length)];
+    const pickColor = useCallback((key) => {
+        let hash = 0;
+        const str = String(key || '');
+        for (let i = 0; i < str.length; i++) {
+            hash = (hash * 31 + str.charCodeAt(i)) | 0;
+        }
+        return avatarColors[Math.abs(hash) % avatarColors.length];
+    }, []);
 
     const canSend = useMemo(() => draft.trim().length > 0 && !sendingAnswer, [draft, sendingAnswer]);
 
@@ -76,7 +83,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
                 setAnswers(list.map((a) => ({
                     id: a.id,
                     author: a.user?.userName || a.user?.username || 'Anonymous',
-                    color: pickColor(),
+                    color: pickColor(a.id),
                     text: a.content || '',
                     likes: a.upvotes || 0,
                     dislikes: a.downvotes || 0,
@@ -90,7 +97,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
                 setLoading(false);
             }
         })();
-    }, [questionId]);
+    }, [questionId, pickColor]);
 
     const [timeLeft, setTimeLeft] = useState(0);
     useEffect(() => {
