@@ -5,20 +5,18 @@ export const globalStyles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    padding: theme.spacing.md,
   },
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
     padding: theme.spacing.md,
+    ...theme.shadows.sm,
   },
   title: {
     fontSize: theme.typography.h1,
     fontWeight: '700',
     color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.xs,
   },
   subtitle: {
     fontSize: theme.typography.body,
