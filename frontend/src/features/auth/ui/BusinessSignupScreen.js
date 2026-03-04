@@ -1,12 +1,17 @@
 import { useState } from 'react';
-import { Text, TextInput, View, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import {
+	Keyboard, Platform, ScrollView, StyleSheet, Text,
+	TextInput, TouchableOpacity, TouchableWithoutFeedback,
+	View, useWindowDimensions,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { globalStyles } from '../../../shared/ui/theme/globalStyles';
 import apiClient from '../../../shared/services/http/apiClient';
 
 export default function BusinessSignupScreen({ navigation, route }) {
 	const { email } = route.params;
+	const { width } = useWindowDimensions();
+	const isNarrow = width < 500;
 
 	const [taxId, setTaxId] = useState('');
 	const [companyName, setCompanyName] = useState('');
@@ -19,23 +24,13 @@ export default function BusinessSignupScreen({ navigation, route }) {
 
 	const handleProceedToPayment = async () => {
 		setError('');
-
-		if (!taxId.trim()) {
-			setError('Tax ID is required.');
-			return;
-		}
-
-		if (!companyName.trim()) {
-			setError('Company Name is required.');
-			return;
-		}
+		if (!taxId.trim()) { setError('Tax ID is required.'); return; }
+		if (!companyName.trim()) { setError('Company Name is required.'); return; }
 
 		try {
 			setIsSubmitting(true);
 			const normalizedTaxId = taxId.trim().toUpperCase();
 
-			// TODO: Tax ID/business data should be persisted only after successful payment.
-			// Current pre-payment registration flow is kept temporarily for testing purposes.
 			await apiClient.post('/api/v1/auth/signup/business', {
 				email,
 				taxId: normalizedTaxId,
@@ -54,298 +49,257 @@ export default function BusinessSignupScreen({ navigation, route }) {
 				description: description.trim() || null,
 			});
 		} catch (err) {
-			let errorMessage = err.response?.data?.message || err.response?.data || err.message || 'Registration failed. Please try again.';
-			errorMessage = typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage);
-
-			if (errorMessage.toLowerCase().includes('invalid tax id') ||
-				errorMessage.toLowerCase().includes('tax id format')) {
+			let msg = err.response?.data?.message || err.response?.data || err.message || 'Registration failed.';
+			msg = typeof msg === 'string' ? msg : JSON.stringify(msg);
+			if (msg.toLowerCase().includes('invalid tax id') || msg.toLowerCase().includes('tax id format'))
 				setError('Tax ID must be: 1 letter + 7 digits + 1 control character.');
-			} else if (errorMessage.toLowerCase().includes('tax id is already registered') ||
-				errorMessage.toLowerCase().includes('taxid is already registered')) {
-				setError('This Tax ID is already registered. Please use a different Tax ID.');
-			} else if (errorMessage.toLowerCase().includes('already completed')) {
+			else if (msg.toLowerCase().includes('tax id is already registered') || msg.toLowerCase().includes('taxid is already registered'))
+				setError('This Tax ID is already registered.');
+			else if (msg.toLowerCase().includes('already completed'))
 				setError('This account has already been completed. Please log in.');
-			} else {
-				setError(errorMessage);
-			}
+			else setError(msg);
 		} finally {
 			setIsSubmitting(false);
 		}
 	};
 
-	return (
-		<View style={globalStyles.screen}>
-			<View style={styles.container}>
-				<View style={styles.backButtonWrapper}>
-					<TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.8}>
-						<Ionicons name="chevron-back" size={32} color="#334155" />
+	const renderInput = (label, value, onChangeText, fieldKey, opts = {}) => (
+		<View style={{ marginTop: 14 }}>
+			<Text style={styles.label}>{label}</Text>
+			<View style={[
+				styles.inputWrapper,
+				focusedField === fieldKey && styles.inputFocused,
+				opts.multiline && { height: 90, alignItems: 'flex-start', paddingTop: 12 },
+			]}>
+				{opts.icon && <Ionicons name={opts.icon} size={18} color="#1f2937" style={{ marginRight: 10 }} />}
+				<TextInput
+					value={value}
+					onChangeText={onChangeText}
+					autoCapitalize={opts.autoCapitalize || 'sentences'}
+					placeholder={opts.placeholder || ''}
+					placeholderTextColor="#c0c5ce"
+					multiline={opts.multiline}
+					style={[styles.input, opts.multiline && { textAlignVertical: 'top' }]}
+					onFocus={() => setFocusedField(fieldKey)}
+					onBlur={() => setFocusedField(null)}
+				/>
+			</View>
+		</View>
+	);
+
+	const benefits = [
+		'Sponsored events & live chats',
+		'Event promotion & management tools',
+		'Increased visibility',
+		'Unlimited events',
+		'Full event customization',
+	];
+
+	const content = (
+		<View style={styles.screen}>
+			<ScrollView
+				contentContainerStyle={styles.scrollContent}
+				showsVerticalScrollIndicator={false}
+				keyboardShouldPersistTaps="handled"
+			>
+				<View style={[styles.card, isNarrow && { marginHorizontal: 16 }]}>
+					{/* Back */}
+					<TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+						<Ionicons name="chevron-back" size={24} color="#667eea" />
 					</TouchableOpacity>
-				</View>
-				{/* Header with logo and title */}
-				<View style={styles.header}>
-					<Image 
-						source={require('../../../../assets/logo.png')} 
-						style={styles.logoImage}
-						resizeMode="contain"
-					/>
-					<View style={styles.titleContainer}>
-						<Text style={styles.title}>Business account</Text>
-						<Text style={styles.subtitle}>extra information required</Text>
-					</View>
-				</View>
 
-				{/* Form Fields */}
-				<View style={styles.form}>
-					<Text style={styles.label}>Tax ID*</Text>
-					<View style={styles.inputContainer}>
-						{!taxId && focusedField !== 'taxId' && (
-							<Ionicons name="pricetag-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
-						)}
-						<TextInput
-							value={taxId}
-							onChangeText={setTaxId}
-							onFocus={() => setFocusedField('taxId')}
-							onBlur={() => setFocusedField(null)}
-							placeholder=""
-							style={[styles.inputWithIcon, (taxId || focusedField === 'taxId') && styles.inputWithoutIcon]}
-							autoCapitalize="characters"
-						/>
+					{/* Header */}
+					<View style={styles.headerCircle}>
+						<Ionicons name="star" size={28} color="#fff" />
 					</View>
+					<Text style={styles.title}>Business Account</Text>
+					<Text style={styles.subtitle}>Complete your business profile</Text>
 
-					<Text style={styles.label}>Company Name*</Text>
-					<View style={styles.inputContainer}>
-						{!companyName && focusedField !== 'companyName' && (
-							<Ionicons name="business-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
-						)}
-						<TextInput
-							value={companyName}
-							onChangeText={setCompanyName}
-							onFocus={() => setFocusedField('companyName')}
-							onBlur={() => setFocusedField(null)}
-							placeholder=""
-							style={[styles.inputWithIcon, (companyName || focusedField === 'companyName') && styles.inputWithoutIcon]}
-						/>
-					</View>
-
-					<Text style={styles.label}>Address</Text>
-					<View style={styles.inputContainer}>
-						{!address && focusedField !== 'address' && (
-							<Ionicons name="location-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
-						)}
-						<TextInput
-							value={address}
-							onChangeText={setAddress}
-							onFocus={() => setFocusedField('address')}
-							onBlur={() => setFocusedField(null)}
-							placeholder=""
-							style={[styles.inputWithIcon, (address || focusedField === 'address') && styles.inputWithoutIcon]}
-						/>
-					</View>
-
-					<Text style={styles.label}>Website</Text>
-					<View style={styles.inputContainer}>
-						{!website && focusedField !== 'website' && (
-							<Ionicons name="globe-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
-						)}
-						<TextInput
-							value={website}
-							onChangeText={setWebsite}
-							onFocus={() => setFocusedField('website')}
-							onBlur={() => setFocusedField(null)}
-							placeholder=""
-							style={[styles.inputWithIcon, (website || focusedField === 'website') && styles.inputWithoutIcon]}
-							autoCapitalize="none"
-						/>
-					</View>
-
-					<Text style={styles.label}>Description</Text>
-					<View style={[styles.inputContainer, styles.descriptionContainer]}>
-						{!description && focusedField !== 'description' && (
-							<Ionicons name="document-text-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
-						)}
-						<TextInput
-							value={description}
-							onChangeText={setDescription}
-							onFocus={() => setFocusedField('description')}
-							onBlur={() => setFocusedField(null)}
-							placeholder=""
-							style={[styles.inputWithIcon, styles.descriptionInput, (description || focusedField === 'description') && styles.inputWithoutIcon]}
-							multiline
-						/>
-					</View>
+					{/* Fields */}
+					{renderInput('Tax ID *', taxId, setTaxId, 'tax', { icon: 'pricetag-outline', autoCapitalize: 'characters', placeholder: 'A1234567B' })}
+					{renderInput('Company Name *', companyName, setCompanyName, 'company', { icon: 'business-outline', placeholder: 'Acme Inc.' })}
+					{renderInput('Address', address, setAddress, 'addr', { icon: 'location-outline', placeholder: '123 Main St.' })}
+					{renderInput('Website', website, setWebsite, 'web', { icon: 'globe-outline', autoCapitalize: 'none', placeholder: 'https://...' })}
+					{renderInput('Description', description, setDescription, 'desc', { icon: 'document-text-outline', multiline: true, placeholder: 'Tell us about your company...' })}
 
 					{error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-					{/* Benefits Section */}
-					<View style={styles.benefitsSection}>
-						<Text style={styles.benefitsTitle}>You will gain:</Text>
-						<View style={styles.benefitsList}>
-							<Text style={styles.benefitItem}>• Access to sponsored events and live chats for your events.</Text>
-							<Text style={styles.benefitItem}>• Tools to promote your events and manage event chats.</Text>
-							<Text style={styles.benefitItem}>• Sponsored account for increased visibility.</Text>
-							<Text style={styles.benefitItem}>• Ability to create an unlimited number of events.</Text>
-							<Text style={styles.benefitItem}>• Full event customization (picture, description, and participant limit)</Text>
-						</View>
+					{/* Benefits */}
+					<View style={styles.benefitsCard}>
+						<Text style={styles.benefitsTitle}>What you get</Text>
+						{benefits.map((b, i) => (
+							<View key={i} style={styles.benefitRow}>
+								<Ionicons name="checkmark-circle" size={18} color="#667eea" />
+								<Text style={styles.benefitText}>{b}</Text>
+							</View>
+						))}
 					</View>
 
-					{/* Proceed Button */}
-					<View style={styles.buttonContainer}>
-						<TouchableOpacity
-							onPress={handleProceedToPayment}
-							disabled={isSubmitting}
-							activeOpacity={0.8}
+					{/* Proceed */}
+					<TouchableOpacity
+						onPress={handleProceedToPayment}
+						disabled={isSubmitting}
+						activeOpacity={0.85}
+					>
+						<LinearGradient
+							colors={['#667eea', '#764ba2']}
+							start={{ x: 0, y: 0 }}
+							end={{ x: 1, y: 1 }}
+							style={styles.proceedBtn}
 						>
-							<LinearGradient
-								colors={['#F59E0B', '#EF4444', '#8B5CF6']}
-								start={{ x: 0, y: 0 }}
-								end={{ x: 1, y: 1 }}
-								style={styles.proceedButton}
-							>
-								<Text style={styles.proceedButtonText}>{isSubmitting ? 'Processing...' : 'Proceed to payment'}</Text>
-							</LinearGradient>
-						</TouchableOpacity>
-					</View>
+							<Ionicons name="card-outline" size={20} color="#fff" />
+							<Text style={styles.proceedBtnText}>
+								{isSubmitting ? 'Processing...' : 'Proceed to Payment'}
+							</Text>
+						</LinearGradient>
+					</TouchableOpacity>
 				</View>
-			</View>
+			</ScrollView>
 		</View>
+	);
+
+	if (Platform.OS === 'web') return content;
+	return (
+		<TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+			{content}
+		</TouchableWithoutFeedback>
 	);
 }
 
 const styles = StyleSheet.create({
-	container: {
+	screen: {
 		flex: 1,
-		paddingVertical: 12,
-		paddingHorizontal: 16,
-		justifyContent: 'space-between',
+		backgroundColor: '#f3f4f6',
 	},
-	backButtonWrapper: {
-		position: 'absolute',
-		top: 6,
-		left: 4,
-		zIndex: 2,
-	},
-	header: {
-		flexDirection: 'row',
+	scrollContent: {
+		flexGrow: 1,
+		justifyContent: 'center',
 		alignItems: 'center',
-		marginTop: 20,
-		marginBottom: 6,
-		gap: 10,
+		padding: 24,
 	},
-	logoImage: {
+	card: {
+		width: '100%',
+		maxWidth: 460,
+		backgroundColor: '#fff',
+		borderRadius: 28,
+		padding: 28,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 8 },
+		shadowOpacity: 0.06,
+		shadowRadius: 24,
+		elevation: 6,
+	},
+	backBtn: {
+		width: 40,
+		height: 40,
+		borderRadius: 12,
+		backgroundColor: '#f3f4f6',
+		alignItems: 'center',
+		justifyContent: 'center',
+		marginBottom: 12,
+	},
+	headerCircle: {
 		width: 64,
 		height: 64,
-	},
-	titleContainer: {
-		flex: 1,
+		borderRadius: 32,
+		backgroundColor: '#f59e0b',
+		alignSelf: 'center',
+		alignItems: 'center',
+		justifyContent: 'center',
+		marginBottom: 16,
+		shadowColor: '#f59e0b',
+		shadowOffset: { width: 0, height: 6 },
+		shadowOpacity: 0.25,
+		shadowRadius: 16,
+		elevation: 8,
 	},
 	title: {
 		fontSize: 24,
-		fontWeight: '700',
-		color: '#334155',
-		marginBottom: 2,
-	},
-	subtitle: {
-		fontSize: 24,
-		fontWeight: '700',
-		color: '#334155',
-		lineHeight: 28,
-	},
-	form: {
-		width: '100%',
-		marginTop: -8,
-	},
-	label: {
-		fontSize: 14,
-		color: '#0F172A',
-		marginBottom: 6,
-		marginTop: 8,
-		fontWeight: '500',
-	},
-	input: {
-		borderWidth: 2,
-		borderColor: '#CBD5E1',
-		borderRadius: 8,
-		backgroundColor: '#FFFFFF',
-		paddingHorizontal: 10,
-		paddingVertical: 6,
-		fontSize: 14,
-		color: '#0F172A',
-		height: 34,
-	},
-	inputContainer: {
-		position: 'relative',
-		justifyContent: 'center',
-	},
-	inputIcon: {
-		position: 'absolute',
-		left: 10,
-		zIndex: 1,
-	},
-	inputWithIcon: {
-		borderWidth: 2,
-		borderColor: '#CBD5E1',
-		borderRadius: 8,
-		backgroundColor: '#FFFFFF',
-		paddingHorizontal: 10,
-		paddingLeft: 34,
-		paddingVertical: 6,
-		fontSize: 14,
-		color: '#0F172A',
-		height: 34,
-	},
-	inputWithoutIcon: {
-		paddingLeft: 10,
-	},
-	descriptionContainer: {
-		alignItems: 'stretch',
-	},
-	descriptionInput: {
-		height: 44,
-		textAlignVertical: 'top',
-	},
-	errorText: {
-		marginTop: 6,
-		color: '#DC2626',
-		fontSize: 11,
+		fontWeight: '800',
+		color: '#1f2937',
 		textAlign: 'center',
 	},
-	benefitsSection: {
-		marginTop: 10,
-		marginBottom: 10,
+	subtitle: {
+		fontSize: 14,
+		color: '#9ca3af',
+		textAlign: 'center',
+		marginTop: 4,
+	},
+	label: {
+		fontSize: 13,
+		fontWeight: '600',
+		color: '#374151',
+		marginBottom: 6,
+	},
+	inputWrapper: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		backgroundColor: '#f9fafb',
+		borderWidth: 1.5,
+		borderColor: '#e5e7eb',
+		borderRadius: 14,
+		paddingHorizontal: 14,
+		height: 48,
+	},
+	inputFocused: {
+		borderColor: '#667eea',
+		backgroundColor: '#fff',
+	},
+	input: {
+		flex: 1,
+		fontSize: 15,
+		color: '#1f2937',
+		height: '100%',
+		outlineStyle: 'none',
+	},
+	errorText: {
+		color: '#ef4444',
+		fontSize: 13,
+		textAlign: 'center',
+		marginTop: 14,
+	},
+	benefitsCard: {
+		backgroundColor: '#f9fafb',
+		borderRadius: 16,
+		padding: 16,
+		marginTop: 20,
+		marginBottom: 20,
+		borderWidth: 1,
+		borderColor: '#e5e7eb',
 	},
 	benefitsTitle: {
-		fontSize: 16,
+		fontSize: 15,
 		fontWeight: '700',
-		color: '#EAB308',
-		marginBottom: 4,
+		color: '#1f2937',
+		marginBottom: 10,
 	},
-	benefitsList: {
-		gap: 3,
+	benefitRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 10,
+		marginBottom: 8,
 	},
-	benefitItem: {
+	benefitText: {
 		fontSize: 13,
-		color: '#0F172A',
-		lineHeight: 13,
+		color: '#374151',
+		flex: 1,
 	},
-	buttonContainer: {
-		marginTop: 10,
-		marginBottom: 4,
-	},
-	proceedButton: {
-		borderRadius: 12,
-		paddingVertical: 10,
+	proceedBtn: {
+		borderRadius: 14,
+		paddingVertical: 16,
+		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'center',
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
+		gap: 10,
+		shadowColor: '#667eea',
+		shadowOffset: { width: 0, height: 6 },
 		shadowOpacity: 0.25,
-		shadowRadius: 4,
+		shadowRadius: 16,
 		elevation: 5,
 	},
-	proceedButtonText: {
-		color: '#FCD34D',
+	proceedBtnText: {
+		color: '#fff',
 		fontWeight: '700',
-		fontSize: 18,
-		lineHeight: 20,
+		fontSize: 16,
 	},
 });
