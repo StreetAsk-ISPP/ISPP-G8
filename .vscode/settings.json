@@ -1,6 +1,44 @@
 {
+  // JavaScript/TypeScript (disabled for React Native/Expo)
   "typescript.validate.enable": false,
   "javascript.validate.enable": false,
   "typescript.tsserver.experimental.enableProjectDiagnostics": false,
-  "maven.view": "hierarchical"
+  // Maven
+  "maven.view": "hierarchical",
+  // Java Language Server - Configuración robusta
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.autobuild.enabled": true,
+  "java.import.maven.enabled": true,
+  "java.import.gradle.enabled": false,
+  "java.server.launchMode": "Standard",
+  "java.project.sourcePaths": [
+    "src/main/java",
+    "src/test/java"
+  ],
+  // CLAVE: Forzar que Maven sea la fuente de verdad
+  "java.configuration.maven.globalSettings": null,
+  "java.configuration.maven.userSettings": null,
+  "java.import.generatesMetadataFilesAtProjectRoot": false,
+  // Evitar conflictos con archivos generados
+  "java.project.outputPath": "",
+  // Performance: Excluir carpetas problemáticas
+  "files.watcherExclude": {
+    "**/target/**": true,
+    "**/node_modules/**": true,
+    "**/.git/objects/**": true,
+    "**/bin/**": true,
+    "**/.settings/**": true
+  },
+  "files.exclude": {
+    "**/bin/**": true,
+    "**/.classpath": true,
+    "**/.project": true,
+    "**/.settings": true,
+    "**/.factorypath": true
+  },
+  // Editor
+  "editor.formatOnSave": true,
+  "[java]": {
+    "editor.defaultFormatter": "redhat.java"
+  }
 }

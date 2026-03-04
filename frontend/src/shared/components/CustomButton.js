@@ -5,7 +5,7 @@ export default function CustomButton({ label, onPress, variant = 'primary', disa
   return (
     <Pressable
       style={[
-        styles.button, 
+        styles.button,
         variant === 'secondary' && styles.buttonSecondary,
         disabled && styles.buttonDisabled,
         style
@@ -14,7 +14,7 @@ export default function CustomButton({ label, onPress, variant = 'primary', disa
       disabled={disabled}
     >
       <Text style={[
-        styles.label, 
+        styles.label,
         variant === 'secondary' && styles.labelSecondary,
         disabled && styles.labelDisabled,
         textStyle
@@ -28,23 +28,29 @@ export default function CustomButton({ label, onPress, variant = 'primary', disa
 const styles = StyleSheet.create({
   button: {
     backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.md,
-    paddingVertical: theme.spacing.sm,
+    borderRadius: 12,
+    paddingVertical: 14,
     paddingHorizontal: theme.spacing.md,
     alignItems: 'center',
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
   },
   buttonSecondary: {
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    backgroundColor: '#f3f4f6',
+    borderWidth: 0,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
   },
   buttonDisabled: {
     opacity: 0.5,
   },
   label: {
-    color: theme.colors.surface,
-    fontSize: theme.typography.body,
-    fontWeight: '600',
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
   },
   labelSecondary: {
     color: theme.colors.textPrimary,

@@ -1,13 +1,19 @@
 import { useState } from 'react';
-import { Text, TextInput, View, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import {
+	Keyboard, Platform, ScrollView, StyleSheet, Text,
+	TextInput, TouchableOpacity, TouchableWithoutFeedback,
+	View, useWindowDimensions,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../../app/providers/AuthProvider';
-import { globalStyles } from '../../../shared/ui/theme/globalStyles';
 import apiClient from '../../../shared/services/http/apiClient';
 
 export default function SignUpScreen({ navigation }) {
 	const { login } = useAuth();
+	const { width } = useWindowDimensions();
+	const isNarrow = width < 500;
+
 	const [firstName, setFirstName] = useState('');
 	const [lastName, setLastName] = useState('');
 	const [email, setEmail] = useState('');
@@ -22,66 +28,37 @@ export default function SignUpScreen({ navigation }) {
 			setError('Please fill in all required fields.');
 			return false;
 		}
-
-		// Validar formato de email
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		if (!emailRegex.test(email)) {
 			setError('Please enter a valid email address.');
 			return false;
 		}
-
 		if (password.length < 6) {
 			setError('Password must be at least 6 characters long.');
 			return false;
 		}
-
 		return true;
 	};
 
 	const handleRegularSignup = async () => {
 		setError('');
-
-		if (!validateForm()) {
-			return;
-		}
-
+		if (!validateForm()) return;
 		try {
 			setIsSubmitting(true);
-			
-			// Step 1: Create basic user
-			await apiClient.post('/api/v1/auth/signup/basic', {
-				email,
-				userName,
-				password,
-				firstName,
-				lastName,
+			await apiClient.post('/api/v1/auth/signup/basic', { email, userName, password, firstName, lastName });
+			await apiClient.post('/api/v1/auth/signup/regular', { email });
+			const loginResponse = await apiClient.post('/api/v1/auth/signin', { email, password });
+			await login(loginResponse.data.token, {
+				id: loginResponse.data.id,
+				username: loginResponse.data.username,
+				roles: loginResponse.data.roles,
 			});
-
-			// Step 2: Complete as regular user
-			await apiClient.post('/api/v1/auth/signup/regular', {
-				email,
-			});
-
-			// Step 3: Automatic login
-			const loginResponse = await apiClient.post('/api/v1/auth/signin', {
-				email,
-				password,
-			});
-			
-			// Save token and redirect to Home
-			await login(loginResponse.data.token);
 		} catch (err) {
-			let errorMessage = err.response?.data?.message || err.response?.data || err.message || 'Registration failed. Please try again.';
-			
-			errorMessage = typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage);
-			
-			if (errorMessage.toLowerCase().includes('username')) {
-				setError('This username is already taken. Please choose a different username.');
-			} else if (errorMessage.toLowerCase().includes('email')) {
-				setError('This email is already registered. Please use a different email or try logging in.');
-			} else {
-				setError(errorMessage);
-			}
+			let msg = err.response?.data?.message || err.response?.data || err.message || 'Registration failed.';
+			msg = typeof msg === 'string' ? msg : JSON.stringify(msg);
+			if (msg.toLowerCase().includes('username')) setError('This username is already taken.');
+			else if (msg.toLowerCase().includes('email')) setError('This email is already registered.');
+			else setError(msg);
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -89,334 +66,275 @@ export default function SignUpScreen({ navigation }) {
 
 	const handleBusinessSignup = async () => {
 		setError('');
-
-		if (!validateForm()) {
-			return;
-		}
-
+		if (!validateForm()) return;
 		try {
 			setIsSubmitting(true);
-
-			// Create basic user
-			await apiClient.post('/api/v1/auth/signup/basic', {
-				email,
-				userName,
-				password,
-				firstName,
-				lastName,
-			});
-
-			// Navigate to the business details screen
-			navigation.navigate('BusinessSignup', {
-				email,
-				password,
-			});
+			await apiClient.post('/api/v1/auth/signup/basic', { email, userName, password, firstName, lastName });
+			navigation.navigate('BusinessSignup', { email, password });
 		} catch (err) {
-			let errorMessage = err.response?.data?.message || err.response?.data || err.message || 'Registration failed. Please try again.';
-			
-			errorMessage = typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage);
-			
-			if (errorMessage.toLowerCase().includes('username')) {
-				setError('This username is already taken. Please choose a different username.');
-			} else if (errorMessage.toLowerCase().includes('email')) {
-				setError('This email is already registered. Please use a different email or try logging in.');
-			} else {
-				setError(errorMessage);
-			}
+			let msg = err.response?.data?.message || err.response?.data || err.message || 'Registration failed.';
+			msg = typeof msg === 'string' ? msg : JSON.stringify(msg);
+			if (msg.toLowerCase().includes('username')) setError('This username is already taken.');
+			else if (msg.toLowerCase().includes('email')) setError('This email is already registered.');
+			else setError(msg);
 		} finally {
 			setIsSubmitting(false);
 		}
 	};
 
-	return (
-		<View style={globalStyles.screen}>
-			<View style={styles.container}>
-				<View style={styles.backButtonWrapper}>
-					<TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.8}>
-						<Ionicons name="chevron-back" size={32} color="#334155" />
-					</TouchableOpacity>
-				</View>
-				{/* Logo/Icon */}
-				<View style={styles.logoContainer}>
-						<Image 
-							source={require('../../../../assets/logo.png')} 
-							style={styles.logoImage}
-							resizeMode="contain"
-						/>
-				</View>
-
-				<Text style={styles.title}>Sign Up</Text>
-
-				{/* Form Fields */}
-				<View style={styles.form}>
-					<Text style={styles.label}>First Name*</Text>
-					<View style={styles.inputContainer}>
-						{!firstName && focusedField !== 'firstName' && <Ionicons name="person-outline" size={20} color="#94A3B8" style={styles.inputIcon} />}
-						<TextInput
-							value={firstName}
-							onChangeText={setFirstName}
-							onFocus={() => setFocusedField('firstName')}
-							onBlur={() => setFocusedField(null)}
-							placeholder=""
-							style={styles.inputWithIcon}
-						/>
-					</View>
-
-					<Text style={styles.label}>Last Name*</Text>
-					<View style={styles.inputContainer}>
-						{!lastName && focusedField !== 'lastName' && <Ionicons name="person-outline" size={20} color="#94A3B8" style={styles.inputIcon} />}
-						<TextInput
-							value={lastName}
-							onChangeText={setLastName}
-							onFocus={() => setFocusedField('lastName')}
-							onBlur={() => setFocusedField(null)}
-							placeholder=""
-							style={styles.inputWithIcon}
-						/>
-					</View>
-
-					<Text style={styles.label}>Email*</Text>
-					<View style={styles.inputContainer}>
-						{!email && focusedField !== 'email' && <Ionicons name="mail-outline" size={20} color="#94A3B8" style={styles.inputIcon} />}
-						<TextInput
-							value={email}
-							onChangeText={setEmail}
-							onFocus={() => setFocusedField('email')}
-							onBlur={() => setFocusedField(null)}
-							placeholder=""
-							keyboardType="email-address"
-							autoCapitalize="none"
-							style={styles.inputWithIcon}
-						/>
-					</View>
-
-					<Text style={styles.label}>User Name*</Text>
-					<View style={styles.inputContainer}>
-						{!userName && focusedField !== 'userName' && <Ionicons name="person-outline" size={20} color="#94A3B8" style={styles.inputIcon} />}
-						<TextInput
-							value={userName}
-							onChangeText={setUserName}
-							onFocus={() => setFocusedField('userName')}
-							onBlur={() => setFocusedField(null)}
-							placeholder=""
-							autoCapitalize="none"
-							style={styles.inputWithIcon}
-						/>
-					</View>
-
-					<Text style={styles.label}>Password*</Text>
-					<View style={styles.inputContainer}>
-						{!password && focusedField !== 'password' && <Ionicons name="key-outline" size={20} color="#94A3B8" style={styles.inputIcon} />}
-						<TextInput
-							value={password}
-							onChangeText={setPassword}
-							onFocus={() => setFocusedField('password')}
-							onBlur={() => setFocusedField(null)}
-							placeholder=""
-							secureTextEntry
-							style={styles.inputWithIcon}
-						/>
-					</View>
-					{error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-					{/* Sign Up As Section */}
-					<View style={styles.buttonsSection}>
-						<Text style={styles.signUpAsText}>SIGN UP AS</Text>
-
-						<View style={styles.buttonsRow}>
-							<View style={styles.buttonContainer}>
-							<TouchableOpacity
-								onPress={handleBusinessSignup}
-								disabled={isSubmitting}
-								activeOpacity={0.8}
-							>
-								<LinearGradient
-									colors={['#F59E0B', '#EF4444', '#8B5CF6']}
-									start={{ x: 0, y: 0 }}
-									end={{ x: 1, y: 1 }}
-									style={styles.businessButton}
-								>
-									<View style={styles.businessButtonContent}>
-									<Text style={styles.businessButtonStar}>⭐</Text>
-									<View style={styles.businessButtonTextContainer}>
-										<Text style={styles.businessButtonText}>Business</Text>
-										<Text style={styles.businessButtonText}>account</Text>
-									</View>
-									</View>
-								</LinearGradient>
-							</TouchableOpacity>
-						</View>
-
-					<View style={styles.buttonContainer}>
-					<TouchableOpacity
-						onPress={handleRegularSignup}
-						disabled={isSubmitting}
-						activeOpacity={0.8}
-					>
-						<LinearGradient
-							colors={['#94A3B8', '#64748B', '#475569']}
-							start={{ x: 0, y: 0 }}
-							end={{ x: 1, y: 1 }}
-							style={styles.normalButton}
-						>
-						<View style={styles.normalButtonTextContainer}>
-							<Text style={styles.normalButtonText}>Regular</Text>
-							<Text style={styles.normalButtonText}>account</Text>
-						</View>
-						</LinearGradient>
-					</TouchableOpacity>
-					</View>
-						</View>
-					</View>
-				</View>
+	const renderInput = (label, value, onChangeText, fieldKey, opts = {}) => (
+		<View style={{ marginTop: 14 }}>
+			<Text style={styles.label}>{label}</Text>
+			<View style={[styles.inputWrapper, focusedField === fieldKey && styles.inputFocused]}>
+				{opts.icon && <Ionicons name={opts.icon} size={18} color="#1f2937" style={{ marginRight: 10 }} />}
+				<TextInput
+					value={value}
+					onChangeText={onChangeText}
+					secureTextEntry={opts.secure}
+					keyboardType={opts.keyboardType}
+					autoCapitalize={opts.autoCapitalize || 'sentences'}
+					placeholder={opts.placeholder || ''}
+					placeholderTextColor="#c0c5ce"
+					style={styles.input}
+					onFocus={() => setFocusedField(fieldKey)}
+					onBlur={() => setFocusedField(null)}
+				/>
 			</View>
 		</View>
+	);
+
+	const content = (
+		<View style={styles.screen}>
+			<ScrollView
+				contentContainerStyle={styles.scrollContent}
+				showsVerticalScrollIndicator={false}
+				keyboardShouldPersistTaps="handled"
+			>
+				<View style={[styles.card, isNarrow && { marginHorizontal: 16 }]}>
+					{/* Back */}
+					<TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+						<Ionicons name="chevron-back" size={24} color="#667eea" />
+					</TouchableOpacity>
+
+					{/* Header */}
+					<View style={styles.headerCircle}>
+						<Ionicons name="person-add" size={30} color="#fff" />
+					</View>
+					<Text style={styles.title}>Create Account</Text>
+					<Text style={styles.subtitle}>Fill in the details below</Text>
+
+					{/* Fields */}
+					{renderInput('First Name *', firstName, setFirstName, 'fn', { icon: 'person-outline', placeholder: 'John' })}
+					{renderInput('Last Name *', lastName, setLastName, 'ln', { icon: 'person-outline', placeholder: 'Doe' })}
+					{renderInput('Email *', email, setEmail, 'em', { icon: 'mail-outline', keyboardType: 'email-address', autoCapitalize: 'none', placeholder: 'you@example.com' })}
+					{renderInput('Username *', userName, setUserName, 'un', { icon: 'at-outline', autoCapitalize: 'none', placeholder: 'johndoe' })}
+					{renderInput('Password *', password, setPassword, 'pw', { icon: 'lock-closed-outline', secure: true, placeholder: '********' })}
+
+					{error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+					{/* Sign Up As */}
+					<Text style={styles.sectionLabel}>SIGN UP AS</Text>
+
+					<View style={styles.buttonsRow}>
+						<TouchableOpacity
+							onPress={handleBusinessSignup}
+							disabled={isSubmitting}
+							activeOpacity={0.85}
+							style={styles.btnHalf}
+						>
+							<LinearGradient
+								colors={['#f59e0b', '#ef4444']}
+								start={{ x: 0, y: 0 }}
+								end={{ x: 1, y: 1 }}
+								style={styles.businessBtn}
+							>
+								<Ionicons name="star" size={18} color="#fff" />
+								<Text style={styles.businessBtnText}>Business</Text>
+							</LinearGradient>
+						</TouchableOpacity>
+
+						<TouchableOpacity
+							onPress={handleRegularSignup}
+							disabled={isSubmitting}
+							activeOpacity={0.85}
+							style={styles.btnHalf}
+						>
+							<View style={styles.normalBtn}>
+								<Ionicons name="person" size={18} color="#374151" />
+								<Text style={styles.normalBtnText}>Normal</Text>
+							</View>
+						</TouchableOpacity>
+					</View>
+
+					{/* Back to login */}
+					<TouchableOpacity
+						onPress={() => navigation.navigate('Login')}
+						style={styles.linkBtn}
+						activeOpacity={0.7}
+					>
+						<Text style={styles.linkText}>Already have an account? <Text style={{ fontWeight: '700' }}>Sign In</Text></Text>
+					</TouchableOpacity>
+				</View>
+			</ScrollView>
+		</View>
+	);
+
+	if (Platform.OS === 'web') return content;
+	return (
+		<TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+			{content}
+		</TouchableWithoutFeedback>
 	);
 }
 
 const styles = StyleSheet.create({
-	container: {
+	screen: {
 		flex: 1,
-		alignItems: 'center',
-		paddingVertical: 16,
+		backgroundColor: '#f3f4f6',
+	},
+	scrollContent: {
+		flexGrow: 1,
 		justifyContent: 'center',
-	},
-	backButtonWrapper: {
-		position: 'absolute',
-		top: 6,
-		left: 4,
-		zIndex: 2,
-	},
-	logoContainer: {
-		marginBottom: 16,
 		alignItems: 'center',
+		padding: 24,
 	},
-	logoImage: {
-		width: 80,
-		height: 80,
+	card: {
+		width: '100%',
+		maxWidth: 440,
+		backgroundColor: '#fff',
+		borderRadius: 28,
+		padding: 28,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 8 },
+		shadowOpacity: 0.06,
+		shadowRadius: 24,
+		elevation: 6,
+	},
+	backBtn: {
+		width: 40,
+		height: 40,
+		borderRadius: 12,
+		backgroundColor: '#f3f4f6',
+		alignItems: 'center',
+		justifyContent: 'center',
+		marginBottom: 12,
+	},
+	headerCircle: {
+		width: 64,
+		height: 64,
+		borderRadius: 32,
+		backgroundColor: '#f87171',
+		alignSelf: 'center',
+		alignItems: 'center',
+		justifyContent: 'center',
+		marginBottom: 16,
+		shadowColor: '#f87171',
+		shadowOffset: { width: 0, height: 6 },
+		shadowOpacity: 0.25,
+		shadowRadius: 16,
+		elevation: 8,
 	},
 	title: {
-		fontSize: 28,
-		fontWeight: '700',
-		color: '#334155',
-		marginBottom: 16,
+		fontSize: 24,
+		fontWeight: '800',
+		color: '#1f2937',
+		textAlign: 'center',
 	},
-	form: {
-		width: '100%',
-		paddingHorizontal: 24,
+	subtitle: {
+		fontSize: 14,
+		color: '#9ca3af',
+		textAlign: 'center',
+		marginTop: 4,
 	},
 	label: {
-		fontSize: 14,
-		color: '#0F172A',
-		marginBottom: 4,
-		marginTop: 8,
-		fontWeight: '500',
+		fontSize: 13,
+		fontWeight: '600',
+		color: '#374151',
+		marginBottom: 6,
 	},
-	input: {
-		borderWidth: 2,
-		borderColor: '#CBD5E1',
-		borderRadius: 10,
-		backgroundColor: '#FFFFFF',
-		paddingHorizontal: 12,
-		paddingVertical: 10,
-		fontSize: 14,
-		color: '#0F172A',
-		height: 42,
-	},
-	inputContainer: {
+	inputWrapper: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		borderWidth: 2,
-		borderColor: '#CBD5E1',
-		borderRadius: 10,
-		backgroundColor: '#FFFFFF',
-		paddingHorizontal: 12,
-		height: 42,
+		backgroundColor: '#f9fafb',
+		borderWidth: 1.5,
+		borderColor: '#e5e7eb',
+		borderRadius: 14,
+		paddingHorizontal: 14,
+		height: 48,
 	},
-	inputIcon: {
-		marginRight: 8,
+	inputFocused: {
+		borderColor: '#667eea',
+		backgroundColor: '#fff',
 	},
-	inputWithIcon: {
+	input: {
 		flex: 1,
-		fontSize: 14,
-		color: '#0F172A',
+		fontSize: 15,
+		color: '#1f2937',
 		height: '100%',
 		outlineStyle: 'none',
 	},
 	errorText: {
-		marginTop: 8,
-		color: '#DC2626',
+		color: '#ef4444',
+		fontSize: 13,
+		textAlign: 'center',
+		marginTop: 14,
+	},
+	sectionLabel: {
 		fontSize: 12,
-		textAlign: 'center',
-	},
-	buttonsSection: {
-		marginTop: 20,
-		marginBottom: 12,
-	},
-	signUpAsText: {
-		fontSize: 20,
 		fontWeight: '700',
-		color: '#991B1B',
+		color: '#9ca3af',
 		textAlign: 'center',
-		marginBottom: 16,
+		marginTop: 24,
+		marginBottom: 14,
+		letterSpacing: 1,
 	},
 	buttonsRow: {
 		flexDirection: 'row',
-		justifyContent: 'space-between',
 		gap: 12,
 	},
-	buttonContainer: {
+	btnHalf: {
 		flex: 1,
 	},
-	businessButton: {
-		borderRadius: 12,
+	businessBtn: {
+		borderRadius: 14,
 		paddingVertical: 16,
-		paddingHorizontal: 12,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.25,
-		shadowRadius: 4,
-		elevation: 5,
-	},
-	businessButtonContent: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		justifyContent: 'space-between',
-	},
-	businessButtonTextContainer: {
-		flex: 1,
-		alignItems: 'center',
-	},
-	businessButtonText: {
-		color: '#FCD34D',
-		fontWeight: '700',
-		fontSize: 18,
-		lineHeight: 20,
-	},
-	businessButtonStar: {
-		fontSize: 28,
-		marginRight: 8,
-	},
-	normalButton: {
-		borderRadius: 12,
-		paddingVertical: 16,
-		paddingHorizontal: 12,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
+		justifyContent: 'center',
+		gap: 8,
+		shadowColor: '#f59e0b',
+		shadowOffset: { width: 0, height: 4 },
 		shadowOpacity: 0.25,
-		shadowRadius: 4,
+		shadowRadius: 12,
 		elevation: 5,
+	},
+	businessBtnText: {
+		color: '#fff',
+		fontWeight: '700',
+		fontSize: 15,
+	},
+	normalBtn: {
+		backgroundColor: '#f3f4f6',
+		borderRadius: 14,
+		paddingVertical: 16,
+		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'center',
+		gap: 8,
+		borderWidth: 1,
+		borderColor: '#e5e7eb',
 	},
-	normalButtonTextContainer: {
+	normalBtnText: {
+		color: '#374151',
+		fontWeight: '700',
+		fontSize: 15,
+	},
+	linkBtn: {
+		marginTop: 20,
 		alignItems: 'center',
 	},
-	normalButtonText: {
-		color: '#1F2937',
-		fontWeight: '700',
-		fontSize: 18,
-		lineHeight: 20,
-		textAlign: 'center',
+	linkText: {
+		fontSize: 14,
+		color: '#667eea',
 	},
 });
