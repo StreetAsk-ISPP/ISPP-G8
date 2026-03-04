@@ -33,3 +33,4 @@ To streamline team coordination, AI tools were occasionally used to summarize me
 ### 4. Creative and Presentation Support
 
 Finally, generative AI was used for minor creative tasks, such as helping design visual elements for presentations or brainstorming ideas for slides and visual assets.
+
