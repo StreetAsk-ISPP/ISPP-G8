@@ -1,6 +1,18 @@
 import { useState } from 'react';
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import {
+  Image,
+  Keyboard,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import apiClient from '../../../shared/services/http/apiClient';
 import { useAuth } from '../../../app/providers/AuthProvider';
@@ -8,21 +20,24 @@ import { theme } from '../../../shared/ui/theme/theme';
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  const [isLoginPressed, setIsLoginPressed] = useState(false);
 
-  const isSmallScreen = width < 380;
-  const isLargeScreen = width >= 900;
-  const screenPadding = isSmallScreen ? theme.spacing.md : isLargeScreen ? theme.spacing.xl : theme.spacing.lg;
-  const formMaxWidth = isLargeScreen ? 460 : 420;
-  const logoSize = isSmallScreen ? 76 : 88;
-  const titleSize = isSmallScreen ? 24 : theme.typography.h1;
-  const inputHeight = isSmallScreen ? 42 : 46;
+  const isWeb = Platform.OS === 'web';
+  const screenPadding = width * (isWeb ? 0.06 : 0.05);
+  const isWideLayout = isWeb && width > height * 1.1;
+  const logoSize = width * (isWideLayout ? 0.075 : 0.14);
+  const titleSize = theme.typography.h1;
+  const inputHeight = 46;
+  const contentTopPadding = insets.top + theme.spacing.lg;
+  const contentBottomPadding = insets.bottom + theme.spacing.lg;
 
   const handleLogin = async () => {
     setError('');
@@ -51,69 +66,105 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
-  return (
-    <View style={[styles.screen, { paddingHorizontal: screenPadding }]}>
-      <View style={styles.container}>
-        <Image
-          source={require('../../../../assets/logo.png')}
-          style={[styles.logo, { width: logoSize, height: logoSize }]}
-          resizeMode="contain"
-        />
+  const content = (
+    <View
+      style={[
+        styles.screen,
+        {
+          paddingHorizontal: screenPadding,
+          paddingTop: contentTopPadding,
+          paddingBottom: contentBottomPadding,
+        },
+      ]}
+    >
+      <View style={[styles.container, !isWideLayout && styles.containerMobile, isWideLayout && styles.containerWide]}>
+        <View style={[styles.brandSection, isWideLayout && styles.brandSectionWide]}>
+          <Image
+            source={require('../../../../assets/logo.png')}
+            style={[styles.logo, { width: logoSize, height: logoSize }]}
+            resizeMode="contain"
+          />
 
-        <Text style={[styles.title, { fontSize: titleSize }]}>Login</Text>
-
-        <View style={[styles.form, { maxWidth: formMaxWidth }]}>
-          <Text style={styles.label}>Username</Text>
-          <View style={[styles.inputWrapper, focusedField === 'identifier' && styles.inputWrapperFocused]}>
-            <Ionicons name="person-outline" size={20} color="#94A3B8" style={styles.inputIcon} />
-            <TextInput
-              value={identifier}
-              onChangeText={setIdentifier}
-              autoCapitalize="none"
-              autoCorrect={false}
-              placeholder="email or username"
-              placeholderTextColor={theme.colors.textSecondary}
-              style={[styles.input, { height: inputHeight }]}
-              onFocus={() => setFocusedField('identifier')}
-              onBlur={() => setFocusedField(null)}
-            />
-          </View>
-
-          <Text style={styles.label}>Password</Text>
-          <View style={[styles.inputWrapper, focusedField === 'password' && styles.inputWrapperFocused]}>
-            <Ionicons name="key-outline" size={20} color="#94A3B8" style={styles.inputIcon} />
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              placeholder="type your password"
-              placeholderTextColor={theme.colors.textSecondary}
-              style={[styles.input, { height: inputHeight }]}
-              onFocus={() => setFocusedField('password')}
-              onBlur={() => setFocusedField(null)}
-            />
-          </View>
-
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-          <TouchableOpacity
-            style={[styles.loginButton, isSubmitting && styles.loginButtonDisabled]}
-            onPress={handleLogin}
-            disabled={isSubmitting}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.loginButtonText}>{isSubmitting ? 'LOGGING IN...' : 'LOGIN'}</Text>
-          </TouchableOpacity>
-
+          <Text style={[styles.title, { fontSize: titleSize }]}>Login</Text>
         </View>
-        <View style={styles.footer}>
-          <Text style={styles.signUpPrompt}>Don’t have an account?</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('SignUp')} activeOpacity={0.8}>
-            <Text style={styles.signUpLink}>Sign Up Here</Text>
-          </TouchableOpacity>
+
+        <View
+          style={[
+            styles.formSection,
+            isWideLayout && styles.formSectionWide,
+          ]}
+        >
+          <View style={styles.form}>
+            <Text style={styles.label}>Username</Text>
+            <View style={[styles.inputWrapper, focusedField === 'identifier' && styles.inputWrapperFocused]}>
+              <Ionicons name="person-outline" size={20} color="#94A3B8" style={styles.inputIcon} />
+              <TextInput
+                value={identifier}
+                onChangeText={setIdentifier}
+                autoCapitalize="none"
+                autoCorrect={false}
+                placeholder="email or username"
+                placeholderTextColor={theme.colors.textSecondary}
+                style={[styles.input, { height: inputHeight }]}
+                onFocus={() => setFocusedField('identifier')}
+                onBlur={() => setFocusedField(null)}
+              />
+            </View>
+
+            <Text style={styles.label}>Password</Text>
+            <View style={[styles.inputWrapper, focusedField === 'password' && styles.inputWrapperFocused]}>
+              <Ionicons name="key-outline" size={20} color="#94A3B8" style={styles.inputIcon} />
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                placeholder="type your password"
+                placeholderTextColor={theme.colors.textSecondary}
+                style={[styles.input, { height: inputHeight }]}
+                onFocus={() => setFocusedField('password')}
+                onBlur={() => setFocusedField(null)}
+              />
+            </View>
+
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+            <TouchableOpacity
+              style={[
+                styles.loginButton,
+                isLoginPressed && styles.loginButtonPressed,
+                isSubmitting && styles.loginButtonDisabled,
+              ]}
+              onPress={handleLogin}
+              onPressIn={() => setIsLoginPressed(true)}
+              onPressOut={() => setIsLoginPressed(false)}
+              disabled={isSubmitting}
+              activeOpacity={0.85}
+            >
+              <Text style={[styles.loginButtonText, isLoginPressed && styles.loginButtonTextPressed]}>
+                {isSubmitting ? 'LOGGING IN...' : 'LOGIN'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={[styles.footer, isWideLayout && styles.footerWide]}>
+            <Text style={styles.signUpPrompt}>Don’t have an account?</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('SignUp')} activeOpacity={0.8}>
+              <Text style={styles.signUpLink}>Sign Up Here</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </View>
+  );
+
+  if (isWeb) {
+    return content;
+  }
+
+  return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      {content}
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -121,13 +172,31 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: theme.colors.background,
+    alignItems: 'center',
   },
   container: {
     flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
+    width: '100%',
+    gap: theme.spacing.lg,
+  },
+  containerMobile: {
+    justifyContent: 'space-between',
+  },
+  containerWide: {
     justifyContent: 'flex-start',
-    paddingTop: theme.spacing.xl,
-    paddingBottom: theme.spacing.md,
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  brandSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandSectionWide: {
+    minWidth: 0,
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
   },
   logo: {
     width: 88,
@@ -141,10 +210,22 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.sm,
   },
+  formSection: {
+    width: '100%',
+    flex: 1,
+    alignItems: 'center',
+  },
+  formSectionWide: {
+    minWidth: 0,
+    alignItems: 'stretch',
+    flex: 1,
+    width: '72%',
+  },
   form: {
     width: '100%',
-    paddingHorizontal: theme.spacing.sm,
-    marginTop: theme.spacing.md,
+    minWidth: 0,
+    paddingHorizontal: theme.spacing.xs,
+    marginTop: theme.spacing.xs,
   },
   label: {
     fontSize: theme.typography.caption,
@@ -194,17 +275,26 @@ const styles = StyleSheet.create({
   loginButtonDisabled: {
     opacity: 0.7,
   },
+  loginButtonPressed: {
+    backgroundColor: theme.colors.border,
+  },
   loginButtonText: {
     color: theme.colors.surface,
     fontSize: theme.typography.body,
     fontWeight: '700',
     letterSpacing: 0.3,
   },
+  loginButtonTextPressed: {
+    color: theme.colors.textPrimary,
+  },
   footer: {
     marginTop: 'auto',
     paddingTop: theme.spacing.lg,
     paddingBottom: theme.spacing.sm,
     alignItems: 'center',
+  },
+  footerWide: {
+    marginTop: 'auto',
   },
   signUpPrompt: {
     textAlign: 'center',
