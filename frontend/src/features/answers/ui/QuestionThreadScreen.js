@@ -44,7 +44,9 @@ export default function QuestionThreadScreen({ route }) {
     // Función auxiliar para obtener color aleatorio de avatar
     const getRandomAvatarColor = () => {
         const colors = ['#CDE8D5', '#E7C6C2', '#F0D7B9', '#D6E4FF', '#FFD6E8', '#D6FFE8'];
-        return colors[Math.floor(Math.random() * colors.length)];
+        const randomArray = new Uint32Array(1);
+        window.crypto.getRandomValues(randomArray);
+        return colors[randomArray[0] % colors.length];
     };
 
     const canSend = useMemo(() => draft.trim().length > 0 && !sendingAnswer, [draft, sendingAnswer]);

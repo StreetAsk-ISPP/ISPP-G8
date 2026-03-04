@@ -1,14 +1,14 @@
-<%@ page session="false" trimDirectiveWhitespaces="true" %>
-<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
-<%@ taglib prefix="streetask" tagdir="/WEB-INF/tags" %>
+<%@ page session="false" trimDirectiveWhitespaces="true" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+    <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
+        <%@ taglib prefix="streetask" tagdir="/WEB-INF/tags" %>
 
-<streetask:layout pageName="error">
+            <streetask:layout pageName="error">
 
-    <spring:url value="/resources/images/pets.png" var="petsImage"/>
-    <img src="${petsImage}"/>
+                <spring:url value="/resources/images/pets.png" var="petsImage" />
+                <img src="${petsImage}" />
 
-    <h2>Something happened...</h2>
+                <h2>Something happened...</h2>
 
-    <p>${exception.message}</p>
+                <p>${exception.message}</p>
 
-</streetask:layout>
+            </streetask:layout>
