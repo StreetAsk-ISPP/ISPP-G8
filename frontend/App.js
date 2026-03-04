@@ -10,6 +10,12 @@ import { NotificationProvider } from './src/app/providers/NotificationProvider';
 const isWeb = Platform.OS === 'web';
 
 export default function App() {
+  const webContainerStyle = {
+    flex: 1,
+    width: '100%',
+    backgroundColor: '#e5e5e5',
+  };
+
   return (
     <SafeAreaProvider>
       <AuthProvider>
@@ -18,10 +24,8 @@ export default function App() {
             <NavigationContainer>
               <StatusBar style="dark" />
               {isWeb ? (
-                <View style={{ flex: 1, alignItems: 'center', backgroundColor: '#e5e5e5' }}>
-                  <View style={{ flex: 1, width: '100%', maxWidth: 430 }}>
-                    <AppNavigator />
-                  </View>
+                <View style={webContainerStyle}>
+                  <AppNavigator />
                 </View>
               ) : (
                 <AppNavigator />
