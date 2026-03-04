@@ -16,6 +16,7 @@ const formatHms = (t) => {
     const s = Math.max(0, Math.floor(t));
     return `${Math.floor(s / 3600)}:${pad2(Math.floor((s % 3600) / 60))}:${pad2(s % 60)}`;
 };
+const avatarColors = ['#dbeafe', '#fce7f3', '#fef3c7', '#d1fae5', '#ede9fe', '#e0e7ff'];
 
 export default function QuestionThreadScreen({ route, navigation }) {
     const { questionId } = route?.params || {};
@@ -38,7 +39,6 @@ export default function QuestionThreadScreen({ route, navigation }) {
 
     const getMinutesAgo = (d) => d ? Math.floor((Date.now() - new Date(d)) / 60000) : 0;
 
-    const avatarColors = ['#dbeafe', '#fce7f3', '#fef3c7', '#d1fae5', '#ede9fe', '#e0e7ff'];
     const pickColor = useCallback((key) => {
         let hash = 0;
         const str = String(key || '');
