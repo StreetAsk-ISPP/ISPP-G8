@@ -3,6 +3,7 @@ package com.streetask.app.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.streetask.app.user.RegularUser;
 
@@ -21,7 +22,7 @@ import lombok.Setter;
 @Setter
 public class Answer extends BaseEntity {
 
-    @JsonIgnore
+    @JsonBackReference("question-answers")
     @ManyToOne(optional = false)
     @JoinColumn(name = "question_id")
     private Question question;
