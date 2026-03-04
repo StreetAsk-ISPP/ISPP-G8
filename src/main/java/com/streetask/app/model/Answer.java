@@ -3,6 +3,7 @@ package com.streetask.app.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.streetask.app.user.RegularUser;
 
 import jakarta.persistence.Embedded;
@@ -20,6 +21,7 @@ import lombok.Setter;
 @Setter
 public class Answer extends BaseEntity {
 
+    @JsonIgnore
     @ManyToOne(optional = false)
     @JoinColumn(name = "question_id")
     private Question question;
@@ -45,6 +47,7 @@ public class Answer extends BaseEntity {
 
     private Integer downvotes;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "answer")
     private List<AnswerVote> votes;
 }

@@ -1,5 +1,6 @@
 package com.streetask.app.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.streetask.app.model.BaseEntity;
 
 import jakarta.persistence.*;
@@ -26,6 +27,7 @@ public class User extends BaseEntity {
 	@Column(unique = true)
 	private String userName;
 
+	@JsonIgnore
 	private String password;
 
 	@NotBlank
