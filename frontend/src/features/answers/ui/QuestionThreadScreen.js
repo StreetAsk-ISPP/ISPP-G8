@@ -8,7 +8,7 @@ import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import apiClient from '../../../shared/services/http/apiClient';
 import { useAuth } from '../../../app/providers/AuthProvider';
-import crossAlert from '../../../shared/utils/crossAlert';
+import { crossAlert } from '../../../shared/utils/crossAlert';
 import MapPickerWeb from '../../home/ui/components/MapPickerWeb';
 
 const pad2 = (n) => String(n).padStart(2, '0');
@@ -122,33 +122,39 @@ export default function QuestionThreadScreen({ route, navigation }) {
         try {
             let loc = userLocation;
             if (!loc) {
-                if (Platform.OS === 'web' && navigator.geolocation) {
-                    loc = await new Promise((resolve, reject) => {
-                        navigator.geolocation.getCurrentPosition(
-                            (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-                            () => reject(new Error('Location required \u2013 tap \ud83d\udccd to pick on map')),
-                            { enableHighAccuracy: true, timeout: 8000 }
-                        );
-                    });
-                    setUserLocation(loc);
-                } else {
-                    const { status } = await Location.requestForegroundPermissionsAsync();
-                    if (status === 'granted') {
-                        const l = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-                        loc = l.coords;
+                try {
+                    if (Platform.OS === 'web' && navigator.geolocation) {
+                        loc = await new Promise((resolve, reject) => {
+                            navigator.geolocation.getCurrentPosition(
+                                (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+                                () => reject(new Error('Location unavailable')),
+                                { enableHighAccuracy: true, timeout: 8000 }
+                            );
+                        });
                         setUserLocation(loc);
                     } else {
-                        throw new Error('Location required \u2013 tap \ud83d\udccd to pick on map');
+                        const { status } = await Location.requestForegroundPermissionsAsync();
+                        if (status === 'granted') {
+                            const l = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+                            loc = l.coords;
+                            setUserLocation(loc);
+                        }
                     }
+                } catch (_) {
+                    // Location not available — send without it; backend will reject only if the question requires it
                 }
             }
 
-            const res = await apiClient.post('/api/v1/answers', {
+            const payload = {
                 content,
                 question: { id: question.id },
                 user: { id: user?.id },
-                userLocation: { latitude: loc.latitude, longitude: loc.longitude },
-            });
+            };
+            if (loc) {
+                payload.userLocation = { latitude: loc.latitude, longitude: loc.longitude };
+            }
+
+            const res = await apiClient.post('/api/v1/answers', payload);
 
             const saved = res.data;
             setAnswers((p) => p.map((a) => a.id === optimistic.id ? {
@@ -345,9 +351,6 @@ export default function QuestionThreadScreen({ route, navigation }) {
                 {/* ── Composer ── */}
                 {!loading && !error && (
                     <View style={[styles.composer, isNarrow && { paddingHorizontal: 12 }]}>
-                        <Pressable onPress={openMapPick} style={styles.locationBtn}>
-                            <Ionicons name="location" size={20} color={userLocation ? '#667eea' : '#ef4444'} />
-                        </Pressable>
                         <TextInput
                             ref={inputRef}
                             value={draft}

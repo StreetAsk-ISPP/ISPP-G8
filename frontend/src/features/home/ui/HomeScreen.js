@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
     View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
-    Switch, useWindowDimensions,
+    Switch, useWindowDimensions, Modal, Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MapComponent from './components/MapComponent';
@@ -18,6 +18,7 @@ export default function HomeScreen({ navigation }) {
 
     const [questions, setQuestions] = useState([]);
     const [showQuestions, setShowQuestions] = useState(true);
+    const [comingSoon, setComingSoon] = useState(false);
 
     const loadQuestions = useCallback(async () => {
         try {
@@ -54,7 +55,7 @@ export default function HomeScreen({ navigation }) {
                         <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7}>
                             <Ionicons name="search-outline" size={20} color="#374151" />
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7}>
+                        <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7} onPress={() => setComingSoon(true)}>
                             <Ionicons name="notifications-outline" size={20} color="#374151" />
                             {ephemeralNotification ? <View style={styles.badge} /> : null}
                         </TouchableOpacity>
@@ -108,6 +109,25 @@ export default function HomeScreen({ navigation }) {
                     <Text style={styles.fabText}>Ask a question</Text>
                 </TouchableOpacity>
             </View>
+
+            {/* ─── Coming Soon Modal ─── */}
+            <Modal
+                visible={comingSoon}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setComingSoon(false)}
+            >
+                <Pressable style={styles.modalOverlay} onPress={() => setComingSoon(false)}>
+                    <View style={styles.modalBox}>
+                        <Ionicons name="notifications" size={28} color="#667eea" />
+                        <Text style={styles.modalTitle}>Coming Soon</Text>
+                        <Text style={styles.modalMsg}>Notifications are not available yet.</Text>
+                        <TouchableOpacity style={styles.modalBtn} onPress={() => setComingSoon(false)} activeOpacity={0.8}>
+                            <Text style={styles.modalBtnText}>OK</Text>
+                        </TouchableOpacity>
+                    </View>
+                </Pressable>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -244,5 +264,50 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 15,
         fontWeight: '700',
+    },
+
+    /* ── Coming Soon Modal ── */
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalBox: {
+        backgroundColor: '#fff',
+        borderRadius: 18,
+        paddingVertical: 28,
+        paddingHorizontal: 32,
+        alignItems: 'center',
+        width: 260,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.15,
+        shadowRadius: 24,
+        elevation: 12,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#1f2937',
+        marginTop: 10,
+    },
+    modalMsg: {
+        fontSize: 13,
+        color: '#6b7280',
+        marginTop: 6,
+        textAlign: 'center',
+    },
+    modalBtn: {
+        marginTop: 18,
+        backgroundColor: '#667eea',
+        borderRadius: 10,
+        paddingVertical: 8,
+        paddingHorizontal: 28,
+    },
+    modalBtnText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
     },
 });
