@@ -1,4 +1,4 @@
-# ISPP-G8
+# ISPP-G10
 Aplicación para conocer en tiempo real información relevante sobre eventos en vivo.
 
 ## Tecnologías
