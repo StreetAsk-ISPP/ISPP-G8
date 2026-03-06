@@ -1,6 +1,7 @@
 package com.streetask.app.model;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -35,14 +36,14 @@ public class Answer extends BaseEntity {
 
     private Boolean isVerified;
 
-    private LocalDateTime verifiedAt;
+    private OffsetDateTime verifiedAt;
 
     private Integer coinsEarned;
 
     @Embedded
     private GeoPoint userLocation;
 
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     private Integer upvotes;
 
