@@ -3,6 +3,7 @@ package com.streetask.app.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.streetask.app.functionalities.shared.json.FlexibleLocalDateTimeDeserializer;
 import com.streetask.app.user.RegularUser;
@@ -53,5 +54,6 @@ public class Question extends BaseEntity {
     private Integer answerCount;
 
     @OneToMany(mappedBy = "question")
+    @JsonManagedReference("question-answers")
     private List<Answer> answers;
 }
