@@ -32,7 +32,6 @@ export default function HomeScreen({ navigation }) {
             if (requestId !== latestRequestRef.current) {
                 return;
             }
-            console.log('[HomeScreen] loaded questions:', raw);
 
             setQuestions(Array.isArray(raw) ? raw : []);
         } catch (e) {
@@ -44,7 +43,6 @@ export default function HomeScreen({ navigation }) {
 
     useEffect(() => {
         const unsub = observeNotifications((n) => {
-            console.log('[HomeScreen] notification received', JSON.stringify(n, null, 2));
 
             if (!isFocused) return;
 
