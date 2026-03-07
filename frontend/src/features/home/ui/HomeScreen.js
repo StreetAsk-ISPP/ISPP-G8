@@ -19,6 +19,7 @@ export default function HomeScreen({ navigation }) {
     const [questions, setQuestions] = useState([]);
     const [showQuestions, setShowQuestions] = useState(true);
     const [comingSoon, setComingSoon] = useState(false);
+    const [modalType, setModalType] = useState('notifications');
 
     const isFocused = useIsFocused();
     const latestRequestRef = useRef(0);
@@ -67,10 +68,14 @@ export default function HomeScreen({ navigation }) {
                     </View>
 
                     <View style={styles.topBarRight}>
-                        <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7}>
+                        <TouchableOpacity
+                            style={styles.iconBtn}
+                            activeOpacity={0.7}
+                            onPress={() => { setModalType('search'); setComingSoon(true); }}
+                        >
                             <Ionicons name="search-outline" size={20} color="#374151" />
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7} onPress={() => setComingSoon(true)}>
+                        <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7} onPress={() => { setModalType('notifications'); setComingSoon(true); }}>
                             <Ionicons name="notifications-outline" size={20} color="#374151" />
                             {ephemeralNotification ? <View style={styles.badge} /> : null}
                         </TouchableOpacity>
@@ -125,7 +130,6 @@ export default function HomeScreen({ navigation }) {
                 </TouchableOpacity>
             </View>
 
-            {/* ─── Coming Soon Modal ─── */}
             <Modal
                 visible={comingSoon}
                 transparent
@@ -134,10 +138,25 @@ export default function HomeScreen({ navigation }) {
             >
                 <Pressable style={styles.modalOverlay} onPress={() => setComingSoon(false)}>
                     <View style={styles.modalBox}>
-                        <Ionicons name="notifications" size={28} color="#667eea" />
+                        <Ionicons
+                            name={modalType === 'search' ? 'search' : 'notifications'}
+                            size={28}
+                            color="#667eea"
+                        />
+
                         <Text style={styles.modalTitle}>Coming Soon</Text>
-                        <Text style={styles.modalMsg}>Notifications are not available yet.</Text>
-                        <TouchableOpacity style={styles.modalBtn} onPress={() => setComingSoon(false)} activeOpacity={0.8}>
+
+                        <Text style={styles.modalMsg}>
+                            {modalType === 'search'
+                                ? 'Search is not available yet.'
+                                : 'Notifications are not available yet.'}
+                        </Text>
+
+                        <TouchableOpacity
+                            style={styles.modalBtn}
+                            onPress={() => setComingSoon(false)}
+                            activeOpacity={0.8}
+                        >
                             <Text style={styles.modalBtnText}>OK</Text>
                         </TouchableOpacity>
                     </View>
