@@ -67,6 +67,11 @@ Escanea el QR con Expo Go o pulsa `w` para abrir en el navegador.
 
 Esta opción levanta **todo** (frontend, backend, MySQL) con un solo comando. Usa MySQL como en producción.
 
+### Preparar el entorno
+
+``` bash
+cp frontend/.env.dev frontend/.env
+```
 ### Arrancar
 
 ```bash
