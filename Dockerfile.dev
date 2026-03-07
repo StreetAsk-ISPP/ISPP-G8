@@ -1,0 +1,21 @@
+FROM eclipse-temurin:21-jdk-jammy
+
+WORKDIR /app
+
+# Copiamos solo los archivos de configuración de Maven primero
+COPY .mvn/ .mvn
+COPY mvnw pom.xml ./
+
+# Le damos permisos de ejecución al script mvnw
+RUN chmod +x mvnw
+
+# Ahora sí, descargamos las dependencias
+RUN ./mvnw dependency:go-offline
+
+COPY src ./src
+
+EXPOSE 8080
+EXPOSE 5005
+
+# Ejecutamos Spring Boot en modo 'run'
+ENTRYPOINT ["sh", "-c", "sh mvnw spring-boot:run -Dspring-boot.run.jvmArguments='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'"]

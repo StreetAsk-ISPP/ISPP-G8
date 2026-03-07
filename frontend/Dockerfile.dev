@@ -1,0 +1,17 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Esto ayuda a que Docker cachee este paso y no reinstale todo si solo cambiaste un componente
+COPY package*.json ./
+
+RUN npm install
+
+# Exponemos el puerto principal de la web y los puertos extra que suele usar Expo
+EXPOSE 8081
+EXPOSE 19000
+EXPOSE 19001
+EXPOSE 19002
+
+# El comando principal será levantar el servidor de desarrollo de Expo
+CMD ["npx", "expo", "start", "--web"]
