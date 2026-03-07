@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import {
     View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
     Switch, useWindowDimensions, Modal, Pressable,
@@ -20,10 +20,19 @@ export default function HomeScreen({ navigation }) {
     const [showQuestions, setShowQuestions] = useState(true);
     const [comingSoon, setComingSoon] = useState(false);
 
+    const isFocused = useIsFocused();
+    const latestRequestRef = useRef(0);
+
     const loadQuestions = useCallback(async () => {
+        const requestId = ++latestRequestRef.current;
         try {
             const res = await apiClient.get('/api/v1/questions');
             const raw = res.data;
+
+            if (requestId !== latestRequestRef.current) {
+                return;
+            }
+
             setQuestions(Array.isArray(raw) ? raw : []);
         } catch (e) {
             console.warn('Failed to load questions', e);
@@ -34,10 +43,16 @@ export default function HomeScreen({ navigation }) {
 
     useEffect(() => {
         const unsub = observeNotifications((n) => {
-            if (n?.type === 'NEARBY_QUESTION') loadQuestions();
+
+            if (!isFocused) return;
+
+            if (n?.type === 'NEARBY_QUESTION') {
+                loadQuestions();
+            }
         });
+
         return unsub;
-    }, [loadQuestions, observeNotifications]);
+    }, [isFocused, loadQuestions, observeNotifications]);
 
     return (
         <SafeAreaView style={styles.screen}>

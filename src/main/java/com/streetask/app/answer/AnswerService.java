@@ -1,6 +1,8 @@
 package com.streetask.app.answer;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 import org.springframework.beans.BeanUtils;
@@ -163,7 +165,7 @@ public class AnswerService {
 
 	private void applyDefaults(Answer answer) {
 		if (answer.getCreatedAt() == null) {
-			answer.setCreatedAt(LocalDateTime.now());
+			answer.setCreatedAt(OffsetDateTime.now(ZoneOffset.UTC));
 		}
 		if (answer.getIsVerified() == null) {
 			answer.setIsVerified(false);
