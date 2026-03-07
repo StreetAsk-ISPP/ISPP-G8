@@ -32,3 +32,5 @@ jobs:
 
       - run: |
           npx eas update --channel trunk --non-interactive --message "trunk: ${{ github.sha }}"
+        env:
+        EXPO_PUBLIC_API_BASE_URL: ${{ vars.EXPO_PUBLIC_API_BASE_URL_PREPROD }}
