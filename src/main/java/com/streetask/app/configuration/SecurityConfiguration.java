@@ -46,7 +46,7 @@ public class SecurityConfiguration {
 	@Value("${streetask.websocket.endpoint:/ws}")
 	private String websocketEndpoint;
 
-	@Value("${streetask.http.allowed-origin-patterns:http://localhost:8080,http://localhost:8081,http://localhost:19006,https://streetask.expo.app}")
+	@Value("${streetask.http.allowed-origin-patterns:http://localhost:8080,http://localhost:8081,http://localhost:19006,https://streetask.expo.app,https://streetask-preprod-frontend.onrender.com}")
 	private String[] allowedHttpOriginPatterns;
 
 	private static final String ADMIN = "ADMIN";
