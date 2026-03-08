@@ -9,6 +9,7 @@ import MapComponent from './components/MapComponent';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useNotifications } from '../../../app/providers/NotificationProvider';
 import apiClient from '../../../shared/services/http/apiClient';
+import { Image } from 'react-native';
 
 export default function HomeScreen({ navigation }) {
     const { logout } = useAuth();
@@ -62,7 +63,10 @@ export default function HomeScreen({ navigation }) {
                 <View style={[styles.topBar, isNarrow && { paddingHorizontal: 12 }]}>
                     <View style={styles.topBarLeft}>
                         <View style={styles.logoBadge}>
-                            <Ionicons name="map" size={18} color="#fff" />
+                            <Image
+                            source={require("../../../../assets/logo.png")}
+                            style={{ width: 18, height: 28 }}
+                            />
                         </View>
                         <Text style={styles.appName}>StreetAsk</Text>
                     </View>
@@ -73,10 +77,10 @@ export default function HomeScreen({ navigation }) {
                             activeOpacity={0.7}
                             onPress={() => { setModalType('search'); setComingSoon(true); }}
                         >
-                            <Ionicons name="search-outline" size={20} color="#374151" />
+                            <Ionicons name="search-outline" size={20} color="#a52019" />
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7} onPress={() => { setModalType('notifications'); setComingSoon(true); }}>
-                            <Ionicons name="notifications-outline" size={20} color="#374151" />
+                            <Ionicons name="notifications-outline" size={20} color="#a52019" />
                             {ephemeralNotification ? <View style={styles.badge} /> : null}
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -114,7 +118,7 @@ export default function HomeScreen({ navigation }) {
                     <Switch
                         value={showQuestions}
                         onValueChange={setShowQuestions}
-                        trackColor={{ false: '#d1d5db', true: '#667eea' }}
+                        trackColor={{ false: '#d1d5db', true: '#a52019' }}
                         thumbColor="#fff"
                     />
                 </View>
@@ -141,7 +145,7 @@ export default function HomeScreen({ navigation }) {
                         <Ionicons
                             name={modalType === 'search' ? 'search' : 'notifications'}
                             size={28}
-                            color="#667eea"
+                            color="#a52019"
                         />
 
                         <Text style={styles.modalTitle}>Coming Soon</Text>
@@ -193,10 +197,10 @@ const styles = StyleSheet.create({
         gap: 10,
     },
     logoBadge: {
-        width: 34,
-        height: 34,
+        width: 38,
+        height: 38,
         borderRadius: 10,
-        backgroundColor: '#667eea',
+        backgroundColor: '#a52019',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -228,7 +232,7 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: '#ef4444',
+        backgroundColor: '#a52019',
     },
 
     /* ── Notification ── */
@@ -272,7 +276,7 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 14,
         fontWeight: '600',
-        color: '#374151',
+        color: '#a52019',
     },
 
     /* ── FAB ── */
@@ -283,12 +287,12 @@ const styles = StyleSheet.create({
         width: 260,
         height: 52,
         borderRadius: 26,
-        backgroundColor: '#667eea',
+        backgroundColor: '#a52019',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 10,
-        shadowColor: '#667eea',
+        shadowColor: '#a52019',
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.35,
         shadowRadius: 16,
@@ -334,7 +338,7 @@ const styles = StyleSheet.create({
     },
     modalBtn: {
         marginTop: 18,
-        backgroundColor: '#667eea',
+        backgroundColor: '#a52019',
         borderRadius: 10,
         paddingVertical: 8,
         paddingHorizontal: 28,
