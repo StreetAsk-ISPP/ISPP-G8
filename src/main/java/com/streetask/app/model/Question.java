@@ -14,7 +14,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -32,13 +34,14 @@ public class Question extends BaseEntity {
     @JoinColumn(name = "event_id")
     private Event event;
 
-    @NotBlank
+    @NotBlank(message = "Question title is required")
     private String title;
 
-    @NotBlank
+    @NotBlank(message = "Question content is required")
     private String content;
 
     @Embedded
+    @Valid
     private GeoPoint location;
 
     private Float radiusKm;
@@ -51,6 +54,7 @@ public class Question extends BaseEntity {
     @JsonDeserialize(using = FlexibleLocalDateTimeDeserializer.class)
     private LocalDateTime createdAt;
 
+    @PositiveOrZero(message = "Answer count must be zero or positive")
     private Integer answerCount;
 
     @OneToMany(mappedBy = "question")
