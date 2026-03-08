@@ -102,7 +102,16 @@ export default function QuestionThreadScreen({ route, navigation }) {
     const [timeLeft, setTimeLeft] = useState(0);
     useEffect(() => {
         if (!question?.expiresAt) return;
-        const exp = new Date(question.expiresAt).getTime();
+        let dateStr = question.expiresAt;
+
+            // 2. Si no tiene la 'Z', se la concatenamos (y reemplazamos el espacio por 'T' para que sea ISO)
+            if (!dateStr.includes('Z')) {
+                dateStr = dateStr.replace(' ', 'T') + 'Z';
+            }
+
+            const exp = new Date(dateStr).getTime();
+
+
         const tick = () => setTimeLeft(Math.max(0, Math.ceil((exp - Date.now()) / 1000)));
         tick();
         const id = setInterval(tick, 1000);
