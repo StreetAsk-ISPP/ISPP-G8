@@ -25,12 +25,17 @@ services:
       start_period: 30s
     restart: unless-stopped
 
-  # Spring Boot Backend
   backend:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     container_name: streetask-backend
     ports:
       - "8080:8080"
+      - "5005:5005"
+    volumes:
+      - .:/app
+      - ~/.m2:/root/.m2
     environment:
       SPRING_PROFILES_ACTIVE: mysql
       MYSQL_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-streetask}?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true&serverTimezone=UTC
@@ -41,18 +46,23 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # React Native/Expo Frontend (Web mode for development)
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile.dev
     container_name: streetask-frontend
     ports:
       - "8081:8081"
+    volumes:
+      # Sincroniza tu código local con el contenedor en tiempo real
+      - ./frontend:/app
+      - /app/node_modules 
     environment:
       EXPO_PUBLIC_API_BASE_URL: http://localhost:8080
-      EXPO_PUBLIC_API_TIMEOUT_MS: 10000
-    depends_on:
-      - backend
-    restart: unless-stopped
+      # Obliga a Expo a usar el método de "polling" para detectar cambios en los archivos
+      # Esto es muy importante cuando se usan volúmenes de Docker en Windows o Mac
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
 
 volumes:
   mysql_data:
