@@ -1,9 +1,9 @@
 # IDE
 .idea/
 *.iml
-bin/
+.vscode/*.local.json
 
-# Java Language Server / Eclipse (IMPORTANTE: no compartir entre compañeros)
+# Java Language Server / Eclipse (do not share local metadata)
 .classpath
 .project
 .settings/
@@ -12,32 +12,55 @@ bin/
 # OS
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # Dependencies
 node_modules/
 __pycache__/
 *.pyc
+.venv/
+venv/
 
 # Environment
 .env
-.env.local
+.env.*
+!.env.example
+!frontend/.env.example
 
-# Build outputs
+# Build outputs and logs
 dist/
 build/
-*.log
-
-# Maven
 target/
+coverage/
+*.log
+*.tmp
+*.bak
+
+# Java / Maven
+*.class
 *.jar
 *.war
 *.ear
 .m2/
+hs_err_pid*
+replay_pid*
 
 # Test reports
 allure-results/
 allure-report/
 
-package-lock.json
-settings.json
-settings.local.json
+# Expo / React Native generated files
+.expo/
+.expo-shared/
+frontend/.expo/
+frontend/.expo-shared/
+frontend/web-build/
+frontend/android/.gradle/
+frontend/android/app/build/
+frontend/android/build/
+frontend/ios/build/
+frontend/ios/Pods/
+
+# Local editor settings
+.vscode/settings.json
+.vscode/settings.local.json
