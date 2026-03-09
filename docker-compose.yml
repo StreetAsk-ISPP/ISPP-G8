@@ -18,7 +18,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -45,9 +45,10 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
+    command: mvn spring-boot:run -DskipTests
 
   frontend:
-    build: 
+    build:
       context: ./frontend
       dockerfile: Dockerfile.dev
     container_name: streetask-frontend
@@ -56,7 +57,7 @@ services:
     volumes:
       # Sincroniza tu código local con el contenedor en tiempo real
       - ./frontend:/app
-      - /app/node_modules 
+      - /app/node_modules
     environment:
       EXPO_PUBLIC_API_BASE_URL: http://localhost:8080
       # Obliga a Expo a usar el método de "polling" para detectar cambios en los archivos

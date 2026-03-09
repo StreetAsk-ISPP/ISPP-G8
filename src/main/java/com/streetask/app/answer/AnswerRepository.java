@@ -22,4 +22,6 @@ public interface AnswerRepository extends CrudRepository<Answer, UUID> {
 
 	Iterable<Answer> findByQuestionIdAndUserIdAndIsVerified(UUID questionId, UUID userId, Boolean isVerified);
 
+	long countByUserId(UUID userId);
+
 }

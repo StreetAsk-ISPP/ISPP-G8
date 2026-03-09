@@ -15,7 +15,10 @@
  */
 package com.streetask.app.user;
 
+import java.util.Map;
+import java.util.HashMap;
 import java.util.UUID;
+import java.util.List;
 
 import jakarta.validation.Valid;
 
@@ -27,15 +30,24 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.streetask.app.question.QuestionRepository;
+import com.streetask.app.answer.AnswerRepository;
+import com.streetask.app.model.Question;
 
 @Service
 public class UserService {
 
 	private UserRepository userRepository;
+	private final QuestionRepository questionRepository;
+	private final AnswerRepository answerRepository;
 
 	@Autowired
-	public UserService(UserRepository userRepository) {
+	public UserService(UserRepository userRepository,
+			QuestionRepository questionRepository,
+			AnswerRepository answerRepository) {
 		this.userRepository = userRepository;
+		this.questionRepository = questionRepository;
+		this.answerRepository = answerRepository;
 	}
 
 	@Transactional
@@ -95,6 +107,30 @@ public class UserService {
 	public void deleteUser(UUID id) {
 		User toDelete = findUser(id);
 		this.userRepository.delete(toDelete);
+	}
+
+	@Transactional(readOnly = true)
+	public Map<String, Object> getUserStats(UUID userId) {
+		Map<String, Object> stats = new HashMap<>();
+		User user = findUser(userId);
+
+		stats.put("username", user.getUserName());
+		stats.put("role", user.getAuthority().getAuthority());
+		stats.put("questionsCount", questionRepository.countByUserId(userId));
+		stats.put("answersCount", answerRepository.countByUserId(userId));
+		stats.put("likesCount", 0);
+
+		return stats;
+	}
+
+	@Transactional(readOnly = true)
+	public Iterable<com.streetask.app.model.Answer> findAnswersByUserId(UUID userId) {
+		return answerRepository.findByUserId(userId);
+	}
+
+	@Transactional(readOnly = true)
+	public Iterable<com.streetask.app.model.Question> findQuestionsByUserId(UUID userId) {
+		return questionRepository.findByUser_Id(userId);
 	}
 
 }
