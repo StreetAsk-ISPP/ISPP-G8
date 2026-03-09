@@ -12,6 +12,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,13 +28,16 @@ public class Event extends BaseEntity {
     @JoinColumn(name = "creator_id")
     private BusinessAccount creator;
 
+    @NotBlank(message = "Event title is required")
     private String title;
 
+    @NotBlank(message = "Event description is required")
     private String description;
 
     private EventCategory category;
 
     @Embedded
+    @Valid
     private GeoPoint location;
 
     private String address;
@@ -42,6 +48,7 @@ public class Event extends BaseEntity {
 
     private Boolean featured;
 
+    @PositiveOrZero(message = "Attendee count must be zero or positive")
     private Integer attendeeCount;
 
     private Boolean active;
