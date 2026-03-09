@@ -1,0 +1,10 @@
+# Comportamiento por defecto: Git decide automáticamente
+* text=auto
+
+# Forzar fin de línea LF (Linux) para scripts que corren en Docker
+mvnw text eol=lf
+*.sh text eol=lf
+
+# Forzar fin de línea CRLF (Windows) para los scripts de Windows (opcional, pero buena práctica)
+mvnw.cmd text eol=crlf
+*.bat text eol=crlf
