@@ -38,7 +38,7 @@ const createCustomIcon = (color) => {
         <path fill="${color}" d="M16 0C9.383 0 4 5.383 4 12c0 8 12 28 12 28s12-20 12-28c0-6.617-5.383-12-12-12z"/>
         <circle fill="white" cx="16" cy="12" r="4"/>
     </svg>`;
-    
+
     return L.icon({
         iconUrl: `data:image/svg+xml;base64,${btoa(svgIcon)}`,
         iconSize: [32, 40],
@@ -48,12 +48,12 @@ const createCustomIcon = (color) => {
 };
 
 const toNum = (v) => {
-  if (typeof v === 'number') return v;
-  if (typeof v === 'string') {
-    const n = parseFloat(v);
-    return Number.isFinite(n) ? n : undefined;
-  }
-  return undefined;
+    if (typeof v === 'number') return v;
+    if (typeof v === 'string') {
+        const n = parseFloat(v);
+        return Number.isFinite(n) ? n : undefined;
+    }
+    return undefined;
 };
 
 const getQuestionCoords = (q) => {
@@ -92,7 +92,7 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
         const requestLocationPermission = async () => {
             try {
                 const { status } = await Location.requestForegroundPermissionsAsync();
-                
+
                 if (status !== 'granted') {
                     setError('Permiso de ubicación denegado');
                     setLoading(false);
@@ -102,7 +102,7 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                 const initialLocation = await Location.getCurrentPositionAsync({
                     accuracy: Location.Accuracy.High,
                 });
-                
+
                 setLocation(initialLocation.coords);
                 setLoading(false);
 
@@ -141,7 +141,7 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
             const response = await locationService.getPublicLocationsSince(30);
             // Asegurar que siempre es un array
             const locations = Array.isArray(response) ? response :
-                            Array.isArray(response?.data) ? response.data : [];
+                Array.isArray(response?.data) ? response.data : [];
             setPublicLocations(locations);
         } catch (err) {
             console.warn('Error loading public locations:', err);
@@ -151,7 +151,7 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
 
     useEffect(() => {
         const ahora = new Date().getTime();
-        
+
         // Filtramos las preguntas que ya vencieron antes de guardarlas en el estado
         const preguntasActivas = questions.filter(q => {
             const fechaExpiracion = new Date(q.expiresAt).getTime();
@@ -252,7 +252,7 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                             </div>
                         </Popup>
                     </Marker>
-                    
+
                     {/* Question Markers */}
                     {(Array.isArray(visibleQuestions) ? visibleQuestions : []).map((q) => {
                         const coords = getQuestionCoords(q);
@@ -260,30 +260,30 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
 
                         return (
                             <Marker
-                            key={q.id}
-                            position={[lat, lng]}
-                            icon={createCustomIcon('#FF9500')}
-                            eventHandlers={{
-                                click: () => onQuestionPress?.(q.id),
-                            }}
+                                key={q.id}
+                                position={[lat, lng]}
+                                icon={createCustomIcon('#FF9500')}
+                                eventHandlers={{
+                                    click: () => onQuestionPress?.(q.id),
+                                }}
                             >
-                            <Popup>
-                                <div style={{ fontSize: '12px' }}>
-                                <strong>{q.title || 'Question'}</strong><br />
-                                <div style={{ marginBottom: '8px' }}>
-                                    <CountdownText
-                                        expiresAt={q.expiresAt}
-                                        onExpire={() => handleQuestionExpire(q.id)}
-                                    />
-                                </div>
-                                <span style={{ opacity: 0.8 }}>
-                                    {lat.toFixed(5)}, {lng.toFixed(5)}
-                                </span><br />
-                                <span style={{ color: '#007AFF', fontWeight: 600 }}>
-                                    Click to open
-                                </span>
-                                </div>
-                            </Popup>
+                                <Popup>
+                                    <div style={{ fontSize: '12px' }}>
+                                        <strong>{q.title || 'Question'}</strong><br />
+                                        <div style={{ marginBottom: '8px' }}>
+                                            <CountdownText
+                                                expiresAt={q.expiresAt}
+                                                onExpire={() => handleQuestionExpire(q.id)}
+                                            />
+                                        </div>
+                                        <span style={{ opacity: 0.8 }}>
+                                            {lat.toFixed(5)}, {lng.toFixed(5)}
+                                        </span><br />
+                                        <span style={{ color: '#007AFF', fontWeight: 600 }}>
+                                            Click to open
+                                        </span>
+                                    </div>
+                                </Popup>
                             </Marker>
                         );
                     })}
@@ -305,25 +305,6 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                         </Marker>
                     ))}
                 </MapContainer>
-
-                {/* Botón flotante para publicar */}
-                <button
-                    style={{
-                        ...webStyles.publishButton,
-                        ...(publishing ? webStyles.publishButtonDisabled : {})
-                    }}
-                    onClick={handlePublishLocation}
-                    disabled={publishing}
-                >
-                    {publishing ? 'Publicando...' : 'Publicar ubicación'}
-                </button>
-
-                {/* Información */}
-                <div style={webStyles.infoBox}>
-                    <span style={webStyles.infoText}>
-                        Ubicaciones públicas: {publicLocations?.length || 0}
-                    </span>
-                </div>
             </div>
         );
     }
@@ -384,7 +365,7 @@ function getTimeAgo(timestamp) {
     const now = new Date();
     const then = new Date(timestamp);
     const seconds = Math.floor((now - then) / 1000);
-    
+
     if (seconds < 60) return 'hace poco';
     if (seconds < 3600) return `hace ${Math.floor(seconds / 60)}m`;
     if (seconds < 86400) return `hace ${Math.floor(seconds / 3600)}h`;
