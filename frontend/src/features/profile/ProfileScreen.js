@@ -34,40 +34,35 @@ export default function ProfileScreen({ navigation }) {
 
                 <TouchableOpacity
                     style={styles.menuItem}
-                    onPress={() => alert('Insights & Activity (Coming Soon)')}
-                >
+                    onPress={() => navigation.navigate('ProfileStats')}>
                     <Ionicons name="stats-chart-outline" size={24} color="#fff" />
                     <Text style={styles.menuItemText}>Insights</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={styles.menuItem}
-                    onPress={() => alert('Balance details (Coming Soon)')}
-                >
+                    onPress={() => alert('Balance details (Coming Soon)')}>
                     <Ionicons name="wallet-outline" size={24} color="#fff" />
                     <Text style={styles.menuItemText}>Balance</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={styles.menuItem}
-                    onPress={() => alert('My purchases (Coming Soon)')}
-                >
+                    onPress={() => alert('My purchases (Coming Soon)')}>
                     <Ionicons name="cart-outline" size={24} color="#fff" />
                     <Text style={styles.menuItemText}>My purchases</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={styles.menuItem}
-                    onPress={() => alert('Settings (Coming Soon)')}
-                >
+                    onPress={() => alert('Settings (Coming Soon)')}>
                     <Ionicons name="settings-outline" size={24} color="#fff" />
                     <Text style={styles.menuItemText}>Settings</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={[styles.menuItem, { backgroundColor: '#4b5563', marginTop: 10 }]}
-                    onPress={logout}
-                >
+                    onPress={logout}>
                     <Ionicons name="log-out-outline" size={24} color="#fff" />
                     <Text style={styles.menuItemText}>Log out</Text>
                 </TouchableOpacity>
