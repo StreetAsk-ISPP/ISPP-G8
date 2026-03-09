@@ -1,17 +1,17 @@
 # Agile Metrics Report
 
 - Repository: `StreetAsk-ISPP/ISPP-G10`
-- Generated at (UTC): `2026-03-08 13:42:49`
+- Generated at (UTC): `2026-03-09 18:32:00`
 - Lookback window: last `30` days (weekly metrics use last `7` days)
 
 | Metric | Value | Status | Threshold |
 |---|---:|---|---|
-| Lead Time (Done Issues) | 2.71 days (n=108) | 🟢 Good | <= 3 days |
-| Throughput | 37 closed issues/week | 🟢 Good | >= 8-12 issues/week |
-| WIP (Active Issues per Assignee) | max 2, avg/team 0.70 | 🟢 Good | max 1-2 active issues/person |
-| Average PR Review Time | 7.18h (n=57) | 🟢 Good | < 48h |
-| % Issues with Assignee | 87.50% assigned (12.50% unassigned) | 🔴 Poor | > 5% unassigned |
-| Closed / Open Issues Ratio | 7.62 (closed=122, open=16) | 🟢 Good | >= 1 |
+| Lead Time (Done Issues) | 2.72 days (n=108) | 🟢 Good | <= 3 days |
+| Throughput | 30 closed issues/week | 🟢 Good | >= 8-12 issues/week |
+| WIP (Active Issues per Assignee) | max 3, avg/team 0.90 | 🟡 At risk | 3 active issues/person |
+| Average PR Review Time | 7.38h (n=59) | 🟢 Good | < 48h |
+| % Issues with Assignee | 94.74% assigned (5.26% unassigned) | 🔴 Poor | > 5% unassigned |
+| Closed / Open Issues Ratio | 6.47 (closed=123, open=19) | 🟢 Good | >= 1 |
 
 ## Theoretical Justification
 
