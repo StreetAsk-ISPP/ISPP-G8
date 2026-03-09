@@ -104,12 +104,12 @@ export default function QuestionThreadScreen({ route, navigation }) {
         if (!question?.expiresAt) return;
         let dateStr = question.expiresAt;
 
-            // 2. Si no tiene la 'Z', se la concatenamos (y reemplazamos el espacio por 'T' para que sea ISO)
-            if (!dateStr.includes('Z')) {
-                dateStr = dateStr.replace(' ', 'T') + 'Z';
-            }
+        // 2. Si no tiene la 'Z', se la concatenamos (y reemplazamos el espacio por 'T' para que sea ISO)
+        if (!dateStr.includes('Z')) {
+            dateStr = dateStr.replace(' ', 'T') + 'Z';
+        }
 
-            const exp = new Date(dateStr).getTime();
+        const exp = new Date(dateStr).getTime();
 
 
         const tick = () => setTimeLeft(Math.max(0, Math.ceil((exp - Date.now()) / 1000)));
@@ -189,20 +189,62 @@ export default function QuestionThreadScreen({ route, navigation }) {
         }
     };
 
-    const vote = (answerId, type) => {
+    const vote = async (answerId, type) => {
+        const cur = myVotes[answerId];
+
+        // 1. Calculamos los deltas a enviar al backend
+        let upDelta = 0;
+        let downDelta = 0;
+        let newVoteState = type;
+
+        if (cur === type) {
+            // Caso 1: Quitar el voto actual (toggle)
+            if (type === 'LIKE') upDelta = -1;
+            else downDelta = -1;
+            newVoteState = null; // Ya no hay voto
+        } else if (cur) {
+            // Caso 2: Cambiar el voto (de LIKE a DISLIKE o viceversa)
+            if (type === 'LIKE') { upDelta = 1; downDelta = -1; }
+            else { upDelta = -1; downDelta = 1; }
+        } else {
+            // Caso 3: Voto nuevo
+            if (type === 'LIKE') upDelta = 1;
+            else downDelta = 1;
+        }
+
+        // 2. Guardamos un respaldo por si falla la API (Rollback)
+        const previousAnswers = [...answers];
+        const previousVotes = { ...myVotes };
+
+        // 3. Actualización Optimista (Visual e inmediata)
+        setAnswers((pa) => pa.map((a) => {
+            if (a.id !== answerId) return a;
+            return {
+                ...a,
+                likes: Math.max(0, (a.likes || 0) + upDelta),
+                dislikes: Math.max(0, (a.dislikes || 0) + downDelta)
+            };
+        }));
+
         setMyVotes((prev) => {
-            const cur = prev[answerId];
-            setAnswers((pa) => pa.map((a) => {
-                if (a.id !== answerId) return a;
-                let l = a.likes || 0, d = a.dislikes || 0;
-                if (cur === type) { type === 'LIKE' ? l-- : d--; return { ...a, likes: Math.max(0, l), dislikes: Math.max(0, d) }; }
-                if (cur === 'LIKE') l--; if (cur === 'DISLIKE') d--;
-                type === 'LIKE' ? l++ : d++;
-                return { ...a, likes: Math.max(0, l), dislikes: Math.max(0, d) };
-            }));
-            if (cur === type) { const c = { ...prev }; delete c[answerId]; return c; }
-            return { ...prev, [answerId]: type };
+            const nextVotes = { ...prev };
+            if (newVoteState) nextVotes[answerId] = newVoteState;
+            else delete nextVotes[answerId];
+            return nextVotes;
         });
+
+        // 4. Llamada real al backend
+        try {
+            await apiClient.put(
+                `/api/v1/answers/${answerId}/votes?upvotesDelta=${upDelta}&downvotesDelta=${downDelta}`
+            );
+        } catch (error) {
+            // 5. Si algo sale mal, revertimos la interfaz y avisamos al usuario
+            console.error("Error al votar:", error);
+            setAnswers(previousAnswers);
+            setMyVotes(previousVotes);
+            crossAlert('Error', 'No se pudo registrar el voto. Verifica tu conexión.');
+        }
     };
 
     const openMapPick = () => {
