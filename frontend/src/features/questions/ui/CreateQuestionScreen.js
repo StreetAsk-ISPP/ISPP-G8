@@ -231,12 +231,12 @@ export default function CreateQuestionScreen({ navigation }) {
                                 style={[styles.btnOutline, { flex: 1, opacity: searching ? 0.5 : 1 }]}
                                 onPress={searchAddress} disabled={searching} activeOpacity={0.7}
                             >
-                                <Ionicons name="search" size={16} color="#667eea" />
+                                <Ionicons name="search" size={16} color="#a52019" />
                                 <Text style={styles.btnOutlineText}>{searching ? 'Searching...' : 'Search'}</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity style={[styles.btnOutline, { flex: 1 }]} onPress={openMapPick} activeOpacity={0.7}>
-                                <Ionicons name="location" size={16} color="#667eea" />
+                                <Ionicons name="location" size={16} color="#a52019" />
                                 <Text style={styles.btnOutlineText}>Pick on map</Text>
                             </TouchableOpacity>
                         </View>
@@ -347,13 +347,13 @@ const styles = StyleSheet.create({
     heading: { fontSize: 24, fontWeight: '800', color: '#1f2937', marginBottom: 20 },
     sectionLabel: { fontSize: 13, fontWeight: '700', color: '#374151', marginBottom: 8, marginTop: 16, textTransform: 'uppercase', letterSpacing: 0.5 },
     inputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9fafb', borderWidth: 1.5, borderColor: '#e5e7eb', borderRadius: 12, paddingHorizontal: 14, height: 48 },
-    inputFocused: { borderColor: '#667eea', backgroundColor: '#fff' },
+    inputFocused: { borderColor: '#a52019', backgroundColor: '#fff' },
     inputMultiline: { height: 'auto', alignItems: 'flex-start', paddingVertical: 12 },
     input: { flex: 1, fontSize: 14, color: '#1f2937', outlineStyle: 'none' },
 
     locationBtnRow: { flexDirection: 'row', gap: 10, marginTop: 10 },
-    btnOutline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: '#667eea', borderRadius: 12, paddingVertical: 11, backgroundColor: '#f0f0ff' },
-    btnOutlineText: { fontSize: 13, fontWeight: '600', color: '#667eea' },
+    btnOutline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: '#a52019', borderRadius: 12, paddingVertical: 11, backgroundColor: '#f0f0ff' },
+    btnOutlineText: { fontSize: 13, fontWeight: '600', color: '#a52019' },
 
     resultItem: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#f9fafb', borderRadius: 10, padding: 12, marginTop: 8, borderWidth: 1, borderColor: '#e5e7eb' },
     resultText: { flex: 1, fontSize: 13, color: '#374151' },
@@ -368,6 +368,6 @@ const styles = StyleSheet.create({
     actionRow: { flexDirection: 'row', gap: 12, marginTop: 24 },
     cancelBtn: { flex: 0.35, backgroundColor: '#f3f4f6', borderRadius: 14, paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb' },
     cancelBtnText: { fontWeight: '600', fontSize: 15, color: '#6b7280' },
-    postBtn: { flex: 0.65, backgroundColor: '#667eea', borderRadius: 14, paddingVertical: 14, alignItems: 'center', shadowColor: '#667eea', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 5 },
+    postBtn: { flex: 0.65, backgroundColor: '#a52019', borderRadius: 14, paddingVertical: 14, alignItems: 'center', shadowColor: '#667eea', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 5 },
     postBtnText: { fontWeight: '700', fontSize: 15, color: '#fff' },
 });
