@@ -9,6 +9,7 @@ import PaymentGatewayPlaceholderScreen from '../../features/payments/ui/PaymentG
 import HomeScreen from '../../features/home/ui/HomeScreen';
 import CreateQuestionScreen from '../../features/questions/ui/CreateQuestionScreen';
 import QuestionThreadScreen from '../../features/answers/ui/QuestionThreadScreen';
+import ProfileScreen from '../../features/profile/ProfileScreen';
 
 import { useAuth } from '../providers/AuthProvider';
 import { theme } from '../../shared/ui/theme/theme';
@@ -40,6 +41,7 @@ export default function AppNavigator() {
                     <Stack.Screen name="Home" component={HomeScreen} />
                     <Stack.Screen name="CreateQuestion" component={CreateQuestionScreen} />
                     <Stack.Screen name="QuestionThread" component={QuestionThreadScreen} />
+                    <Stack.Screen name="Profile" component={ProfileScreen} />
                 </>
             )}
         </Stack.Navigator>

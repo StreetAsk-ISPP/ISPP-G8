@@ -71,6 +71,13 @@ export default function HomeScreen({ navigation }) {
                         <TouchableOpacity
                             style={styles.iconBtn}
                             activeOpacity={0.7}
+                            onPress={() => navigation.navigate('Profile')}
+                        >
+                            <Ionicons name="person-outline" size={20} color="#374151" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.iconBtn}
+                            activeOpacity={0.7}
                             onPress={() => { setModalType('search'); setComingSoon(true); }}
                         >
                             <Ionicons name="search-outline" size={20} color="#374151" />
