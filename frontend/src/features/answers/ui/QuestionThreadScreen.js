@@ -10,6 +10,8 @@ import apiClient from '../../../shared/services/http/apiClient';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { crossAlert } from '../../../shared/utils/crossAlert';
 import MapPickerWeb from '../../home/ui/components/MapPickerWeb';
+import { calculateDistanceInKm } from '../../../shared/utils/helpers'; // Haversine formula para calcular distancia entre 2 puntos
+import { RADIO } from '../../home/ui/components/MapComponent'; // Radio permitido (150m) importado desde MapComponent para sincronización
 
 const pad2 = (n) => String(n).padStart(2, '0');
 const formatHms = (t) => {
@@ -48,26 +50,48 @@ export default function QuestionThreadScreen({ route, navigation }) {
         return avatarColors[Math.abs(hash) % avatarColors.length];
     }, []);
 
-    const canSend = useMemo(() => draft.trim().length > 0 && !sendingAnswer, [draft, sendingAnswer]);
+    const canSend = useMemo(() => draft.trim().length > 0, [draft]);
+
+    const isWithinRadius = useMemo(() => {
+        if (!userLocation || !question) return null;
+        const qLat = question.location?.latitude;
+        const qLng = question.location?.longitude;
+        if (qLat == null || qLng == null) return false;
+
+        const distM = calculateDistanceInKm(
+            { latitude: userLocation.latitude, longitude: userLocation.longitude },
+            { latitude: parseFloat(qLat), longitude: parseFloat(qLng) }
+        ) * 1000;
+
+        return distM <= RADIO;
+    }, [userLocation, question]);
 
     useEffect(() => {
         if (Platform.OS === 'web' && navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-                () => { },
-                { enableHighAccuracy: true, timeout: 8000 }
+                (error) => {
+                    console.warn('[Geolocation] Failed:', error.code, error.message);
+
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+                        (retryErr) => console.warn('[Geolocation] Retry failed:', retryErr.code, retryErr.message),
+                        { enableHighAccuracy: true, timeout: 20000 }
+                    );
+                },
+                { enableHighAccuracy: false, timeout: 8000, maximumAge: 180000 }
             );
-            return;
+        } else {
+            (async () => {
+                try {
+                    const { status } = await Location.requestForegroundPermissionsAsync();
+                    if (status === 'granted') {
+                        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+                        setUserLocation(loc.coords);
+                    }
+                } catch (_) { /* location unavailable */ }
+            })();
         }
-        (async () => {
-            try {
-                const { status } = await Location.requestForegroundPermissionsAsync();
-                if (status === 'granted') {
-                    const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-                    setUserLocation(loc.coords);
-                }
-            } catch (_) { /* location unavailable */ }
-        })();
     }, []);
 
     useEffect(() => {
@@ -401,27 +425,36 @@ export default function QuestionThreadScreen({ route, navigation }) {
 
                 {/* ── Composer ── */}
                 {!loading && !error && (
-                    <View style={[styles.composer, isNarrow && { paddingHorizontal: 12 }]}>
-                        <TextInput
-                            ref={inputRef}
-                            value={draft}
-                            onChangeText={setDraft}
-                            placeholder="Write your answer..."
-                            placeholderTextColor="#9ca3af"
-                            style={styles.composerInput}
-                            editable={!sendingAnswer}
-                        />
-                        <Pressable
-                            onPress={sendAnswerHandler}
-                            disabled={!canSend}
-                            style={[styles.sendBtn, !canSend && { opacity: 0.4 }]}
-                        >
-                            {sendingAnswer
-                                ? <ActivityIndicator size="small" color="#fff" />
-                                : <Ionicons name="send" size={18} color="#fff" />
-                            }
-                        </Pressable>
-                    </View>
+                    isWithinRadius === false ? (
+                        <View style={styles.outOfRange}>
+                            <Ionicons name="location-outline" size={18} color="#ef4444" />
+                            <Text style={styles.outOfRangeText}>
+                                No estás en la zona de la pregunta, acércate para poder responder.
+                            </Text>
+                        </View>
+                    ) : (
+                        <View style={[styles.composer, isNarrow && { paddingHorizontal: 12 }]}>
+                            <TextInput
+                                ref={inputRef}
+                                value={draft}
+                                onChangeText={setDraft}
+                                placeholder="Write your answer..."
+                                placeholderTextColor="#9ca3af"
+                                style={styles.composerInput}
+                                editable={isWithinRadius !== false && !sendingAnswer}
+                            />
+                            <Pressable
+                                onPress={sendAnswerHandler}
+                                disabled={!canSend}
+                                style={[styles.sendBtn, !canSend && { opacity: 0.4 }]}
+                            >
+                                {sendingAnswer
+                                    ? <ActivityIndicator size="small" color="#fff" />
+                                    : <Ionicons name="send" size={18} color="#fff" />
+                                }
+                            </Pressable>
+                        </View>
+                    )
                 )}
             </KeyboardAvoidingView>
         </SafeAreaView>
@@ -656,4 +689,13 @@ const styles = StyleSheet.create({
     mapCancelText: { fontWeight: '700', fontSize: 15, color: '#6b7280' },
     mapOkBtn: { flex: 1, backgroundColor: '#667eea', borderRadius: 14, paddingVertical: 14, alignItems: 'center', shadowColor: '#667eea', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 5 },
     mapOkText: { fontWeight: '700', fontSize: 15, color: '#fff' },
+    // Geolocation: estilo del banner de "fuera del radio"
+    outOfRange: {
+        // Banner rojo con icono de ubicación, se muestra cuando usuario está fuera del radio de 150m
+        flexDirection: 'row', alignItems: 'center', gap: 10,
+        margin: 12, padding: 14,
+        backgroundColor: '#fef2f2', borderRadius: 14, // Fondo rojo claro
+        borderWidth: 1, borderColor: '#fecaca', // Borde rojo
+    },
+    outOfRangeText: { flex: 1, fontSize: 13, fontWeight: '600', color: '#ef4444', lineHeight: 18 }, // Texto rojo explicativo
 });

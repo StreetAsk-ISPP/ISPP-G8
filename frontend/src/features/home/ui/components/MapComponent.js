@@ -16,6 +16,10 @@ import { CountdownText } from './CountdownText';
 // Para web: importar Leaflet y CSS
 let MapContainer, TileLayer, Marker, Popup;
 let L;
+let Circle;
+
+// 150m a lo mejor es poco
+export const RADIO = 150;
 
 if (Platform.OS === 'web') {
     try {
@@ -24,6 +28,7 @@ if (Platform.OS === 'web') {
         TileLayer = require('react-leaflet').TileLayer;
         Marker = require('react-leaflet').Marker;
         Popup = require('react-leaflet').Popup;
+        Circle = require('react-leaflet').Circle;
         L = require('leaflet');
     } catch (e) {
         console.error('Error loading Leaflet:', e);
@@ -239,6 +244,14 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
+                    {Circle && (
+                        <Circle
+                            center={[location.latitude, location.longitude]}
+                            radius={RADIO}
+                            pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.08, weight: 2 }}
+                        />
+                    )}
+
                     {/* Marcador de tu ubicación */}
                     <Marker
                         position={[location.latitude, location.longitude]}
