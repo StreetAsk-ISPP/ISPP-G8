@@ -4,9 +4,6 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - fix/backend-deploy
  
 jobs:
   build-and-deploy:
@@ -30,7 +27,6 @@ jobs:
           push: true
           tags: |
             streetask/backend:latest
-            streetask/backend:${{ github.sha }}
  
       - name: Azure Login
         uses: azure/login@v1
@@ -45,7 +41,7 @@ jobs:
             az containerapp update \
               --name sprint2-backend \
               --resource-group sprint1-recursos \
-              --image streetask/backend:${{ github.sha }} \
+              --image streetask/backend:latest \
               --max-replicas 4 \
               --min-replicas 1 \
               --set-env-vars \
