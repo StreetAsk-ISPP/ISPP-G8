@@ -92,7 +92,15 @@ git checkout bugfix
 git pull origin bugfix
 ```
 
-Example: Fix a critical production issue
+#### Release Branch (type: sprint release)
+
+```bash
+git checkout -b release/sprint-<number>
+
+```
+
+Example: `release/sprint-1`
+
 
 ### 2. Development
 
@@ -122,6 +130,7 @@ feature/my-task  ──PR──>  trunk  ──(admins when ready)──>  main
 - `feature/*` branches are **deleted** after merge to `trunk` by admins
 - `document/*` branches are **deleted** after merge to `trunk` by admins
 - `bugfix` branch is **permanent** for hotfixes
+
 
 ### 4. Merging to main (Production)
 
