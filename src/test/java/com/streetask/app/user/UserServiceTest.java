@@ -2,6 +2,7 @@ package com.streetask.app.user;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -39,7 +40,7 @@ class UserServiceTest {
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(answerRepository.aggregateVotesByUserIds(anyCollection())).thenReturn(Collections.singletonList(
-            new Object[] { userId, 6L, 0L }));
+                new Object[] { userId, 6L, 0L }));
 
         User result = userService.findUser(userId);
 
@@ -62,14 +63,54 @@ class UserServiceTest {
 
         when(userRepository.findAll()).thenReturn(users);
         when(answerRepository.aggregateVotesByUserIds(anyCollection())).thenReturn(Arrays.asList(
-            new Object[] { firstId, 3L, 1L },
-            new Object[] { secondId, 0L, 2L }));
+                new Object[] { firstId, 3L, 1L },
+                new Object[] { secondId, 0L, 2L }));
 
         Iterable<User> result = userService.findAll();
 
         User[] resultArray = ((List<User>) result).toArray(new User[0]);
         assertEquals(5, resultArray[0].getReputation());
         assertEquals(-2, resultArray[1].getReputation());
+        verify(answerRepository).aggregateVotesByUserIds(anyCollection());
+    }
+
+    @Test
+    void findUserById_shouldDefaultReputationToZeroWhenVotesAreMissing() {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        user.setId(userId);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(answerRepository.aggregateVotesByUserIds(eq(List.of(userId)))).thenReturn(Collections.emptyList());
+
+        User result = userService.findUser(userId);
+
+        assertEquals(0, result.getReputation());
+        verify(answerRepository).aggregateVotesByUserIds(eq(List.of(userId)));
+    }
+
+    @Test
+    void findAll_shouldDefaultReputationToZeroWhenAUserHasNoAggregates() {
+        UUID firstId = UUID.randomUUID();
+        UUID secondId = UUID.randomUUID();
+
+        User first = new User();
+        first.setId(firstId);
+
+        User second = new User();
+        second.setId(secondId);
+
+        List<User> users = Arrays.asList(first, second);
+
+        when(userRepository.findAll()).thenReturn(users);
+        when(answerRepository.aggregateVotesByUserIds(anyCollection())).thenReturn(Collections.singletonList(
+                new Object[] { firstId, 2L, 0L }));
+
+        Iterable<User> result = userService.findAll();
+
+        User[] resultArray = ((List<User>) result).toArray(new User[0]);
+        assertEquals(4, resultArray[0].getReputation());
+        assertEquals(0, resultArray[1].getReputation());
         verify(answerRepository).aggregateVotesByUserIds(anyCollection());
     }
 }
