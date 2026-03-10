@@ -18,7 +18,9 @@
 6. [Tools & Frameworks](#tools--frameworks)
 7. [Test Execution](#test-execution)
 8. [CI/CD Integration](#cicd-integration)
-9. [Roadmap](#roadmap)
+9. [Integration Tests Plan](#integration-tests-plan)
+10. [Interface Tests Plan](#interface-tests-plan)
+11. [Roadmap](#roadmap)
 
 ---
 
@@ -731,6 +733,464 @@ View latest run
 
 ---
 
+## Integration Tests Plan
+
+Integration tests validate complete application flows spanning **multiple modules**, using a real Spring Boot context (`@SpringBootTest`) and an in-memory H2 database. Unlike module-level integration tests (e.g., Auth), these tests exercise the full request-response cycle across the service, repository, and controller layers simultaneously.
+
+### Tools
+
+| Tool | Purpose |
+|------|---------|
+| `@SpringBootTest(webEnvironment = RANDOM_PORT)` | Starts full HTTP server on random port |
+| `TestRestTemplate` | Real HTTP client for integration assertions |
+| `H2 Database` | Isolated in-memory DB, reset between test classes via `@DirtiesContext` |
+| `@Sql` / `@BeforeEach` | Seed data for reproducible scenarios |
+| `JUnit 5` | Test runner and lifecycle management |
+
+### Integration Test Scenarios
+
+#### FLOW 1: Complete Q&A Lifecycle (User → Question → Answer)
+
+**File**: `QnALifecycleIntegrationTest.java`
+**Objective**: Validate the full question-and-answer flow from authenticated user to final response
+**Modules involved**: AUTH + QUESTION + ANSWER
+
+| # | Test | Steps | Expected |
+|---|------|-------|----------|
+| 1 | `testFullQnAFlow` | Register → Login → Create question → Create answer | 201 Created at each step; answer linked to question |
+| 2 | `testGetQuestionWithAnswers` | Create question + 3 answers → GET /api/v1/questions/{id} | Response includes embedded answers list |
+| 3 | `testOnlyOwnerCanDeleteQuestion` | User A creates question → User B attempts DELETE | 403 Forbidden for User B |
+| 4 | `testDeleteQuestionCascadesToAnswers` | Create question with answers → DELETE question | Answers removed from DB (cascade) |
+| 5 | `testVoteAnswerFlow` | Authenticated user → POST /api/v1/answers/{id}/vote | Vote count incremented; idempotent on second call |
+
+```java
+// Example skeleton
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+class QnALifecycleIntegrationTest {
+
+    @Autowired
+    private TestRestTemplate restTemplate;
+
+    @Test
+    void testFullQnAFlow() {
+        // 1. Sign up
+        ResponseEntity<Void> signup = restTemplate.postForEntity("/api/v1/auth/signup", signupRequest(), Void.class);
+        assertThat(signup.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // 2. Sign in and get JWT
+        ResponseEntity<JwtResponse> signin = restTemplate.postForEntity("/api/v1/auth/signin", signinRequest(), JwtResponse.class);
+        String jwt = signin.getBody().getToken();
+
+        // 3. Create question with JWT header
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(jwt);
+        ResponseEntity<QuestionDTO> question = restTemplate.exchange(
+            "/api/v1/questions", HttpMethod.POST,
+            new HttpEntity<>(questionRequest(), headers), QuestionDTO.class);
+        assertThat(question.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        // 4. Create answer for question
+        ResponseEntity<AnswerDTO> answer = restTemplate.exchange(
+            "/api/v1/answers", HttpMethod.POST,
+            new HttpEntity<>(answerRequest(question.getBody().getId()), headers), AnswerDTO.class);
+        assertThat(answer.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+}
+```
+
+---
+
+#### FLOW 2: Location + Question Geolocation Flow
+
+**File**: `LocationQuestionIntegrationTest.java`
+**Objective**: Validate the location-publishing flow and its relation to nearby questions
+**Modules involved**: AUTH + USER (Location) + QUESTION
+
+| # | Test | Steps | Expected |
+|---|------|-------|----------|
+| 1 | `testPublishAndRetrieveLocation` | Sign in → POST /api/v1/locations/publish → GET /api/v1/locations/me | Location stored; returned on GET |
+| 2 | `testPublicLocationsVisibleToOthers` | User A publishes public location → User B calls GET /api/v1/locations/public | User A's location appears in list |
+| 3 | `testPrivateLocationNotVisible` | User A publishes private location → User B calls GET /api/v1/locations/public | User A's location NOT in public list |
+| 4 | `testQuestionsFilteredByLocation` | Publish location → GET /api/v1/questions?lat=X&lon=Y&radius=500 | Only nearby questions returned |
+| 5 | `testLocationUpdateFlow` | Publish location → Publish new location → GET /api/v1/locations/me | Returns most recent location |
+
+---
+
+#### FLOW 3: Authentication Security Flow
+
+**File**: `AuthSecurityIntegrationTest.java`
+**Objective**: Validate that protected endpoints enforce authentication and role-based access
+**Modules involved**: AUTH + QUESTION + ANSWER
+
+| # | Test | Steps | Expected |
+|---|------|-------|----------|
+| 1 | `testProtectedEndpointWithoutToken` | GET /api/v1/questions without Authorization header | 401 Unauthorized |
+| 2 | `testProtectedEndpointWithExpiredToken` | Use expired JWT → access protected endpoint | 401 Unauthorized |
+| 3 | `testProtectedEndpointWithValidToken` | Sign in → use JWT → GET /api/v1/questions | 200 OK |
+| 4 | `testAdminCanAccessAdminEndpoints` | Sign in as ADMIN role → GET /api/v1/admin/** | 200 OK |
+| 5 | `testUserCannotAccessAdminEndpoints` | Sign in as USER role → GET /api/v1/admin/** | 403 Forbidden |
+| 6 | `testTokenReusableAcrossRequests` | Sign in once → make 3 different requests with same JWT | All return 200 OK |
+
+---
+
+#### FLOW 4: WebSocket Real-Time Integration
+
+**File**: `WebSocketIntegrationTest.java`
+**Objective**: Validate WebSocket connection and message delivery for real-time features
+**Modules involved**: AUTH + WebSocket broker + QUESTION
+
+| # | Test | Steps | Expected |
+|---|------|-------|----------|
+| 1 | `testWebSocketConnectionEstablished` | Connect via SockJS to /ws | Connection handshake succeeds (HTTP 101) |
+| 2 | `testSubscribeToQuestionTopic` | Connect → SUBSCRIBE to /topic/questions/{id} | Subscription acknowledgment received |
+| 3 | `testSendMessageAndReceiveBroadcast` | Connect → SEND to /app/questions/{id}/answer → subscriber receives | Message delivered to subscriber |
+| 4 | `testAuthenticatedWebSocketConnection` | Connect with JWT in header → SUBSCRIBE | Authenticated session established |
+| 5 | `testUnauthenticatedWebSocketRejected` | Connect without JWT → attempt SUBSCRIBE to protected topic | Connection refused or message rejected |
+
+```java
+// Example skeleton using Spring's StompClient
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class WebSocketIntegrationTest {
+
+    @LocalServerPort
+    private int port;
+
+    @Test
+    void testWebSocketConnectionEstablished() throws Exception {
+        WebSocketStompClient stompClient = new WebSocketStompClient(
+            new SockJsClient(List.of(new WebSocketTransport(new StandardWebSocketClient()))));
+        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+
+        StompSession session = stompClient
+            .connect("ws://localhost:" + port + "/ws", new StompSessionHandlerAdapter() {})
+            .get(1, TimeUnit.SECONDS);
+
+        assertThat(session.isConnected()).isTrue();
+        session.disconnect();
+    }
+}
+```
+
+---
+
+### Maven Command for Integration Tests Only
+
+```bash
+# Run only integration tests (by naming convention *IntegrationTest.java)
+mvn clean test -Dtest="*IntegrationTest"
+
+# Run all tests including integration
+mvn clean verify -B
+```
+
+### Coverage Criteria (Integration Tests)
+
+| Flow | Tests | Target |
+|------|-------|--------|
+| Q&A Lifecycle | 5 | Cross-module happy + edge paths |
+| Location + Question | 5 | Geolocation flow covered |
+| Auth Security | 6 | All auth edge cases |
+| WebSocket | 5 | Real-time connection covered |
+| **TOTAL new** | **21** | All critical user journeys |
+
+---
+
+## Interface Tests Plan
+
+The frontend is a **React Native (Expo v54)** application. Interface tests validate that UI components render correctly, user interactions work, and navigation flows behave as expected.
+
+### Tool Selection
+
+Two complementary layers are recommended:
+
+| Layer | Tool | Purpose | Complexity |
+|-------|------|---------|-----------|
+| **Component tests** | Jest + `@testing-library/react-native` | Unit/integration tests for screens and components | Low — native Expo support |
+| **E2E tests** | Maestro | Full user journey tests on device/emulator | Medium — YAML-based, works with Expo Go |
+
+Both tools are compatible with the current Expo setup without ejecting.
+
+---
+
+### Layer 1: Component Tests with Jest + @testing-library/react-native
+
+#### Setup
+
+```bash
+# Install dependencies
+cd frontend
+npm install --save-dev @testing-library/react-native @testing-library/jest-native jest-expo
+```
+
+**`frontend/package.json`** additions:
+```json
+{
+  "jest": {
+    "preset": "jest-expo",
+    "setupFilesAfterFramework": ["@testing-library/jest-native/extend-expect"],
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)"
+    ]
+  }
+}
+```
+
+#### Test Files & Coverage
+
+**File**: `frontend/__tests__/screens/LoginScreen.test.tsx`
+**Objective**: Validate the login form renders correctly and handles user input
+
+| # | Test | Action | Expected |
+|---|------|--------|----------|
+| 1 | `renders login form` | Render `<LoginScreen />` | Email and password inputs visible |
+| 2 | `shows validation error on empty submit` | Press login button with empty fields | Validation error messages shown |
+| 3 | `shows error on invalid credentials` | Submit with wrong credentials (mock API 401) | Error message rendered |
+| 4 | `navigates to home on success` | Submit valid credentials (mock API 200 + JWT) | Navigation to HomeScreen triggered |
+| 5 | `password field is masked` | Inspect password input | `secureTextEntry` is true |
+
+```tsx
+// Example
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import LoginScreen from '../../src/screens/LoginScreen';
+import axios from 'axios';
+
+jest.mock('axios');
+
+test('navigates to home on successful login', async () => {
+  (axios.post as jest.Mock).mockResolvedValueOnce({
+    data: { token: 'fake-jwt', userId: 1 }
+  });
+
+  const mockNavigate = jest.fn();
+  const { getByPlaceholderText, getByText } = render(
+    <LoginScreen navigation={{ navigate: mockNavigate }} />
+  );
+
+  fireEvent.changeText(getByPlaceholderText('Email'), 'user@test.com');
+  fireEvent.changeText(getByPlaceholderText('Password'), 'password123');
+  fireEvent.press(getByText('Login'));
+
+  await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('Home'));
+});
+```
+
+---
+
+**File**: `frontend/__tests__/screens/QuestionListScreen.test.tsx`
+**Objective**: Validate question list renders and interactions work
+
+| # | Test | Action | Expected |
+|---|------|--------|----------|
+| 1 | `renders question list` | Mock API → render screen | Question titles visible |
+| 2 | `shows loading state` | Render before API resolves | Loading indicator shown |
+| 3 | `shows empty state` | Mock API returns empty array | "No questions" message shown |
+| 4 | `navigates to detail on tap` | Tap a question item | Navigate to QuestionDetailScreen with correct ID |
+| 5 | `shows error on API failure` | Mock API rejects | Error message rendered |
+
+---
+
+**File**: `frontend/__tests__/screens/QuestionDetailScreen.test.tsx`
+**Objective**: Validate question detail with answers
+
+| # | Test | Action | Expected |
+|---|------|--------|----------|
+| 1 | `renders question and answers` | Mock API → render | Question title + answer list visible |
+| 2 | `can submit a new answer` | Type answer text → press Submit | POST to API called; new answer appears |
+| 3 | `vote button increments count` | Press vote on answer | Vote count displayed +1 |
+
+---
+
+**File**: `frontend/__tests__/components/MapView.test.tsx`
+**Objective**: Validate the map component renders and location markers appear
+
+| # | Test | Action | Expected |
+|---|------|--------|----------|
+| 1 | `renders map container` | Render `<MapView />` | Map container element visible |
+| 2 | `renders location markers` | Pass array of locations as props | One marker per location rendered |
+| 3 | `requests location permission` | Mount component | `expo-location` permission request triggered |
+
+---
+
+**File**: `frontend/__tests__/navigation/AppNavigator.test.tsx`
+**Objective**: Validate navigation flows
+
+| # | Test | Action | Expected |
+|---|------|--------|----------|
+| 1 | `unauthenticated user sees login screen` | Render with no stored JWT | LoginScreen rendered |
+| 2 | `authenticated user sees home screen` | Mock stored JWT → render | HomeScreen rendered |
+| 3 | `logout clears JWT and returns to login` | Call logout action | JWT cleared; LoginScreen rendered |
+
+---
+
+#### Run Component Tests
+
+```bash
+cd frontend
+npx jest                        # all tests
+npx jest --watchAll             # watch mode
+npx jest --coverage             # with coverage report
+npx jest LoginScreen.test.tsx   # single file
+```
+
+**Coverage targets (component tests)**:
+
+| Screen/Component | Coverage Target |
+|-----------------|----------------|
+| LoginScreen | 80% |
+| RegisterScreen | 75% |
+| QuestionListScreen | 80% |
+| QuestionDetailScreen | 75% |
+| MapView component | 70% |
+| AppNavigator | 85% |
+
+---
+
+### Layer 2: E2E Tests with Maestro
+
+Maestro uses YAML-based flow files that run on a real device or emulator via Expo Go. No code changes to the app are needed.
+
+#### Setup
+
+```bash
+# Install Maestro CLI
+curl -Ls "https://get.maestro.mobile.dev" | bash
+
+# Start the Expo app (in another terminal)
+cd frontend && npx expo start
+
+# Run a flow
+maestro test frontend/e2e/login.yaml
+```
+
+#### E2E Flow Files
+
+**`frontend/e2e/login_flow.yaml`** — Login and access home
+
+```yaml
+appId: com.streetask.app
+---
+- launchApp
+- assertVisible: "Welcome to StreetAsk"
+- tapOn: "Email"
+- inputText: "testuser@streetask.com"
+- tapOn: "Password"
+- inputText: "Test1234!"
+- tapOn: "Login"
+- assertVisible: "Questions near you"
+```
+
+---
+
+**`frontend/e2e/create_question_flow.yaml`** — Create a new question
+
+```yaml
+appId: com.streetask.app
+---
+- launchApp
+# login first
+- tapOn: "Email"
+- inputText: "testuser@streetask.com"
+- tapOn: "Password"
+- inputText: "Test1234!"
+- tapOn: "Login"
+# navigate to create question
+- tapOn:
+    id: "create-question-button"
+- assertVisible: "New Question"
+- tapOn: "Title"
+- inputText: "Where is the nearest coffee shop?"
+- tapOn: "Description"
+- inputText: "Looking for a good espresso near the main square."
+- tapOn: "Submit"
+- assertVisible: "Question created"
+- assertVisible: "Where is the nearest coffee shop?"
+```
+
+---
+
+**`frontend/e2e/answer_question_flow.yaml`** — Answer an existing question
+
+```yaml
+appId: com.streetask.app
+---
+- launchApp
+- tapOn: "Email"
+- inputText: "testuser@streetask.com"
+- tapOn: "Password"
+- inputText: "Test1234!"
+- tapOn: "Login"
+- tapOn:
+    text: "Where is the nearest coffee shop?"
+- assertVisible: "Answers"
+- tapOn:
+    id: "add-answer-button"
+- inputText: "There is a great one 200m north on Calle Mayor."
+- tapOn: "Submit Answer"
+- assertVisible: "There is a great one 200m north on Calle Mayor."
+```
+
+---
+
+**`frontend/e2e/location_flow.yaml`** — Publish and view location
+
+```yaml
+appId: com.streetask.app
+---
+- launchApp
+- tapOn: "Email"
+- inputText: "testuser@streetask.com"
+- tapOn: "Password"
+- inputText: "Test1234!"
+- tapOn: "Login"
+- tapOn:
+    id: "location-tab"
+- assertVisible: "Map"
+- tapOn:
+    id: "publish-location-button"
+- assertVisible: "Location published"
+```
+
+---
+
+#### E2E Coverage
+
+| Flow | File | Critical Scenarios |
+|------|------|--------------------|
+| Login | `login_flow.yaml` | Happy path, wrong password |
+| Registration | `register_flow.yaml` | Valid data, duplicate email |
+| Create Question | `create_question_flow.yaml` | Happy path, empty fields |
+| Answer Question | `answer_question_flow.yaml` | Happy path, vote |
+| Location | `location_flow.yaml` | Publish, view map |
+| Logout | `logout_flow.yaml` | Session cleared |
+
+---
+
+### Interface Tests in CI/CD
+
+```yaml
+# Addition to .github/workflows/mobile-ci.yml
+- name: Run component tests
+  working-directory: ./frontend
+  run: |
+    npm install
+    npx jest --coverage --ci
+
+- name: Upload frontend coverage
+  uses: actions/upload-artifact@v3
+  with:
+    name: frontend-coverage
+    path: frontend/coverage/
+
+# E2E tests (optional, requires emulator)
+- name: Run Maestro E2E tests
+  run: |
+    maestro test frontend/e2e/login_flow.yaml
+    maestro test frontend/e2e/create_question_flow.yaml
+```
+
+---
+
 ## Roadmap for Improvements
 
 ### Phase 1: Foundation (CURRENT ✓)
@@ -806,6 +1266,7 @@ View latest run
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.0 | 2026-03-10 | Added Integration Tests Plan (cross-module flows) and Interface Tests Plan (Jest + Maestro) |
 | 2.0 | 2026-03-10 | Explicit plan with concrete numbers |
 | 1.0 | 2026-03-10 | Initial strategic document |
 
