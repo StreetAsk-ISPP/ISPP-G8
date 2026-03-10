@@ -25,8 +25,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: |
-            streetask/backend:latest
+          tags: streetask/backend:latest # Usamos 'latest' para el despliegue continuo
  
       - name: Azure Login
         uses: azure/login@v1
