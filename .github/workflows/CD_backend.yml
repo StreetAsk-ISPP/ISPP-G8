@@ -28,7 +28,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: streetask/backend:latest # Usamos 'latest' para el despliegue continuo
+          tags: |
+            streetask/backend:latest
+            streetask/backend:${{ github.sha }}
  
       - name: Azure Login
         uses: azure/login@v1
@@ -43,7 +45,7 @@ jobs:
             az containerapp update \
               --name sprint2-backend \
               --resource-group sprint1-recursos \
-              --image streetask/backend:latest \
+              --image streetask/backend:${{ github.sha }} \
               --max-replicas 4 \
               --min-replicas 1 \
               --set-env-vars \
