@@ -4,6 +4,9 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - fix/backend-deploy
  
 jobs:
   build-and-deploy:
@@ -38,7 +41,7 @@ jobs:
           inlineScript: |
             az config set extension.use_dynamic_install=yes_without_prompt
             az containerapp update \
-              --name sprint1-backend \
+              --name sprint2-backend \
               --resource-group sprint1-recursos \
               --image streetask/backend:latest \
               --max-replicas 4 \
