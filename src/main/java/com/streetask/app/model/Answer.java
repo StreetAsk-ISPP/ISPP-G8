@@ -13,6 +13,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -32,21 +35,26 @@ public class Answer extends BaseEntity {
     @JsonBackReference("user-answers")
     private RegularUser user;
 
+    @NotBlank(message = "Answer content is required")
     private String content;
 
     private Boolean isVerified;
 
     private OffsetDateTime verifiedAt;
 
+    @PositiveOrZero(message = "Coins earned must be zero or positive")
     private Integer coinsEarned;
 
     @Embedded
+    @Valid
     private GeoPoint userLocation;
 
     private OffsetDateTime createdAt;
 
+    @PositiveOrZero(message = "Upvotes must be zero or positive")
     private Integer upvotes;
 
+    @PositiveOrZero(message = "Downvotes must be zero or positive")
     private Integer downvotes;
 
     @OneToMany(mappedBy = "answer")

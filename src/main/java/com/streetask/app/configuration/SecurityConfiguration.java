@@ -46,6 +46,9 @@ public class SecurityConfiguration {
 	@Value("${streetask.websocket.endpoint:/ws}")
 	private String websocketEndpoint;
 
+	@Value("${streetask.http.allowed-origin-patterns:http://localhost:8080,http://localhost:8081,http://localhost:19006,https://streetask.expo.app,https://streetask-preprod-frontend.onrender.com}")
+	private String[] allowedHttpOriginPatterns;
+
 	private static final String ADMIN = "ADMIN";
 	private static final String CLINIC_OWNER = "CLINIC_OWNER";
 
@@ -142,11 +145,7 @@ public class SecurityConfiguration {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(List.of(
-				"http://localhost:8080",
-				"http://localhost:8081",
-				"http://localhost:19006",
-				"https://streetask.expo.app"));
+		configuration.setAllowedOriginPatterns(List.of(allowedHttpOriginPatterns));
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("*"));
 		configuration.setAllowCredentials(true);

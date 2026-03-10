@@ -334,4 +334,156 @@ class QuestionRestControllerTest {
 		return payload;
 	}
 
+	// =============== LOCATION VALIDATION TESTS ===============
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldAcceptValidCoordinates() throws Exception {
+		Map<String, Object> validLocation = new HashMap<>();
+		validLocation.put("latitude", 40.416775);
+		validLocation.put("longitude", -3.703790);
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", validLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.location.latitude").value(40.416775))
+				.andExpect(jsonPath("$.location.longitude").value(-3.703790));
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldRejectInvalidLatitudeTooHigh() throws Exception {
+		Map<String, Object> invalidLocation = new HashMap<>();
+		invalidLocation.put("latitude", 91.0); // Invalid: exceeds max
+		invalidLocation.put("longitude", 0.0);
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", invalidLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldRejectInvalidLatitudeTooLow() throws Exception {
+		Map<String, Object> invalidLocation = new HashMap<>();
+		invalidLocation.put("latitude", -91.0); // Invalid: below min
+		invalidLocation.put("longitude", 0.0);
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", invalidLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldRejectInvalidLongitudeTooHigh() throws Exception {
+		Map<String, Object> invalidLocation = new HashMap<>();
+		invalidLocation.put("latitude", 0.0);
+		invalidLocation.put("longitude", 181.0); // Invalid: exceeds max
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", invalidLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldRejectInvalidLongitudeTooLow() throws Exception {
+		Map<String, Object> invalidLocation = new HashMap<>();
+		invalidLocation.put("latitude", 0.0);
+		invalidLocation.put("longitude", -181.0); // Invalid: below min
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", invalidLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldRejectLocationWithNullLatitude() throws Exception {
+		Map<String, Object> invalidLocation = new HashMap<>();
+		invalidLocation.put("latitude", null);
+		invalidLocation.put("longitude", 0.0);
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", invalidLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldRejectLocationWithNullLongitude() throws Exception {
+		Map<String, Object> invalidLocation = new HashMap<>();
+		invalidLocation.put("latitude", 0.0);
+		invalidLocation.put("longitude", null);
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", invalidLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldAcceptBoundaryValues() throws Exception {
+		Map<String, Object> boundaryLocation = new HashMap<>();
+		boundaryLocation.put("latitude", 90.0); // Max valid
+		boundaryLocation.put("longitude", 180.0); // Max valid
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", boundaryLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.location.latitude").value(90.0))
+				.andExpect(jsonPath("$.location.longitude").value(180.0));
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldAcceptNegativeBoundaryValues() throws Exception {
+		Map<String, Object> boundaryLocation = new HashMap<>();
+		boundaryLocation.put("latitude", -90.0); // Min valid
+		boundaryLocation.put("longitude", -180.0); // Min valid
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", boundaryLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.location.latitude").value(-90.0))
+				.andExpect(jsonPath("$.location.longitude").value(-180.0));
+	}
+
 }

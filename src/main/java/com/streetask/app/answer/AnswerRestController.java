@@ -118,4 +118,22 @@ public class AnswerRestController {
 		return new ResponseEntity<>(new MessageResponse("Answer deleted!"), HttpStatus.OK);
 	}
 
+	@PutMapping(value = "{answerId}/votes")
+	@ResponseStatus(HttpStatus.OK)
+	@Operation(summary = "Update vote counters for an answer")
+	public ResponseEntity<?> updateVotes(
+			@PathVariable("answerId") UUID id,
+			@RequestParam int upvotesDelta,
+			@RequestParam int downvotesDelta) {
+
+		// Validamos que la respuesta existe
+		RestPreconditions.checkNotNull(answerService.findAnswer(id), "Answer", "id", id);
+
+		try {
+			Answer updatedAnswer = answerService.updateVotes(id, upvotesDelta, downvotesDelta);
+			return new ResponseEntity<>(updatedAnswer, HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
 }

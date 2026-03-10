@@ -10,6 +10,8 @@ import apiClient from '../../../shared/services/http/apiClient';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { crossAlert } from '../../../shared/utils/crossAlert';
 import MapPickerWeb from '../../home/ui/components/MapPickerWeb';
+import { calculateDistanceInKm } from '../../../shared/utils/helpers'; // Haversine formula para calcular distancia entre 2 puntos
+import { RADIO } from '../../home/ui/components/MapComponent'; // Radio permitido (150m) importado desde MapComponent para sincronización
 
 const pad2 = (n) => String(n).padStart(2, '0');
 const formatHms = (t) => {
@@ -48,26 +50,48 @@ export default function QuestionThreadScreen({ route, navigation }) {
         return avatarColors[Math.abs(hash) % avatarColors.length];
     }, []);
 
-    const canSend = useMemo(() => draft.trim().length > 0 && !sendingAnswer, [draft, sendingAnswer]);
+    const canSend = useMemo(() => draft.trim().length > 0, [draft]);
+
+    const isWithinRadius = useMemo(() => {
+        if (!userLocation || !question) return null;
+        const qLat = question.location?.latitude;
+        const qLng = question.location?.longitude;
+        if (qLat == null || qLng == null) return false;
+
+        const distM = calculateDistanceInKm(
+            { latitude: userLocation.latitude, longitude: userLocation.longitude },
+            { latitude: parseFloat(qLat), longitude: parseFloat(qLng) }
+        ) * 1000;
+
+        return distM <= RADIO;
+    }, [userLocation, question]);
 
     useEffect(() => {
         if (Platform.OS === 'web' && navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-                () => { },
-                { enableHighAccuracy: true, timeout: 8000 }
+                (error) => {
+                    console.warn('[Geolocation] Failed:', error.code, error.message);
+
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+                        (retryErr) => console.warn('[Geolocation] Retry failed:', retryErr.code, retryErr.message),
+                        { enableHighAccuracy: true, timeout: 20000 }
+                    );
+                },
+                { enableHighAccuracy: false, timeout: 8000, maximumAge: 180000 }
             );
-            return;
+        } else {
+            (async () => {
+                try {
+                    const { status } = await Location.requestForegroundPermissionsAsync();
+                    if (status === 'granted') {
+                        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+                        setUserLocation(loc.coords);
+                    }
+                } catch (_) { /* location unavailable */ }
+            })();
         }
-        (async () => {
-            try {
-                const { status } = await Location.requestForegroundPermissionsAsync();
-                if (status === 'granted') {
-                    const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-                    setUserLocation(loc.coords);
-                }
-            } catch (_) { /* location unavailable */ }
-        })();
     }, []);
 
     useEffect(() => {
@@ -104,12 +128,12 @@ export default function QuestionThreadScreen({ route, navigation }) {
         if (!question?.expiresAt) return;
         let dateStr = question.expiresAt;
 
-            // 2. Si no tiene la 'Z', se la concatenamos (y reemplazamos el espacio por 'T' para que sea ISO)
-            if (!dateStr.includes('Z')) {
-                dateStr = dateStr.replace(' ', 'T') + 'Z';
-            }
+        // 2. Si no tiene la 'Z', se la concatenamos (y reemplazamos el espacio por 'T' para que sea ISO)
+        if (!dateStr.includes('Z')) {
+            dateStr = dateStr.replace(' ', 'T') + 'Z';
+        }
 
-            const exp = new Date(dateStr).getTime();
+        const exp = new Date(dateStr).getTime();
 
 
         const tick = () => setTimeLeft(Math.max(0, Math.ceil((exp - Date.now()) / 1000)));
@@ -189,20 +213,62 @@ export default function QuestionThreadScreen({ route, navigation }) {
         }
     };
 
-    const vote = (answerId, type) => {
+    const vote = async (answerId, type) => {
+        const cur = myVotes[answerId];
+
+        // 1. Calculamos los deltas a enviar al backend
+        let upDelta = 0;
+        let downDelta = 0;
+        let newVoteState = type;
+
+        if (cur === type) {
+            // Caso 1: Quitar el voto actual (toggle)
+            if (type === 'LIKE') upDelta = -1;
+            else downDelta = -1;
+            newVoteState = null; // Ya no hay voto
+        } else if (cur) {
+            // Caso 2: Cambiar el voto (de LIKE a DISLIKE o viceversa)
+            if (type === 'LIKE') { upDelta = 1; downDelta = -1; }
+            else { upDelta = -1; downDelta = 1; }
+        } else {
+            // Caso 3: Voto nuevo
+            if (type === 'LIKE') upDelta = 1;
+            else downDelta = 1;
+        }
+
+        // 2. Guardamos un respaldo por si falla la API (Rollback)
+        const previousAnswers = [...answers];
+        const previousVotes = { ...myVotes };
+
+        // 3. Actualización Optimista (Visual e inmediata)
+        setAnswers((pa) => pa.map((a) => {
+            if (a.id !== answerId) return a;
+            return {
+                ...a,
+                likes: Math.max(0, (a.likes || 0) + upDelta),
+                dislikes: Math.max(0, (a.dislikes || 0) + downDelta)
+            };
+        }));
+
         setMyVotes((prev) => {
-            const cur = prev[answerId];
-            setAnswers((pa) => pa.map((a) => {
-                if (a.id !== answerId) return a;
-                let l = a.likes || 0, d = a.dislikes || 0;
-                if (cur === type) { type === 'LIKE' ? l-- : d--; return { ...a, likes: Math.max(0, l), dislikes: Math.max(0, d) }; }
-                if (cur === 'LIKE') l--; if (cur === 'DISLIKE') d--;
-                type === 'LIKE' ? l++ : d++;
-                return { ...a, likes: Math.max(0, l), dislikes: Math.max(0, d) };
-            }));
-            if (cur === type) { const c = { ...prev }; delete c[answerId]; return c; }
-            return { ...prev, [answerId]: type };
+            const nextVotes = { ...prev };
+            if (newVoteState) nextVotes[answerId] = newVoteState;
+            else delete nextVotes[answerId];
+            return nextVotes;
         });
+
+        // 4. Llamada real al backend
+        try {
+            await apiClient.put(
+                `/api/v1/answers/${answerId}/votes?upvotesDelta=${upDelta}&downvotesDelta=${downDelta}`
+            );
+        } catch (error) {
+            // 5. Si algo sale mal, revertimos la interfaz y avisamos al usuario
+            console.error("Error al votar:", error);
+            setAnswers(previousAnswers);
+            setMyVotes(previousVotes);
+            crossAlert('Error', 'No se pudo registrar el voto. Verifica tu conexión.');
+        }
     };
 
     const openMapPick = () => {
@@ -359,27 +425,36 @@ export default function QuestionThreadScreen({ route, navigation }) {
 
                 {/* ── Composer ── */}
                 {!loading && !error && (
-                    <View style={[styles.composer, isNarrow && { paddingHorizontal: 12 }]}>
-                        <TextInput
-                            ref={inputRef}
-                            value={draft}
-                            onChangeText={setDraft}
-                            placeholder="Write your answer..."
-                            placeholderTextColor="#9ca3af"
-                            style={styles.composerInput}
-                            editable={!sendingAnswer}
-                        />
-                        <Pressable
-                            onPress={sendAnswerHandler}
-                            disabled={!canSend}
-                            style={[styles.sendBtn, !canSend && { opacity: 0.4 }]}
-                        >
-                            {sendingAnswer
-                                ? <ActivityIndicator size="small" color="#fff" />
-                                : <Ionicons name="send" size={18} color="#fff" />
-                            }
-                        </Pressable>
-                    </View>
+                    isWithinRadius === false ? (
+                        <View style={styles.outOfRange}>
+                            <Ionicons name="location-outline" size={18} color="#ef4444" />
+                            <Text style={styles.outOfRangeText}>
+                                No estás en la zona de la pregunta, acércate para poder responder.
+                            </Text>
+                        </View>
+                    ) : (
+                        <View style={[styles.composer, isNarrow && { paddingHorizontal: 12 }]}>
+                            <TextInput
+                                ref={inputRef}
+                                value={draft}
+                                onChangeText={setDraft}
+                                placeholder="Write your answer..."
+                                placeholderTextColor="#9ca3af"
+                                style={styles.composerInput}
+                                editable={isWithinRadius !== false && !sendingAnswer}
+                            />
+                            <Pressable
+                                onPress={sendAnswerHandler}
+                                disabled={!canSend}
+                                style={[styles.sendBtn, !canSend && { opacity: 0.4 }]}
+                            >
+                                {sendingAnswer
+                                    ? <ActivityIndicator size="small" color="#fff" />
+                                    : <Ionicons name="send" size={18} color="#fff" />
+                                }
+                            </Pressable>
+                        </View>
+                    )
                 )}
             </KeyboardAvoidingView>
         </SafeAreaView>
@@ -614,4 +689,13 @@ const styles = StyleSheet.create({
     mapCancelText: { fontWeight: '700', fontSize: 15, color: '#6b7280' },
     mapOkBtn: { flex: 1, backgroundColor: '#667eea', borderRadius: 14, paddingVertical: 14, alignItems: 'center', shadowColor: '#667eea', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 5 },
     mapOkText: { fontWeight: '700', fontSize: 15, color: '#fff' },
+    // Geolocation: estilo del banner de "fuera del radio"
+    outOfRange: {
+        // Banner rojo con icono de ubicación, se muestra cuando usuario está fuera del radio de 150m
+        flexDirection: 'row', alignItems: 'center', gap: 10,
+        margin: 12, padding: 14,
+        backgroundColor: '#fef2f2', borderRadius: 14, // Fondo rojo claro
+        borderWidth: 1, borderColor: '#fecaca', // Borde rojo
+    },
+    outOfRangeText: { flex: 1, fontSize: 13, fontWeight: '600', color: '#ef4444', lineHeight: 18 }, // Texto rojo explicativo
 });
