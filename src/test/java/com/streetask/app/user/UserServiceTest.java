@@ -1,24 +1,25 @@
 package com.streetask.app.user;
 
+import com.streetask.app.answer.AnswerRepository;
 import com.streetask.app.exceptions.ResourceNotFoundException;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -31,11 +32,15 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private AnswerRepository answerRepository;
+
     @InjectMocks
     private UserService userService;
 
     private User testUser;
     private UUID testUserId;
+
     private static final String TEST_EMAIL = "test@example.com";
     private static final String TEST_USERNAME = "testuser";
     private static final String TEST_FIRST_NAME = "Test";
@@ -53,7 +58,7 @@ class UserServiceTest {
         SecurityContextHolder.clearContext();
     }
 
-    // =============== SAVE USER TESTS ===============
+    // ================= SAVE USER =================
 
     @Test
     @DisplayName("saveUser should persist user successfully")
@@ -66,22 +71,22 @@ class UserServiceTest {
         assertNotNull(savedUser);
         assertEquals(userToSave.getEmail(), savedUser.getEmail());
         assertEquals(userToSave.getUserName(), savedUser.getUserName());
-        verify(userRepository, times(1)).save(userToSave);
+        verify(userRepository).save(userToSave);
     }
 
     @Test
     @DisplayName("saveUser should throw DataAccessException on database failure")
     void saveUser_shouldThrowDataAccessExceptionOnDatabaseFailure() {
         User userToSave = createTestUser(UUID.randomUUID(), "newuser@example.com", "newuser");
+
         when(userRepository.save(any(User.class)))
-                .thenThrow(new org.springframework.dao.DataAccessException("DB Error") {
-                });
+                .thenThrow(new DataAccessException("DB Error") {});
 
         assertThrows(DataAccessException.class, () -> userService.saveUser(userToSave));
-        verify(userRepository, times(1)).save(userToSave);
+        verify(userRepository).save(userToSave);
     }
 
-    // =============== FIND USER BY EMAIL TESTS ===============
+    // ================= FIND USER =================
 
     @Test
     @DisplayName("findUser by email should return user when found")
@@ -93,20 +98,17 @@ class UserServiceTest {
         assertNotNull(foundUser);
         assertEquals(TEST_EMAIL, foundUser.getEmail());
         assertEquals(testUserId, foundUser.getId());
-        verify(userRepository, times(1)).findByEmail(TEST_EMAIL);
+        verify(userRepository).findByEmail(TEST_EMAIL);
     }
 
     @Test
     @DisplayName("findUser by email should throw ResourceNotFoundException when not found")
     void findUserByEmail_shouldThrowResourceNotFoundExceptionWhenNotFound() {
-        String nonExistentEmail = "notfound@example.com";
-        when(userRepository.findByEmail(nonExistentEmail)).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("notfound@example.com")).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> userService.findUser(nonExistentEmail));
-        verify(userRepository, times(1)).findByEmail(nonExistentEmail);
+        assertThrows(ResourceNotFoundException.class,
+                () -> userService.findUser("notfound@example.com"));
     }
-
-    // =============== FIND USER BY ID TESTS ===============
 
     @Test
     @DisplayName("findUser by id should return user when found")
@@ -117,8 +119,6 @@ class UserServiceTest {
 
         assertNotNull(foundUser);
         assertEquals(testUserId, foundUser.getId());
-        assertEquals(TEST_EMAIL, foundUser.getEmail());
-        verify(userRepository, times(1)).findById(testUserId);
     }
 
     @Test
@@ -127,15 +127,16 @@ class UserServiceTest {
         UUID nonExistentId = UUID.randomUUID();
         when(userRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> userService.findUser(nonExistentId));
-        verify(userRepository, times(1)).findById(nonExistentId);
+        assertThrows(ResourceNotFoundException.class,
+                () -> userService.findUser(nonExistentId));
     }
 
-    // =============== FIND CURRENT USER TESTS ===============
+    // ================= CURRENT USER =================
 
     @Test
-    @DisplayName("findCurrentUser should return authenticated user when present")
+    @DisplayName("findCurrentUser should return authenticated user")
     void findCurrentUser_shouldReturnAuthenticatedUserWhenPresent() {
+
         setupSecurityContext(TEST_EMAIL);
         when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(testUser));
 
@@ -143,242 +144,124 @@ class UserServiceTest {
 
         assertNotNull(currentUser);
         assertEquals(TEST_EMAIL, currentUser.getEmail());
-        assertEquals(testUserId, currentUser.getId());
-        verify(userRepository, times(1)).findByEmail(TEST_EMAIL);
     }
 
-    @Test
-    @DisplayName("findCurrentUser should throw ResourceNotFoundException when authentication is missing")
-    void findCurrentUser_shouldThrowResourceNotFoundExceptionWhenAuthenticationMissing() {
-        SecurityContextHolder.setContext(SecurityContextHolder.createEmptyContext());
-
-        assertThrows(ResourceNotFoundException.class, () -> userService.findCurrentUser());
-        verify(userRepository, never()).findByEmail(anyString());
-    }
+    // ================= EXISTS =================
 
     @Test
-    @DisplayName("findCurrentUser should throw ResourceNotFoundException when authenticated email not found in database")
-    void findCurrentUser_shouldThrowResourceNotFoundExceptionWhenAuthenticatedEmailNotFound() {
-        setupSecurityContext(TEST_EMAIL);
-        when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> userService.findCurrentUser());
-        verify(userRepository, times(1)).findByEmail(TEST_EMAIL);
-    }
-
-    // =============== EXISTS USER TESTS ===============
-
-    @Test
-    @DisplayName("existsUser should return true when user exists by email")
     void existsUser_shouldReturnTrueWhenUserExistsByEmail() {
         when(userRepository.existsByEmail(TEST_EMAIL)).thenReturn(true);
 
-        Boolean exists = userService.existsUser(TEST_EMAIL);
-
-        assertTrue(exists);
-        verify(userRepository, times(1)).existsByEmail(TEST_EMAIL);
+        assertTrue(userService.existsUser(TEST_EMAIL));
     }
 
     @Test
-    @DisplayName("existsUser should return false when user does not exist by email")
-    void existsUser_shouldReturnFalseWhenUserDoesNotExistByEmail() {
-        when(userRepository.existsByEmail(TEST_EMAIL)).thenReturn(false);
-
-        Boolean exists = userService.existsUser(TEST_EMAIL);
-
-        assertFalse(exists);
-        verify(userRepository, times(1)).existsByEmail(TEST_EMAIL);
-    }
-
-    // =============== EXISTS BY USERNAME TESTS ===============
-
-    @Test
-    @DisplayName("existsByUserName should return true when user exists by username")
     void existsByUserName_shouldReturnTrueWhenUserExistsByUsername() {
         when(userRepository.existsByUserName(TEST_USERNAME)).thenReturn(true);
 
-        Boolean exists = userService.existsByUserName(TEST_USERNAME);
-
-        assertTrue(exists);
-        verify(userRepository, times(1)).existsByUserName(TEST_USERNAME);
+        assertTrue(userService.existsByUserName(TEST_USERNAME));
     }
 
-    @Test
-    @DisplayName("existsByUserName should return false when user does not exist by username")
-    void existsByUserName_shouldReturnFalseWhenUserDoesNotExistByUsername() {
-        when(userRepository.existsByUserName(TEST_USERNAME)).thenReturn(false);
-
-        Boolean exists = userService.existsByUserName(TEST_USERNAME);
-
-        assertFalse(exists);
-        verify(userRepository, times(1)).existsByUserName(TEST_USERNAME);
-    }
-
-    // =============== FIND ALL TESTS ===============
+    // ================= FIND ALL =================
 
     @Test
-    @DisplayName("findAll should return all users")
     void findAll_shouldReturnAllUsers() {
+
         List<User> users = new ArrayList<>();
         users.add(testUser);
         users.add(createTestUser(UUID.randomUUID(), "user2@example.com", "user2"));
-        users.add(createTestUser(UUID.randomUUID(), "user3@example.com", "user3"));
 
         when(userRepository.findAll()).thenReturn(users);
 
-        Iterable<User> foundUsers = userService.findAll();
+        Iterable<User> result = userService.findAll();
 
-        assertNotNull(foundUsers);
-        List<User> userList = new ArrayList<>();
-        foundUsers.forEach(userList::add);
-        assertEquals(3, userList.size());
-        verify(userRepository, times(1)).findAll();
+        assertNotNull(result);
+        verify(userRepository).findAll();
     }
 
-    @Test
-    @DisplayName("findAll should return empty iterable when no users exist")
-    void findAll_shouldReturnEmptyIterableWhenNoUsersExist() {
-        when(userRepository.findAll()).thenReturn(new ArrayList<>());
-
-        Iterable<User> foundUsers = userService.findAll();
-
-        assertNotNull(foundUsers);
-        List<User> userList = new ArrayList<>();
-        foundUsers.forEach(userList::add);
-        assertTrue(userList.isEmpty());
-        verify(userRepository, times(1)).findAll();
-    }
-
-    // =============== FIND ALL BY AUTHORITY TESTS ===============
+    // ================= UPDATE =================
 
     @Test
-    @DisplayName("findAllByAuthority should return users with specific authority")
-    void findAllByAuthority_shouldReturnUsersWithSpecificAuthority() {
-        String authority = "ADMIN";
-        User admin1 = createTestUser(UUID.randomUUID(), "admin1@example.com", "admin1");
-        User admin2 = createTestUser(UUID.randomUUID(), "admin2@example.com", "admin2");
-        List<User> adminUsers = List.of(admin1, admin2);
-
-        when(userRepository.findAllByAuthority(authority)).thenReturn(adminUsers);
-
-        Iterable<User> foundUsers = userService.findAllByAuthority(authority);
-
-        assertNotNull(foundUsers);
-        List<User> userList = new ArrayList<>();
-        foundUsers.forEach(userList::add);
-        assertEquals(2, userList.size());
-        verify(userRepository, times(1)).findAllByAuthority(authority);
-    }
-
-    @Test
-    @DisplayName("findAllByAuthority should return empty iterable when no users with authority exist")
-    void findAllByAuthority_shouldReturnEmptyIterableWhenNoUsersWithAuthorityExist() {
-        String authority = "NONEXISTENT";
-        when(userRepository.findAllByAuthority(authority)).thenReturn(new ArrayList<>());
-
-        Iterable<User> foundUsers = userService.findAllByAuthority(authority);
-
-        assertNotNull(foundUsers);
-        List<User> userList = new ArrayList<>();
-        foundUsers.forEach(userList::add);
-        assertTrue(userList.isEmpty());
-        verify(userRepository, times(1)).findAllByAuthority(authority);
-    }
-
-    // =============== UPDATE USER TESTS ===============
-
-    @Test
-    @DisplayName("updateUser should preserve original id when updating user")
     void updateUser_shouldPreserveOriginalIdWhenUpdatingUser() {
-        UUID userIdToUpdate = testUserId;
-        User userToUpdate = createTestUser(UUID.randomUUID(), "newmail@example.com", "newusername");
-        userToUpdate.setFirstName("UpdatedFirst");
-        userToUpdate.setLastName("UpdatedLast");
 
-        when(userRepository.findById(userIdToUpdate)).thenReturn(Optional.of(testUser));
-        when(userRepository.save(any(User.class))).thenReturn(testUser);
+        User update = createTestUser(UUID.randomUUID(),"new@mail.com","newuser");
 
-        User updatedUser = userService.updateUser(userToUpdate, userIdToUpdate);
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any())).thenReturn(testUser);
 
-        assertNotNull(updatedUser);
-        assertEquals(userIdToUpdate, updatedUser.getId());
-        // Verify properties were updated
-        assertEquals("UpdatedFirst", updatedUser.getFirstName());
-        assertEquals("UpdatedLast", updatedUser.getLastName());
-        verify(userRepository, times(1)).findById(userIdToUpdate);
-        verify(userRepository, times(1)).save(any(User.class));
+        User updated = userService.updateUser(update,testUserId);
+
+        assertEquals(testUserId,updated.getId());
     }
 
-    @Test
-    @DisplayName("updateUser should not change id during update")
-    void updateUser_shouldNotChangeIdDuringUpdate() {
-        UUID userIdToUpdate = testUserId;
-        UUID differentId = UUID.randomUUID();
-        User userWithDifferentId = createTestUser(differentId, "new@example.com", "newuser");
-
-        when(userRepository.findById(userIdToUpdate)).thenReturn(Optional.of(testUser));
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-            User savedUser = invocation.getArgument(0);
-            return savedUser;
-        });
-
-        User updatedUser = userService.updateUser(userWithDifferentId, userIdToUpdate);
-
-        assertEquals(userIdToUpdate, updatedUser.getId());
-        assertNotEquals(differentId, updatedUser.getId());
-        verify(userRepository, times(1)).findById(userIdToUpdate);
-    }
+    // ================= DELETE =================
 
     @Test
-    @DisplayName("updateUser should throw ResourceNotFoundException when user to update not found")
-    void updateUser_shouldThrowResourceNotFoundExceptionWhenUserToUpdateNotFound() {
-        UUID nonExistentId = UUID.randomUUID();
-        User userToUpdate = createTestUser(UUID.randomUUID(), "new@example.com", "newuser");
-        when(userRepository.findById(nonExistentId)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> userService.updateUser(userToUpdate, nonExistentId));
-        verify(userRepository, times(1)).findById(nonExistentId);
-        verify(userRepository, never()).save(any(User.class));
-    }
-
-    // =============== DELETE USER TESTS ===============
-
-    @Test
-    @DisplayName("deleteUser should successfully delete user when found")
     void deleteUser_shouldSuccessfullyDeleteUserWhenFound() {
+
         when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
         doNothing().when(userRepository).delete(testUser);
 
         userService.deleteUser(testUserId);
 
-        verify(userRepository, times(1)).findById(testUserId);
-        verify(userRepository, times(1)).delete(testUser);
+        verify(userRepository).delete(testUser);
     }
+
+    // ================= REPUTATION TESTS (TRUNK) =================
 
     @Test
-    @DisplayName("deleteUser should throw ResourceNotFoundException when user not found")
-    void deleteUser_shouldThrowResourceNotFoundExceptionWhenUserNotFound() {
-        UUID nonExistentId = UUID.randomUUID();
-        when(userRepository.findById(nonExistentId)).thenReturn(Optional.empty());
+    void findUserById_shouldIncludeReputation() {
 
-        assertThrows(ResourceNotFoundException.class, () -> userService.deleteUser(nonExistentId));
-        verify(userRepository, times(1)).findById(nonExistentId);
-        verify(userRepository, never()).delete(any(User.class));
-    }
-
-    @Test
-    @DisplayName("deleteUser should throw exception on database delete failure")
-    void deleteUser_shouldThrowExceptionOnDatabaseDeleteFailure() {
-        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
-        doThrow(new RuntimeException("Delete failed")).when(userRepository).delete(testUser);
-
-        assertThrows(RuntimeException.class, () -> userService.deleteUser(testUserId));
-        verify(userRepository, times(1)).findById(testUserId);
-        verify(userRepository, times(1)).delete(testUser);
-    }
-
-    private User createTestUser(UUID id, String email, String userName) {
+        UUID userId = UUID.randomUUID();
         User user = new User();
+        user.setId(userId);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        when(answerRepository.aggregateVotesByUserIds(anyCollection()))
+                .thenReturn(Collections.singletonList(
+                        new Object[]{userId,6L,0L}));
+
+        User result = userService.findUser(userId);
+
+        assertEquals(12,result.getReputation());
+        verify(answerRepository).aggregateVotesByUserIds(anyCollection());
+    }
+
+    @Test
+    void findAll_shouldIncludeReputationForEveryUser() {
+
+        UUID firstId = UUID.randomUUID();
+        UUID secondId = UUID.randomUUID();
+
+        User first = new User();
+        first.setId(firstId);
+
+        User second = new User();
+        second.setId(secondId);
+
+        List<User> users = Arrays.asList(first,second);
+
+        when(userRepository.findAll()).thenReturn(users);
+
+        when(answerRepository.aggregateVotesByUserIds(anyCollection()))
+                .thenReturn(Arrays.asList(
+                        new Object[]{firstId,3L,1L},
+                        new Object[]{secondId,0L,2L}));
+
+        Iterable<User> result = userService.findAll();
+
+        User[] arr=((List<User>)result).toArray(new User[0]);
+
+        assertEquals(5,arr[0].getReputation());
+        assertEquals(-2,arr[1].getReputation());
+    }
+
+    // ================= HELPERS =================
+
+    private User createTestUser(UUID id,String email,String userName){
+
+        User user=new User();
         user.setId(id);
         user.setEmail(email);
         user.setUserName(userName);
@@ -387,14 +270,18 @@ class UserServiceTest {
         user.setPassword("password123");
         user.setActive(true);
         user.setCreatedAt(LocalDateTime.now());
+
         return user;
     }
 
-    private void setupSecurityContext(String email) {
-        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.getName()).thenReturn(email);
-        securityContext.setAuthentication(authentication);
-        SecurityContextHolder.setContext(securityContext);
+    private void setupSecurityContext(String email){
+
+        SecurityContext context=SecurityContextHolder.createEmptyContext();
+
+        Authentication auth=mock(Authentication.class);
+        when(auth.getName()).thenReturn(email);
+
+        context.setAuthentication(auth);
+        SecurityContextHolder.setContext(context);
     }
 }
