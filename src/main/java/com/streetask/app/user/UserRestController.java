@@ -76,6 +76,26 @@ class UserRestController {
 		return new ResponseEntity<>(userService.findUser(id), HttpStatus.OK);
 	}
 
+	@GetMapping(value = "{id}/reputation")
+	public ResponseEntity<Integer> findReputationById(@PathVariable("id") UUID id) {
+		User currentUser = userService.findCurrentUser();
+		boolean isAdmin = currentUser.hasAuthority("ADMIN");
+		boolean isOwner = currentUser.getId().equals(id);
+
+		if (!isAdmin && !isOwner) {
+			throw new AccessDeniedException("You can only view your own reputation.");
+		}
+
+		User user = isOwner ? currentUser : userService.findUser(id);
+		return new ResponseEntity<>(user.getReputation(), HttpStatus.OK);
+	}
+
+	@GetMapping(value = "me/reputation")
+	public ResponseEntity<Integer> findCurrentUserReputation() {
+		User user = userService.findCurrentUser();
+		return new ResponseEntity<>(user.getReputation(), HttpStatus.OK);
+	}
+
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public ResponseEntity<User> create(@RequestBody @Valid User user) {

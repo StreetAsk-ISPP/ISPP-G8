@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+	Image,
 	Keyboard, Platform, ScrollView, StyleSheet, Text,
 	TextInput, TouchableOpacity, TouchableWithoutFeedback,
 	View, useWindowDimensions,
@@ -117,8 +118,12 @@ export default function SignUpScreen({ navigation }) {
 					</TouchableOpacity>
 
 					{/* Header */}
-					<View style={styles.headerCircle}>
-						<Ionicons name="person-add" size={30} color="#fff" />
+					<View style={styles.logoContainer}>
+						<Image
+							source={require('../../../../assets/logo.png')}
+							style={styles.logoImage}
+							resizeMode="contain"
+						/>
 					</View>
 					<Text style={styles.title}>Create Account</Text>
 					<Text style={styles.subtitle}>Fill in the details below</Text>
@@ -219,20 +224,13 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		marginBottom: 12,
 	},
-	headerCircle: {
-		width: 64,
-		height: 64,
-		borderRadius: 32,
-		backgroundColor: '#f87171',
-		alignSelf: 'center',
+	logoContainer: {
 		alignItems: 'center',
-		justifyContent: 'center',
 		marginBottom: 16,
-		shadowColor: '#f87171',
-		shadowOffset: { width: 0, height: 6 },
-		shadowOpacity: 0.25,
-		shadowRadius: 16,
-		elevation: 8,
+	},
+	logoImage: {
+		width: 88,
+		height: 88,
 	},
 	title: {
 		fontSize: 24,

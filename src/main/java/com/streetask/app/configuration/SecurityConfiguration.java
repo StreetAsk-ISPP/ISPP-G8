@@ -46,7 +46,7 @@ public class SecurityConfiguration {
 	@Value("${streetask.websocket.endpoint:/ws}")
 	private String websocketEndpoint;
 
-	@Value("${streetask.http.allowed-origin-patterns:http://localhost:8080,http://localhost:8081,http://localhost:19006,https://streetask.expo.app,https://streetask-preprod-frontend.onrender.com}")
+	@Value("${streetask.http.allowed-origin-patterns:http://localhost:8080,http://localhost:8081,http://localhost:19006,https://streetask.expo.app,https://sprint2-streetask.expo.app,https://streetask-preprod-frontend.onrender.com}")
 	private String[] allowedHttpOriginPatterns;
 
 	private static final String ADMIN = "ADMIN";
@@ -89,6 +89,10 @@ public class SecurityConfiguration {
 						.requestMatchers("/api/v1/locations/public/**").permitAll()
 						// Public only GET of user locations
 						.requestMatchers(HttpMethod.GET, "/api/v1/locations/user/**").permitAll()
+
+						// Authenticated users can view their own reputation
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/me/reputation").authenticated()
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/reputation").authenticated()
 
 						// Restricted API for owners
 						.requestMatchers("/api/v1/plan").hasAuthority("OWNER")

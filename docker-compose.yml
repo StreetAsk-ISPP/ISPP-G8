@@ -2,6 +2,7 @@
 # Usage: docker-compose up -d
 # Note: Backend, Frontend and Database are deployed separately on Azure
 #       This file is for local development only
+# This configuration uses H2 in-memory database for rapid development
 
 services:
   # MySQL Database for local development
@@ -24,6 +25,27 @@ services:
       retries: 5
       start_period: 30s
     restart: unless-stopped
+  # MySQL Database for local development (commented out - using H2 for now)
+  # Uncomment this section and update backend environment if you need MySQL
+  # db:
+  #   image: mysql:8.0
+  #   container_name: streetask-db
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+  #     MYSQL_DATABASE: ${MYSQL_DATABASE:-streetask}
+  #     MYSQL_USER: ${MYSQL_USER:-streetask}
+  #     MYSQL_PASSWORD: ${MYSQL_PASSWORD:-streetask}
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 30s
+  #   restart: unless-stopped
 
   backend:
     build:
@@ -37,13 +59,15 @@ services:
       - .:/app
       - ~/.m2:/root/.m2
     environment:
-      SPRING_PROFILES_ACTIVE: mysql
-      MYSQL_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-streetask}?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true&serverTimezone=UTC
-      MYSQL_USER: ${MYSQL_USER:-streetask}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-streetask}
-    depends_on:
-      db:
-        condition: service_healthy
+      SPRING_PROFILES_ACTIVE: default
+      # For MySQL, uncomment these and comment out the line above:
+      # SPRING_PROFILES_ACTIVE: mysql
+      # MYSQL_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-streetask}?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true&serverTimezone=UTC
+      # MYSQL_USER: ${MYSQL_USER:-streetask}
+      # MYSQL_PASSWORD: ${MYSQL_PASSWORD:-streetask}
+    # depends_on:  # Uncomment when using MySQL
+    #   db:
+    #     condition: service_healthy
     restart: unless-stopped
     command: mvn spring-boot:run -DskipTests
 
@@ -65,6 +89,7 @@ services:
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
 
-volumes:
-  mysql_data:
-    driver: local
+# Uncomment if using MySQL
+# volumes:
+#   mysql_data:
+#     driver: local

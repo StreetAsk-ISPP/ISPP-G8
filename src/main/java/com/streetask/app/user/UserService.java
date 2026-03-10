@@ -15,16 +15,19 @@
  */
 package com.streetask.app.user;
 
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.UUID;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 import jakarta.validation.Valid;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import com.streetask.app.answer.AnswerRepository;
 import com.streetask.app.exceptions.ResourceNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,33 +41,33 @@ import com.streetask.app.model.Question;
 public class UserService {
 
 	private UserRepository userRepository;
-	private final QuestionRepository questionRepository;
-	private final AnswerRepository answerRepository;
+	private AnswerRepository answerRepository;
+	private static final int LIKE_WEIGHT = 2;
+	private static final int DISLIKE_WEIGHT = 1;
 
 	@Autowired
-	public UserService(UserRepository userRepository,
-			QuestionRepository questionRepository,
-			AnswerRepository answerRepository) {
+	public UserService(UserRepository userRepository, AnswerRepository answerRepository) {
 		this.userRepository = userRepository;
-		this.questionRepository = questionRepository;
 		this.answerRepository = answerRepository;
 	}
 
 	@Transactional
 	public User saveUser(User user) throws DataAccessException {
 		userRepository.save(user);
-		return user;
+		return enrichReputation(user);
 	}
 
 	@Transactional(readOnly = true)
 	public User findUser(String email) {
-		return userRepository.findByEmail(email)
+		User user = userRepository.findByEmail(email)
 				.orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+		return enrichReputation(user);
 	}
 
 	@Transactional(readOnly = true)
 	public User findUser(UUID id) {
-		return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+		User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+		return enrichReputation(user);
 	}
 
 	@Transactional(readOnly = true)
@@ -72,9 +75,11 @@ public class UserService {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		if (auth == null)
 			throw new ResourceNotFoundException("Nobody authenticated!");
-		else
-			return userRepository.findByEmail(auth.getName())
+		else {
+			User user = userRepository.findByEmail(auth.getName())
 					.orElseThrow(() -> new ResourceNotFoundException("User", "Email", auth.getName()));
+			return enrichReputation(user);
+		}
 	}
 
 	public Boolean existsUser(String email) {
@@ -87,11 +92,11 @@ public class UserService {
 
 	@Transactional(readOnly = true)
 	public Iterable<User> findAll() {
-		return userRepository.findAll();
+		return enrichReputation(userRepository.findAll());
 	}
 
 	public Iterable<User> findAllByAuthority(String auth) {
-		return userRepository.findAllByAuthority(auth);
+		return enrichReputation(userRepository.findAllByAuthority(auth));
 	}
 
 	@Transactional
@@ -100,7 +105,7 @@ public class UserService {
 		BeanUtils.copyProperties(user, toUpdate, "id");
 		userRepository.save(toUpdate);
 
-		return toUpdate;
+		return enrichReputation(toUpdate);
 	}
 
 	@Transactional
@@ -109,28 +114,43 @@ public class UserService {
 		this.userRepository.delete(toDelete);
 	}
 
-	@Transactional(readOnly = true)
-	public Map<String, Object> getUserStats(UUID userId) {
-		Map<String, Object> stats = new HashMap<>();
-		User user = findUser(userId);
-
-		stats.put("username", user.getUserName());
-		stats.put("role", user.getAuthority().getAuthority());
-		stats.put("questionsCount", questionRepository.countByUserId(userId));
-		stats.put("answersCount", answerRepository.countByUserId(userId));
-		stats.put("likesCount", 0);
-
-		return stats;
+	private User enrichReputation(User user) {
+		Map<UUID, Integer> reputationByUserId = calculateReputationByUserIds(List.of(user.getId()));
+		user.setReputation(reputationByUserId.getOrDefault(user.getId(), 0));
+		return user;
 	}
 
-	@Transactional(readOnly = true)
-	public Iterable<com.streetask.app.model.Answer> findAnswersByUserId(UUID userId) {
-		return answerRepository.findByUserId(userId);
+	private Iterable<User> enrichReputation(Iterable<User> users) {
+		List<User> userList = StreamSupport.stream(users.spliterator(), false).toList();
+		if (userList.isEmpty()) {
+			return userList;
+		}
+
+		List<UUID> userIds = new ArrayList<>(userList.size());
+		for (User user : userList) {
+			userIds.add(user.getId());
+		}
+
+		Map<UUID, Integer> reputationByUserId = calculateReputationByUserIds(userIds);
+
+		for (User user : userList) {
+			user.setReputation(reputationByUserId.getOrDefault(user.getId(), 0));
+		}
+
+		return userList;
 	}
 
-	@Transactional(readOnly = true)
-	public Iterable<com.streetask.app.model.Question> findQuestionsByUserId(UUID userId) {
-		return questionRepository.findByUser_Id(userId);
+	private Map<UUID, Integer> calculateReputationByUserIds(List<UUID> userIds) {
+		Map<UUID, Integer> reputationByUserId = new HashMap<>();
+		List<Object[]> aggregates = answerRepository.aggregateVotesByUserIds(userIds);
+		for (Object[] row : aggregates) {
+			UUID userId = (UUID) row[0];
+			int likes = ((Number) row[1]).intValue();
+			int dislikes = ((Number) row[2]).intValue();
+			int reputation = (likes * LIKE_WEIGHT) - (dislikes * DISLIKE_WEIGHT);
+			reputationByUserId.put(userId, reputation);
+		}
+		return reputationByUserId;
 	}
 
 }
