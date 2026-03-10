@@ -53,13 +53,11 @@ export default function LoginScreen({ navigation }) {
                 <View style={[styles.card, isNarrow && { marginHorizontal: 16, borderRadius: 24 }]}>
                     {/* Logo */}
                     <View style={styles.logoContainer}>
-                        <View style={styles.logoCircle}>
-                            <Image
-                                source={require('../../../../assets/logo.png')}
-                                style={styles.logoImage}
-                                resizeMode="contain"
-                            />
-                        </View>
+                        <Image
+                            source={require('../../../../assets/logo.png')}
+                            style={styles.logoImage}
+                            resizeMode="contain"
+                        />
                     </View>
 
                     <Text style={styles.title}>Welcome back</Text>
@@ -167,23 +165,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 24,
     },
-    logoCircle: {
-        width: 72,
-        height: 72,
-        borderRadius: 36,
-        backgroundColor: '#f87171',
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#f87171',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.25,
-        shadowRadius: 16,
-        elevation: 8,
-    },
     logoImage: {
-        width: 40,
-        height: 40,
-        tintColor: '#fff',
+        width: 88,
+        height: 88,
     },
     title: {
         fontSize: 26,
