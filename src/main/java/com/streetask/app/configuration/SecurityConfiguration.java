@@ -87,6 +87,10 @@ public class SecurityConfiguration {
 						// Public only GET of user locations
 						.requestMatchers(HttpMethod.GET, "/api/v1/locations/user/**").permitAll()
 
+						// Authenticated users can view their own reputation
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/me/reputation").authenticated()
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/reputation").authenticated()
+
 						// Restricted API for owners
 						.requestMatchers("/api/v1/plan").hasAuthority("OWNER")
 
