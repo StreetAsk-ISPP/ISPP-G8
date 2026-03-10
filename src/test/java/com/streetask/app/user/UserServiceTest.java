@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,7 +38,7 @@ class UserServiceTest {
         user.setId(userId);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(answerRepository.aggregateVotesByUserIds(anyCollection())).thenReturn(Arrays.asList(
+        when(answerRepository.aggregateVotesByUserIds(anyCollection())).thenReturn(Collections.singletonList(
             new Object[] { userId, 6L, 0L }));
 
         User result = userService.findUser(userId);
