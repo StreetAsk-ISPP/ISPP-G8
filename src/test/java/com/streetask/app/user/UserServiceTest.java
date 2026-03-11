@@ -86,7 +86,8 @@ class UserServiceTest {
         User userToSave = createTestUser(UUID.randomUUID(), "newuser@example.com", "newuser");
 
         when(userRepository.save(any(User.class)))
-                .thenThrow(new DataAccessException("DB Error") {});
+                .thenThrow(new DataAccessException("DB Error") {
+                });
 
         assertThrows(DataAccessException.class, () -> userService.saveUser(userToSave));
         verify(userRepository).save(userToSave);
@@ -190,14 +191,14 @@ class UserServiceTest {
     @Test
     void updateUser_shouldPreserveOriginalIdWhenUpdatingUser() {
 
-        User update = createTestUser(UUID.randomUUID(),"new@mail.com","newuser");
+        User update = createTestUser(UUID.randomUUID(), "new@mail.com", "newuser");
 
         when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any())).thenReturn(testUser);
 
-        User updated = userService.updateUser(update,testUserId);
+        User updated = userService.updateUser(update, testUserId);
 
-        assertEquals(testUserId,updated.getId());
+        assertEquals(testUserId, updated.getId());
     }
 
     // ================= DELETE =================
@@ -223,14 +224,12 @@ class UserServiceTest {
         user.setId(userId);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-
-        when(answerRepository.aggregateVotesByUserIds(anyCollection()))
-                .thenReturn(Collections.singletonList(
-                        new Object[]{userId,6L,0L}));
+        when(answerRepository.aggregateVotesByUserIds(anyCollection())).thenReturn(Collections.singletonList(
+                new Object[] { userId, 6L, 0L }));
 
         User result = userService.findUser(userId);
 
-        assertEquals(12,result.getReputation());
+        assertEquals(12, result.getReputation());
         verify(answerRepository).aggregateVotesByUserIds(anyCollection());
     }
 
@@ -246,21 +245,59 @@ class UserServiceTest {
         User second = new User();
         second.setId(secondId);
 
-        List<User> users = Arrays.asList(first,second);
+        List<User> users = Arrays.asList(first, second);
 
         when(userRepository.findAll()).thenReturn(users);
-
-        when(answerRepository.aggregateVotesByUserIds(anyCollection()))
-                .thenReturn(Arrays.asList(
-                        new Object[]{firstId,3L,1L},
-                        new Object[]{secondId,0L,2L}));
+        when(answerRepository.aggregateVotesByUserIds(anyCollection())).thenReturn(Arrays.asList(
+                new Object[] { firstId, 3L, 1L },
+                new Object[] { secondId, 0L, 2L }));
 
         Iterable<User> result = userService.findAll();
 
-        User[] arr=((List<User>)result).toArray(new User[0]);
+        User[] arr = ((List<User>) result).toArray(new User[0]);
 
-        assertEquals(5,arr[0].getReputation());
-        assertEquals(-2,arr[1].getReputation());
+        assertEquals(5, arr[0].getReputation());
+        assertEquals(-2, arr[1].getReputation());
+    }
+
+    @Test
+    void findUserById_shouldDefaultReputationToZeroWhenVotesAreMissing() {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        user.setId(userId);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(answerRepository.aggregateVotesByUserIds(eq(List.of(userId)))).thenReturn(Collections.emptyList());
+
+        User result = userService.findUser(userId);
+
+        assertEquals(0, result.getReputation());
+        verify(answerRepository).aggregateVotesByUserIds(eq(List.of(userId)));
+    }
+
+    @Test
+    void findAll_shouldDefaultReputationToZeroWhenAUserHasNoAggregates() {
+        UUID firstId = UUID.randomUUID();
+        UUID secondId = UUID.randomUUID();
+
+        User first = new User();
+        first.setId(firstId);
+
+        User second = new User();
+        second.setId(secondId);
+
+        List<User> users = Arrays.asList(first, second);
+
+        when(userRepository.findAll()).thenReturn(users);
+        when(answerRepository.aggregateVotesByUserIds(anyCollection())).thenReturn(Collections.singletonList(
+                new Object[] { firstId, 2L, 0L }));
+
+        Iterable<User> result = userService.findAll();
+
+        User[] resultArray = ((List<User>) result).toArray(new User[0]);
+        assertEquals(4, resultArray[0].getReputation());
+        assertEquals(0, resultArray[1].getReputation());
+        verify(answerRepository).aggregateVotesByUserIds(anyCollection());
     }
 
     // ================= USER STATS =================
@@ -421,7 +458,7 @@ class UserServiceTest {
 
     private User createTestUser(UUID id,String email,String userName){
 
-        User user=new User();
+        User user = new User();
         user.setId(id);
         user.setEmail(email);
         user.setUserName(userName);
@@ -434,11 +471,11 @@ class UserServiceTest {
         return user;
     }
 
-    private void setupSecurityContext(String email){
+    private void setupSecurityContext(String email) {
 
-        SecurityContext context=SecurityContextHolder.createEmptyContext();
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
 
-        Authentication auth=mock(Authentication.class);
+        Authentication auth = mock(Authentication.class);
         when(auth.getName()).thenReturn(email);
 
         context.setAuthentication(auth);

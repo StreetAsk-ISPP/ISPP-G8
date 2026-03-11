@@ -21,7 +21,7 @@ jobs:
           to: ${{ secrets.PILOT_EMAILS }}
           
           
-          from: "streetask0@gmail.com"
+          from: "Streetask <streetask0@gmail.com>"
           
           subject: "Nueva actualización disponible: ${{ github.event.release.tag_name }}"
           
@@ -46,4 +46,4 @@ jobs:
             Si encontráis cualquier fallo o tenéis una idea de mejora, no dudéis en reflejarlo en el formulario. ¡Gracias por vuestro tiempo!
             
             Atentamente,
-            El Equipo de Desarrollo 
+            El Equipo de Desarrollo
