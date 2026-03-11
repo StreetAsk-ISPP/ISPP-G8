@@ -2,6 +2,9 @@ package com.streetask.app.user;
 
 import com.streetask.app.answer.AnswerRepository;
 import com.streetask.app.exceptions.ResourceNotFoundException;
+import com.streetask.app.question.QuestionRepository;
+import com.streetask.app.model.Question;
+import com.streetask.app.model.Answer;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +37,9 @@ class UserServiceTest {
 
     @Mock
     private AnswerRepository answerRepository;
+
+    @Mock
+    private QuestionRepository questionRepository;
 
     @InjectMocks
     private UserService userService;
@@ -257,7 +263,161 @@ class UserServiceTest {
         assertEquals(-2,arr[1].getReputation());
     }
 
+    // ================= USER STATS =================
+
+    @Test
+    @DisplayName("getUserStats should return correct stats for a user with activity")
+    void getUserStats_shouldReturnCorrectStatsForUserWithActivity() {
+        User user = createTestUserWithAuthority(testUserId, TEST_EMAIL, TEST_USERNAME, "USER");
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(user));
+        when(questionRepository.countByCreatorId(testUserId)).thenReturn(5L);
+        when(answerRepository.countByUserId(testUserId)).thenReturn(10L);
+        when(answerRepository.aggregateVotesByUserIds(anyCollection()))
+                .thenReturn(Collections.singletonList(new Object[]{testUserId, 8L, 2L}));
+
+        Map<String, Object> stats = userService.getUserStats(testUserId);
+
+        assertNotNull(stats);
+        assertEquals(5L, stats.get("questionsCount"));
+        assertEquals(10L, stats.get("answersCount"));
+        assertEquals(TEST_USERNAME, stats.get("username"));
+        assertEquals("USER", stats.get("role"));
+        assertEquals(8, stats.get("likesCount"));
+        assertEquals(2, stats.get("dislikesCount"));
+        assertNotNull(stats.get("reputation"));
+        verify(questionRepository).countByCreatorId(testUserId);
+        verify(answerRepository).countByUserId(testUserId);
+    }
+
+    @Test
+    @DisplayName("getUserStats should return zero counts for user with no activity")
+    void getUserStats_shouldReturnZeroCountsForUserWithNoActivity() {
+        User user = createTestUserWithAuthority(testUserId, TEST_EMAIL, TEST_USERNAME, "USER");
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(user));
+        when(questionRepository.countByCreatorId(testUserId)).thenReturn(0L);
+        when(answerRepository.countByUserId(testUserId)).thenReturn(0L);
+        when(answerRepository.aggregateVotesByUserIds(anyCollection()))
+                .thenReturn(Collections.emptyList());
+
+        Map<String, Object> stats = userService.getUserStats(testUserId);
+
+        assertNotNull(stats);
+        assertEquals(0L, stats.get("questionsCount"));
+        assertEquals(0L, stats.get("answersCount"));
+        assertEquals(0, stats.get("likesCount"));
+        assertEquals(0, stats.get("dislikesCount"));
+    }
+
+    @Test
+    @DisplayName("getUserStats should return correct role for ADMIN user")
+    void getUserStats_shouldReturnAdminRole() {
+        User user = createTestUserWithAuthority(testUserId, TEST_EMAIL, TEST_USERNAME, "ADMIN");
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(user));
+        when(questionRepository.countByCreatorId(testUserId)).thenReturn(0L);
+        when(answerRepository.countByUserId(testUserId)).thenReturn(0L);
+        when(answerRepository.aggregateVotesByUserIds(anyCollection()))
+                .thenReturn(Collections.emptyList());
+
+        Map<String, Object> stats = userService.getUserStats(testUserId);
+
+        assertEquals("ADMIN", stats.get("role"));
+    }
+
+    @Test
+    @DisplayName("getUserStats should throw ResourceNotFoundException for non-existent user")
+    void getUserStats_shouldThrowResourceNotFoundExceptionForNonExistentUser() {
+        UUID nonExistentId = UUID.randomUUID();
+        when(userRepository.findById(nonExistentId)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> userService.getUserStats(nonExistentId));
+    }
+
+    // ================= FIND QUESTIONS BY USER =================
+
+    @Test
+    @DisplayName("findQuestionsByUserId should return questions for user")
+    void findQuestionsByUserId_shouldReturnQuestionsForUser() {
+        Question q1 = new Question();
+        q1.setId(UUID.randomUUID());
+        q1.setTitle("Question 1");
+
+        Question q2 = new Question();
+        q2.setId(UUID.randomUUID());
+        q2.setTitle("Question 2");
+
+        List<Question> questions = Arrays.asList(q1, q2);
+        when(questionRepository.findByCreatorId(testUserId)).thenReturn(questions);
+
+        Iterable<Question> result = userService.findQuestionsByUserId(testUserId);
+
+        assertNotNull(result);
+        List<Question> resultList = new ArrayList<>();
+        result.forEach(resultList::add);
+        assertEquals(2, resultList.size());
+        verify(questionRepository).findByCreatorId(testUserId);
+    }
+
+    @Test
+    @DisplayName("findQuestionsByUserId should return empty list when user has no questions")
+    void findQuestionsByUserId_shouldReturnEmptyListWhenNoQuestions() {
+        when(questionRepository.findByCreatorId(testUserId)).thenReturn(Collections.emptyList());
+
+        Iterable<Question> result = userService.findQuestionsByUserId(testUserId);
+
+        assertNotNull(result);
+        List<Question> resultList = new ArrayList<>();
+        result.forEach(resultList::add);
+        assertTrue(resultList.isEmpty());
+    }
+
+    // ================= FIND ANSWERS BY USER =================
+
+    @Test
+    @DisplayName("findAnswersByUserId should return answers for user")
+    void findAnswersByUserId_shouldReturnAnswersForUser() {
+        Answer a1 = new Answer();
+        a1.setId(UUID.randomUUID());
+        a1.setContent("Answer 1");
+
+        Answer a2 = new Answer();
+        a2.setId(UUID.randomUUID());
+        a2.setContent("Answer 2");
+
+        List<Answer> answers = Arrays.asList(a1, a2);
+        when(answerRepository.findByUserId(testUserId)).thenReturn(answers);
+
+        Iterable<com.streetask.app.model.Answer> result = userService.findAnswersByUserId(testUserId);
+
+        assertNotNull(result);
+        List<com.streetask.app.model.Answer> resultList = new ArrayList<>();
+        result.forEach(resultList::add);
+        assertEquals(2, resultList.size());
+        verify(answerRepository).findByUserId(testUserId);
+    }
+
+    @Test
+    @DisplayName("findAnswersByUserId should return empty list when user has no answers")
+    void findAnswersByUserId_shouldReturnEmptyListWhenNoAnswers() {
+        when(answerRepository.findByUserId(testUserId)).thenReturn(Collections.emptyList());
+
+        Iterable<com.streetask.app.model.Answer> result = userService.findAnswersByUserId(testUserId);
+
+        assertNotNull(result);
+        List<com.streetask.app.model.Answer> resultList = new ArrayList<>();
+        result.forEach(resultList::add);
+        assertTrue(resultList.isEmpty());
+    }
+
     // ================= HELPERS =================
+
+    private User createTestUserWithAuthority(UUID id, String email, String userName, String authorityName) {
+        User user = createTestUser(id, email, userName);
+        Authorities auth = new Authorities();
+        auth.setAuthority(authorityName);
+        user.setAuthority(auth);
+        return user;
+    }
 
     private User createTestUser(UUID id,String email,String userName){
 

@@ -34,7 +34,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.streetask.app.question.QuestionRepository;
-import com.streetask.app.answer.AnswerRepository;
 import com.streetask.app.model.Question;
 
 @Service
@@ -42,13 +41,16 @@ public class UserService {
 
 	private UserRepository userRepository;
 	private AnswerRepository answerRepository;
+	private QuestionRepository questionRepository;
 	private static final int LIKE_WEIGHT = 2;
 	private static final int DISLIKE_WEIGHT = 1;
 
 	@Autowired
-	public UserService(UserRepository userRepository, AnswerRepository answerRepository) {
+	public UserService(UserRepository userRepository, AnswerRepository answerRepository,
+			QuestionRepository questionRepository) {
 		this.userRepository = userRepository;
 		this.answerRepository = answerRepository;
+		this.questionRepository = questionRepository;
 	}
 
 	@Transactional
@@ -151,6 +153,45 @@ public class UserService {
 			reputationByUserId.put(userId, reputation);
 		}
 		return reputationByUserId;
+	}
+
+	@Transactional(readOnly = true)
+	public Map<String, Object> getUserStats(UUID userId) {
+		User user = findUser(userId);
+
+		long questionsCount = questionRepository.countByCreatorId(userId);
+		long answersCount = answerRepository.countByUserId(userId);
+
+		// Aggregate likes (upvotes) and dislikes (downvotes) for all answers by this user
+		List<Object[]> aggregates = answerRepository.aggregateVotesByUserIds(List.of(userId));
+		int likesCount = 0;
+		int dislikesCount = 0;
+		if (!aggregates.isEmpty()) {
+			Object[] row = aggregates.get(0);
+			likesCount = ((Number) row[1]).intValue();
+			dislikesCount = ((Number) row[2]).intValue();
+		}
+
+		Map<String, Object> stats = new HashMap<>();
+		stats.put("questionsCount", questionsCount);
+		stats.put("answersCount", answersCount);
+		stats.put("username", user.getUserName());
+		stats.put("role", user.getAuthority().getAuthority());
+		stats.put("likesCount", likesCount);
+		stats.put("dislikesCount", dislikesCount);
+		stats.put("reputation", user.getReputation());
+
+		return stats;
+	}
+
+	@Transactional(readOnly = true)
+	public Iterable<Question> findQuestionsByUserId(UUID userId) {
+		return questionRepository.findByCreatorId(userId);
+	}
+
+	@Transactional(readOnly = true)
+	public Iterable<com.streetask.app.model.Answer> findAnswersByUserId(UUID userId) {
+		return answerRepository.findByUserId(userId);
 	}
 
 }

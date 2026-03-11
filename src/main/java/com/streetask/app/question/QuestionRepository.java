@@ -25,8 +25,6 @@ public interface QuestionRepository extends CrudRepository<Question, UUID> {
 
 	Iterable<Question> findAllByActiveTrueAndExpiresAtBefore(LocalDateTime now);
 
-	Iterable<Question> findByUser_Id(UUID userId);
-
-	long countByUserId(UUID userId);
+	long countByCreatorId(UUID creatorId);
 
 }

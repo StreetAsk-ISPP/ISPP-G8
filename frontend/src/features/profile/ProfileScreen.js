@@ -5,7 +5,7 @@ import { useAuth } from '../../app/providers/AuthProvider';
 
 export default function ProfileScreen({ navigation }) {
     const { user, logout } = useAuth();
-
+    console.log(user)
     return (
         <SafeAreaView style={styles.screen}>
             <View style={styles.headerRed}>

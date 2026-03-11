@@ -3,11 +3,11 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Act
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../app/providers/AuthProvider';
-import { API_BASE_URL } from '../../app/config/config';
+import apiClient from '../../shared/services/http/apiClient';
 
 export default function ProfileStats() {
     const navigation = useNavigation();
-    const { authData } = useAuth();
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState('preguntas');
 
     // Estados para datos del servidor
@@ -24,23 +24,21 @@ export default function ProfileStats() {
 
     useEffect(() => {
         const fetchAllData = async () => {
-            if (!authData?.id || !authData?.token) return;
+            if (!user?.id) {
+                setLoading(false);
+                return;
+            }
 
             try {
-                const headers = {
-                    'Authorization': `Bearer ${authData.token}`,
-                    'Content-Type': 'application/json',
-                };
-
                 // Ejecutamos las 3 peticiones en paralelo para mayor velocidad
                 const [resStats, resQuestions, resAnswers] = await Promise.all([
-                    fetch(`${API_BASE_URL}/api/v1/users/${authData.id}/stats`, { headers }),
-                    fetch(`${API_BASE_URL}/api/v1/users/${authData.id}/questions`, { headers }),
-                    fetch(`${API_BASE_URL}/api/v1/users/${authData.id}/answers`, { headers })
+                    apiClient.get(`/api/v1/users/${user.id}/stats`),
+                    apiClient.get(`/api/v1/users/${user.id}/questions`),
+                    apiClient.get(`/api/v1/users/${user.id}/answers`)
                 ]);
 
-                if (resStats.ok) {
-                    const data = await resStats.json();
+                if (resStats.data) {
+                    const data = resStats.data;
                     setServerStats({
                         preguntas: data.questionsCount,
                         respuestas: data.answersCount,
@@ -50,8 +48,8 @@ export default function ProfileStats() {
                     });
                 }
 
-                if (resQuestions.ok) setUserQuestions(await resQuestions.json());
-                if (resAnswers.ok) setUserAnswers(await resAnswers.json());
+                if (resQuestions.data) setUserQuestions(resQuestions.data);
+                if (resAnswers.data) setUserAnswers(resAnswers.data);
 
             } catch (error) {
                 console.error("Error cargando datos de perfil:", error);
@@ -61,7 +59,7 @@ export default function ProfileStats() {
         };
 
         fetchAllData();
-    }, [authData]);
+    }, [user]);
 
     const renderHistoryItem = (item, type) => (
         <View key={item.id} style={styles.historyItem}>
@@ -110,7 +108,7 @@ export default function ProfileStats() {
                 {/* Card de Rango y Coins */}
                 <View style={styles.headerCard}>
                     <Text style={styles.rangoText}>{serverStats.role}</Text>
-                    <Text style={styles.userEmailText}>{authData?.email}</Text>
+                    <Text style={styles.userEmailText}>{user?.username}</Text>
                     <View style={styles.coinsRow}>
                         <Ionicons name="star" size={20} color="#FFD700" />
                         <Text style={styles.coinsText}>{serverStats.likes * 10} StreetCoins</Text>
