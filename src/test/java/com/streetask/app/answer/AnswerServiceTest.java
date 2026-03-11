@@ -9,18 +9,24 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.streetask.app.exceptions.ResourceNotFoundException;
 import com.streetask.app.functionalities.notifications.events.AnswerCreatedEvent;
 import com.streetask.app.model.Answer;
 import com.streetask.app.model.GeoPoint;
 import com.streetask.app.model.Question;
+import com.streetask.app.user.RegularUser;
+import com.streetask.app.user.RegularUserRepository;
 
 class AnswerServiceTest {
 
@@ -30,11 +36,15 @@ class AnswerServiceTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
+    @Mock
+    private RegularUserRepository regularUserRepository;
+
     @InjectMocks
     private AnswerService answerService;
 
     private Answer answer;
     private Question question;
+    private RegularUser authenticatedUser;
     private UUID answerId;
     private UUID questionId;
     private UUID userId;
@@ -46,6 +56,22 @@ class AnswerServiceTest {
         answerId = UUID.randomUUID();
         questionId = UUID.randomUUID();
         userId = UUID.randomUUID();
+
+        authenticatedUser = new RegularUser();
+        authenticatedUser.setId(userId);
+        authenticatedUser.setEmail("testuser@example.com");
+        authenticatedUser.setUserName("testuser");
+
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(authentication.getName()).thenReturn(authenticatedUser.getEmail());
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        when(regularUserRepository.findByEmail(authenticatedUser.getEmail()))
+            .thenReturn(Optional.of(authenticatedUser));
+        when(regularUserRepository.findByUserNameIgnoreCase(authenticatedUser.getEmail()))
+            .thenReturn(Optional.empty());
 
         // Create test question with location and radius
         question = new Question();
@@ -64,9 +90,15 @@ class AnswerServiceTest {
         answer.setId(answerId);
         answer.setQuestion(question);
         answer.setContent("Test Answer");
+        answer.setUser(authenticatedUser);
         answer.setUserLocation(new GeoPoint());
         answer.getUserLocation().setLatitude(37.7749); // Same location as question
         answer.getUserLocation().setLongitude(-122.4194);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test

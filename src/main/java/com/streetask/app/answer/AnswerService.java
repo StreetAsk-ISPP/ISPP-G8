@@ -9,6 +9,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataAccessException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +20,8 @@ import com.streetask.app.functionalities.notifications.events.AnswerCreatedEvent
 import com.streetask.app.model.Answer;
 import com.streetask.app.model.GeoPoint;
 import com.streetask.app.model.Question;
+import com.streetask.app.user.RegularUser;
+import com.streetask.app.user.RegularUserRepository;
 
 import jakarta.validation.Valid;
 
@@ -24,16 +29,20 @@ import jakarta.validation.Valid;
 public class AnswerService {
 
 	private final AnswerRepository answerRepository;
+	private final RegularUserRepository regularUserRepository;
 	private final ApplicationEventPublisher eventPublisher;
 
 	@Autowired
-	public AnswerService(AnswerRepository answerRepository, ApplicationEventPublisher eventPublisher) {
+	public AnswerService(AnswerRepository answerRepository, RegularUserRepository regularUserRepository,
+			ApplicationEventPublisher eventPublisher) {
 		this.answerRepository = answerRepository;
+		this.regularUserRepository = regularUserRepository;
 		this.eventPublisher = eventPublisher;
 	}
 
 	@Transactional
 	public Answer saveAnswer(@Valid Answer answer, Question question) throws DataAccessException {
+		attachAuthenticatedUser(answer);
 		// Validate location before saving
 		validateAnswerLocation(answer, question);
 		applyDefaults(answer);
@@ -196,6 +205,23 @@ public class AnswerService {
 		if (answer.getDownvotes() == null) {
 			answer.setDownvotes(0);
 		}
+	}
+
+	private void attachAuthenticatedUser(Answer answer) {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		if (auth == null || auth.getName() == null || auth.getName().isBlank()) {
+			if (answer.getUser() != null) {
+				return;
+			}
+			throw new AccessDeniedException("Only authenticated regular users can create answers");
+		}
+
+		String identifier = auth.getName().trim();
+		RegularUser regularUser = regularUserRepository.findByEmail(identifier)
+				.or(() -> regularUserRepository.findByUserNameIgnoreCase(identifier))
+				.orElseThrow(() -> new AccessDeniedException("Only regular users can create answers"));
+
+		answer.setUser(regularUser);
 	}
 
 }

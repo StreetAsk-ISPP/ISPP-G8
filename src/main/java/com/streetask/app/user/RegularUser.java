@@ -3,7 +3,6 @@ package com.streetask.app.user;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.streetask.app.model.Answer;
 import com.streetask.app.model.CoinTransaction;
 import com.streetask.app.model.EventAttendance;
@@ -39,8 +38,8 @@ public class RegularUser extends User {
     @OneToMany(mappedBy = "creator")
     private List<Question> questions;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
-    @JsonManagedReference("user-answers")
     private List<Answer> answers;
 
     @OneToMany(mappedBy = "regularUser")
