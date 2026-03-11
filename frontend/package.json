@@ -31,7 +31,7 @@
     "react-native-screens": "~4.16.0",
     "react-native-web": "^0.21.0",
     "sockjs-client": "^1.6.1",
-    "tar": "7.5.8"
+    "tar": "7.5.11"
   },
   "devDependencies": {
     "babel-preset-expo": "^54.0.10",
