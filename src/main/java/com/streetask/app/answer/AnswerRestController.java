@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.streetask.app.auth.payload.response.MessageResponse;
 import com.streetask.app.model.Answer;
 import com.streetask.app.model.Question;
+import com.streetask.app.model.enums.VoteType;
 import com.streetask.app.util.RestPreconditions;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -118,19 +119,43 @@ public class AnswerRestController {
 		return new ResponseEntity<>(new MessageResponse("Answer deleted!"), HttpStatus.OK);
 	}
 
+	@GetMapping("/votes")
+	@Operation(summary = "Get the authenticated user's votes for all answers of a question")
+	public ResponseEntity<?> getUserVotes(
+			@RequestParam UUID userId,
+			@RequestParam UUID questionId) {
+		return new ResponseEntity<>(answerService.getUserVotesForQuestion(userId, questionId), HttpStatus.OK);
+	}
+
 	@PutMapping(value = "{answerId}/votes")
 	@ResponseStatus(HttpStatus.OK)
-	@Operation(summary = "Update vote counters for an answer")
+	@Operation(summary = "Vote on an answer (once per user)")
 	public ResponseEntity<?> updateVotes(
-			@PathVariable("answerId") UUID id,
-			@RequestParam int upvotesDelta,
-			@RequestParam int downvotesDelta) {
+			@PathVariable("answerId") UUID answerId,
+			@RequestParam UUID userId,
+			@RequestParam VoteType voteType) {
 
-		// Validamos que la respuesta existe
-		RestPreconditions.checkNotNull(answerService.findAnswer(id), "Answer", "id", id);
+		RestPreconditions.checkNotNull(answerService.findAnswer(answerId), "Answer", "id", answerId);
 
 		try {
-			Answer updatedAnswer = answerService.updateVotes(id, upvotesDelta, downvotesDelta);
+			Answer updatedAnswer = answerService.updateVotes(answerId, userId, voteType);
+			return new ResponseEntity<>(updatedAnswer, HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@DeleteMapping(value = "{answerId}/votes")
+	@ResponseStatus(HttpStatus.OK)
+	@Operation(summary = "Remove a user's vote from an answer")
+	public ResponseEntity<?> removeVote(
+			@PathVariable("answerId") UUID answerId,
+			@RequestParam UUID userId) {
+
+		RestPreconditions.checkNotNull(answerService.findAnswer(answerId), "Answer", "id", answerId);
+
+		try {
+			Answer updatedAnswer = answerService.removeVote(answerId, userId);
 			return new ResponseEntity<>(updatedAnswer, HttpStatus.OK);
 		} catch (Exception e) {
 			return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.BAD_REQUEST);

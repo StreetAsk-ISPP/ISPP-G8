@@ -5,6 +5,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.streetask.app.user.RegularUser;
 
 import jakarta.persistence.Embedded;
@@ -57,6 +58,7 @@ public class Answer extends BaseEntity {
     @PositiveOrZero(message = "Downvotes must be zero or positive")
     private Integer downvotes;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "answer")
     private List<AnswerVote> votes;
 }
