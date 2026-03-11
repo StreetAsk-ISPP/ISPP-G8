@@ -145,7 +145,7 @@ export default function ProfileStats() {
                     </View>
                     <View style={styles.reputationCenter}>
                         <Text style={styles.reputationTitle}>Reputation Score</Text>
-                        <Text style={styles.reputationSub}>Based on your answers' votes</Text>
+                        <Text style={styles.reputationSub}>{"Based on your answers' votes"}</Text>
                     </View>
                     <View style={styles.reputationRight}>
                         <Text style={styles.reputationValue}>{serverStats.reputation}</Text>
