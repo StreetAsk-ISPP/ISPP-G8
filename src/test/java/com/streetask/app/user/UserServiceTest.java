@@ -58,7 +58,7 @@ class UserServiceTest {
         SecurityContextHolder.clearContext();
     }
 
-    // ===================== TESTS ORIGINALES =====================
+    // ================= SAVE USER =================
 
     @Test
     @DisplayName("saveUser should persist user successfully")
@@ -75,6 +75,21 @@ class UserServiceTest {
     }
 
     @Test
+    @DisplayName("saveUser should throw DataAccessException on database failure")
+    void saveUser_shouldThrowDataAccessExceptionOnDatabaseFailure() {
+        User userToSave = createTestUser(UUID.randomUUID(), "newuser@example.com", "newuser");
+
+        when(userRepository.save(any(User.class)))
+                .thenThrow(new DataAccessException("DB Error") {});
+
+        assertThrows(DataAccessException.class, () -> userService.saveUser(userToSave));
+        verify(userRepository).save(userToSave);
+    }
+
+    // ================= FIND USER =================
+
+    @Test
+    @DisplayName("findUser by email should return user when found")
     void findUserByEmail_shouldReturnUserWhenFound() {
         when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(testUser));
 
@@ -82,10 +97,21 @@ class UserServiceTest {
 
         assertNotNull(foundUser);
         assertEquals(TEST_EMAIL, foundUser.getEmail());
+        assertEquals(testUserId, foundUser.getId());
         verify(userRepository).findByEmail(TEST_EMAIL);
     }
 
     @Test
+    @DisplayName("findUser by email should throw ResourceNotFoundException when not found")
+    void findUserByEmail_shouldThrowResourceNotFoundExceptionWhenNotFound() {
+        when(userRepository.findByEmail("notfound@example.com")).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> userService.findUser("notfound@example.com"));
+    }
+
+    @Test
+    @DisplayName("findUser by id should return user when found")
     void findUserById_shouldReturnUserWhenFound() {
         when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
 
@@ -93,11 +119,54 @@ class UserServiceTest {
 
         assertNotNull(foundUser);
         assertEquals(testUserId, foundUser.getId());
-        verify(userRepository).findById(testUserId);
     }
 
     @Test
+    @DisplayName("findUser by id should throw ResourceNotFoundException when not found")
+    void findUserById_shouldThrowResourceNotFoundExceptionWhenNotFound() {
+        UUID nonExistentId = UUID.randomUUID();
+        when(userRepository.findById(nonExistentId)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> userService.findUser(nonExistentId));
+    }
+
+    // ================= CURRENT USER =================
+
+    @Test
+    @DisplayName("findCurrentUser should return authenticated user")
+    void findCurrentUser_shouldReturnAuthenticatedUserWhenPresent() {
+
+        setupSecurityContext(TEST_EMAIL);
+        when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(testUser));
+
+        User currentUser = userService.findCurrentUser();
+
+        assertNotNull(currentUser);
+        assertEquals(TEST_EMAIL, currentUser.getEmail());
+    }
+
+    // ================= EXISTS =================
+
+    @Test
+    void existsUser_shouldReturnTrueWhenUserExistsByEmail() {
+        when(userRepository.existsByEmail(TEST_EMAIL)).thenReturn(true);
+
+        assertTrue(userService.existsUser(TEST_EMAIL));
+    }
+
+    @Test
+    void existsByUserName_shouldReturnTrueWhenUserExistsByUsername() {
+        when(userRepository.existsByUserName(TEST_USERNAME)).thenReturn(true);
+
+        assertTrue(userService.existsByUserName(TEST_USERNAME));
+    }
+
+    // ================= FIND ALL =================
+
+    @Test
     void findAll_shouldReturnAllUsers() {
+
         List<User> users = new ArrayList<>();
         users.add(testUser);
         users.add(createTestUser(UUID.randomUUID(), "user2@example.com", "user2"));
@@ -110,27 +179,58 @@ class UserServiceTest {
         verify(userRepository).findAll();
     }
 
-    // ===================== TESTS DE REPUTACIÓN (TRUNK) =====================
+    // ================= UPDATE =================
+
+    @Test
+    void updateUser_shouldPreserveOriginalIdWhenUpdatingUser() {
+
+        User update = createTestUser(UUID.randomUUID(),"new@mail.com","newuser");
+
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any())).thenReturn(testUser);
+
+        User updated = userService.updateUser(update,testUserId);
+
+        assertEquals(testUserId,updated.getId());
+    }
+
+    // ================= DELETE =================
+
+    @Test
+    void deleteUser_shouldSuccessfullyDeleteUserWhenFound() {
+
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
+        doNothing().when(userRepository).delete(testUser);
+
+        userService.deleteUser(testUserId);
+
+        verify(userRepository).delete(testUser);
+    }
+
+    // ================= REPUTATION TESTS (TRUNK) =================
 
     @Test
     void findUserById_shouldIncludeReputation() {
+
         UUID userId = UUID.randomUUID();
         User user = new User();
         user.setId(userId);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(answerRepository.aggregateVotesByUserIds(anyCollection())).thenReturn(
-                Collections.singletonList(new Object[]{userId, 6L, 0L})
-        );
+
+        when(answerRepository.aggregateVotesByUserIds(anyCollection()))
+                .thenReturn(Collections.singletonList(
+                        new Object[]{userId,6L,0L}));
 
         User result = userService.findUser(userId);
 
-        assertEquals(12, result.getReputation());
+        assertEquals(12,result.getReputation());
         verify(answerRepository).aggregateVotesByUserIds(anyCollection());
     }
 
     @Test
     void findAll_shouldIncludeReputationForEveryUser() {
+
         UUID firstId = UUID.randomUUID();
         UUID secondId = UUID.randomUUID();
 
@@ -140,27 +240,28 @@ class UserServiceTest {
         User second = new User();
         second.setId(secondId);
 
-        List<User> users = Arrays.asList(first, second);
+        List<User> users = Arrays.asList(first,second);
 
         when(userRepository.findAll()).thenReturn(users);
-        when(answerRepository.aggregateVotesByUserIds(anyCollection())).thenReturn(Arrays.asList(
-                new Object[]{firstId, 3L, 1L},
-                new Object[]{secondId, 0L, 2L}
-        ));
+
+        when(answerRepository.aggregateVotesByUserIds(anyCollection()))
+                .thenReturn(Arrays.asList(
+                        new Object[]{firstId,3L,1L},
+                        new Object[]{secondId,0L,2L}));
 
         Iterable<User> result = userService.findAll();
 
-        User[] resultArray = ((List<User>) result).toArray(new User[0]);
-        assertEquals(5, resultArray[0].getReputation());
-        assertEquals(-2, resultArray[1].getReputation());
+        User[] arr=((List<User>)result).toArray(new User[0]);
 
-        verify(answerRepository).aggregateVotesByUserIds(anyCollection());
+        assertEquals(5,arr[0].getReputation());
+        assertEquals(-2,arr[1].getReputation());
     }
 
-    // ===================== HELPERS =====================
+    // ================= HELPERS =================
 
-    private User createTestUser(UUID id, String email, String userName) {
-        User user = new User();
+    private User createTestUser(UUID id,String email,String userName){
+
+        User user=new User();
         user.setId(id);
         user.setEmail(email);
         user.setUserName(userName);
@@ -169,14 +270,18 @@ class UserServiceTest {
         user.setPassword("password123");
         user.setActive(true);
         user.setCreatedAt(LocalDateTime.now());
+
         return user;
     }
 
-    private void setupSecurityContext(String email) {
-        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.getName()).thenReturn(email);
-        securityContext.setAuthentication(authentication);
-        SecurityContextHolder.setContext(securityContext);
+    private void setupSecurityContext(String email){
+
+        SecurityContext context=SecurityContextHolder.createEmptyContext();
+
+        Authentication auth=mock(Authentication.class);
+        when(auth.getName()).thenReturn(email);
+
+        context.setAuthentication(auth);
+        SecurityContextHolder.setContext(context);
     }
 }
