@@ -64,14 +64,21 @@ export default function HomeScreen({ navigation }) {
                     <View style={styles.topBarLeft}>
                         <View style={styles.logoBadge}>
                             <Image
-                            source={require("../../../../assets/logo.png")}
-                            style={{ width: 18, height: 28 }}
+                                source={require("../../../../assets/logo.png")}
+                                style={{ width: 18, height: 28 }}
                             />
                         </View>
                         <Text style={styles.appName}>StreetAsk</Text>
                     </View>
 
                     <View style={styles.topBarRight}>
+                        <TouchableOpacity
+                            style={styles.iconBtn}
+                            activeOpacity={0.7}
+                            onPress={() => navigation.navigate('Profile')}
+                        >
+                            <Ionicons name="person-outline" size={20} color="#374151" />
+                        </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.iconBtn}
                             activeOpacity={0.7}

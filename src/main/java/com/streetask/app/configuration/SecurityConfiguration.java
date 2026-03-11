@@ -94,6 +94,11 @@ public class SecurityConfiguration {
 						.requestMatchers(HttpMethod.GET, "/api/v1/users/me/reputation").authenticated()
 						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/reputation").authenticated()
 
+						// Authenticated users can view stats, questions and answers
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/stats").authenticated()
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/questions").authenticated()
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/answers").authenticated()
+
 						// Restricted API for owners
 						.requestMatchers("/api/v1/plan").hasAuthority("OWNER")
 

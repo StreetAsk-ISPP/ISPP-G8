@@ -16,6 +16,8 @@
 package com.streetask.app.user;
 
 import java.util.UUID;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -119,7 +121,24 @@ class UserRestController {
 			throw new AccessDeniedException("You can't delete yourself!");
 	}
 
+	@GetMapping(value = "/{id}/stats")
+	public ResponseEntity<Map<String, Object>> getUserStats(@PathVariable("id") UUID id) {
+		RestPreconditions.checkNotNull(userService.findUser(id), "User", "ID", id);
+
+		Map<String, Object> stats = userService.getUserStats(id);
+		return new ResponseEntity<>(stats, HttpStatus.OK);
+	}
+
+	@GetMapping(value = "/{id}/questions")
+	public ResponseEntity<Iterable<com.streetask.app.model.Question>> getUserQuestions(@PathVariable("id") UUID id) {
+		RestPreconditions.checkNotNull(userService.findUser(id), "User", "ID", id);
+		return new ResponseEntity<>(userService.findQuestionsByUserId(id), HttpStatus.OK);
+	}
+
+	@GetMapping(value = "/{id}/answers")
+	public ResponseEntity<Iterable<com.streetask.app.model.Answer>> getUserAnswers(@PathVariable("id") UUID id) {
+		RestPreconditions.checkNotNull(userService.findUser(id), "User", "ID", id);
+		return new ResponseEntity<>(userService.findAnswersByUserId(id), HttpStatus.OK);
+	}
+
 }
-
-
-
