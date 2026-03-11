@@ -162,7 +162,8 @@ public class UserService {
 		long questionsCount = questionRepository.countByCreatorId(userId);
 		long answersCount = answerRepository.countByUserId(userId);
 
-		// Aggregate likes (upvotes) and dislikes (downvotes) for all answers by this user
+		// Aggregate likes (upvotes) and dislikes (downvotes) for all answers by this
+		// user
 		List<Object[]> aggregates = answerRepository.aggregateVotesByUserIds(List.of(userId));
 		int likesCount = 0;
 		int dislikesCount = 0;
