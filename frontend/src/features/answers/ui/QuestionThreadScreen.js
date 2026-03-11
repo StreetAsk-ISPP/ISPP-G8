@@ -115,6 +115,16 @@ export default function QuestionThreadScreen({ route, navigation }) {
                     userId: a.user?.id,
                     isVerified: a.isVerified,
                 })));
+                // Cargar los votos previos del usuario para esta pregunta
+                if (user?.id) {
+                    try {
+                        const vRes = await apiClient.get(`/api/v1/answers/votes?userId=${user.id}&questionId=${questionId}`);
+                        // vRes.data es un mapa { answerId: 'LIKE'|'DISLIKE' }
+                        if (vRes.data && typeof vRes.data === 'object') {
+                            setMyVotes(vRes.data);
+                        }
+                    } catch (_) { /* ignorar si falla la carga de votos */ }
+                }
             } catch (e) {
                 setError(e.message || 'Error loading data');
             } finally {
@@ -216,58 +226,44 @@ export default function QuestionThreadScreen({ route, navigation }) {
     const vote = async (answerId, type) => {
         const cur = myVotes[answerId];
 
-        // 1. Calculamos los deltas a enviar al backend
-        let upDelta = 0;
-        let downDelta = 0;
-        let newVoteState = type;
-
         if (cur === type) {
-            // Caso 1: Quitar el voto actual (toggle)
-            if (type === 'LIKE') upDelta = -1;
-            else downDelta = -1;
-            newVoteState = null; // Ya no hay voto
-        } else if (cur) {
-            // Caso 2: Cambiar el voto (de LIKE a DISLIKE o viceversa)
-            if (type === 'LIKE') { upDelta = 1; downDelta = -1; }
-            else { upDelta = -1; downDelta = 1; }
-        } else {
-            // Caso 3: Voto nuevo
-            if (type === 'LIKE') upDelta = 1;
-            else downDelta = 1;
+            // Deseleccionar: quitar el voto
+            setAnswers((pa) => pa.map((a) => {
+                if (a.id !== answerId) return a;
+                return {
+                    ...a,
+                    likes: type === 'LIKE' ? Math.max(0, (a.likes || 0) - 1) : (a.likes || 0),
+                    dislikes: type === 'DISLIKE' ? Math.max(0, (a.dislikes || 0) - 1) : (a.dislikes || 0),
+                };
+            }));
+            setMyVotes((prev) => { const n = { ...prev }; delete n[answerId]; return n; });
+            try {
+                await apiClient.delete(`/api/v1/answers/${answerId}/votes?userId=${user.id}`);
+            } catch (error) {
+                console.error('Error al quitar voto:', error);
+            }
+            return;
         }
 
-        // 2. Guardamos un respaldo por si falla la API (Rollback)
-        const previousAnswers = [...answers];
-        const previousVotes = { ...myVotes };
-
-        // 3. Actualización Optimista (Visual e inmediata)
+        // Actualización optimista (voto nuevo o cambio)
         setAnswers((pa) => pa.map((a) => {
             if (a.id !== answerId) return a;
-            return {
-                ...a,
-                likes: Math.max(0, (a.likes || 0) + upDelta),
-                dislikes: Math.max(0, (a.dislikes || 0) + downDelta)
-            };
+            const newLikes = type === 'LIKE'
+                ? (a.likes || 0) + 1
+                : cur === 'LIKE' ? Math.max(0, (a.likes || 0) - 1) : (a.likes || 0);
+            const newDislikes = type === 'DISLIKE'
+                ? (a.dislikes || 0) + 1
+                : cur === 'DISLIKE' ? Math.max(0, (a.dislikes || 0) - 1) : (a.dislikes || 0);
+            return { ...a, likes: newLikes, dislikes: newDislikes };
         }));
+        setMyVotes((prev) => ({ ...prev, [answerId]: type }));
 
-        setMyVotes((prev) => {
-            const nextVotes = { ...prev };
-            if (newVoteState) nextVotes[answerId] = newVoteState;
-            else delete nextVotes[answerId];
-            return nextVotes;
-        });
-
-        // 4. Llamada real al backend
         try {
             await apiClient.put(
-                `/api/v1/answers/${answerId}/votes?upvotesDelta=${upDelta}&downvotesDelta=${downDelta}`
+                `/api/v1/answers/${answerId}/votes?userId=${user.id}&voteType=${type}`
             );
         } catch (error) {
-            // 5. Si algo sale mal, revertimos la interfaz y avisamos al usuario
-            console.error("Error al votar:", error);
-            setAnswers(previousAnswers);
-            setMyVotes(previousVotes);
-            crossAlert('Error', 'No se pudo registrar el voto. Verifica tu conexión.');
+            console.error('Error al votar:', error);
         }
     };
 
@@ -307,11 +303,11 @@ export default function QuestionThreadScreen({ route, navigation }) {
                     <Text style={styles.threadBody}>{item.text}</Text>
                     <View style={styles.threadActions}>
                         <Pressable onPress={() => vote(item.id, 'LIKE')} style={[styles.threadVoteBtn, v === 'DISLIKE' && { opacity: 0.3 }]}>
-                            <Ionicons name={v === 'LIKE' ? 'arrow-up-circle' : 'arrow-up-circle-outline'} size={18} color={v === 'LIKE' ? '#667eea' : '#9ca3af'} />
-                            <Text style={[styles.threadVoteCount, v === 'LIKE' && { color: '#667eea' }]}>{item.likes || 0}</Text>
+                            <Ionicons name={v === 'LIKE' ? 'thumbs-up' : 'thumbs-up-outline'} size={18} color={v === 'LIKE' ? '#22c55e' : '#9ca3af'} />
+                            <Text style={[styles.threadVoteCount, v === 'LIKE' && { color: '#22c55e' }]}>{item.likes || 0}</Text>
                         </Pressable>
                         <Pressable onPress={() => vote(item.id, 'DISLIKE')} style={[styles.threadVoteBtn, v === 'LIKE' && { opacity: 0.3 }]}>
-                            <Ionicons name={v === 'DISLIKE' ? 'arrow-down-circle' : 'arrow-down-circle-outline'} size={18} color={v === 'DISLIKE' ? '#ef4444' : '#9ca3af'} />
+                            <Ionicons name={v === 'DISLIKE' ? 'thumbs-down' : 'thumbs-down-outline'} size={18} color={v === 'DISLIKE' ? '#ef4444' : '#9ca3af'} />
                             <Text style={[styles.threadVoteCount, v === 'DISLIKE' && { color: '#ef4444' }]}>{item.dislikes || 0}</Text>
                         </Pressable>
                     </View>

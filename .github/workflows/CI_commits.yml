@@ -19,6 +19,6 @@ jobs:
       
       # Step to validate commit messages following the Conventional Commits standard
       - name: Validate commit messages
-        uses: webiny/action-conventional-commits@v1.3.0
+        uses: webiny/action-conventional-commits@8bc41ff4e7d423d56fa4905f6ff79209a78776c7
         with:
           allowed-commit-types: "feat,fix,docs"

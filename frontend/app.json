@@ -28,7 +28,10 @@
       "package": "com.streetask.app"
     },
     "web": {
-      "output": "single"
+      "output": "single",
+      "favicon": "./assets/icon-1024.png",
+      "name": "StreetAsk",
+      "shortName": "StreetAsk"
     },
     "extra": {
       "eas": {

@@ -2,6 +2,7 @@ package com.streetask.app.model;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.streetask.app.model.enums.VoteType;
 import com.streetask.app.user.RegularUser;
 
@@ -23,6 +24,7 @@ import lombok.Setter;
 @Setter
 public class AnswerVote extends BaseEntity {
 
+    @JsonIgnore
     @ManyToOne(optional = false)
     @JoinColumn(name = "answer_id")
     private Answer answer;
