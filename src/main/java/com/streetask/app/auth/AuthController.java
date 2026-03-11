@@ -74,11 +74,8 @@ public class AuthController {
 			List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority())
 					.collect(Collectors.toList());
 
-			// Retrieve the actual userName from the User entity (userDetails.getUsername() returns the email)
-			com.streetask.app.user.User user = userService.findUser(userDetails.getId());
-
 			return ResponseEntity.ok()
-					.body(new JwtResponse(jwt, userDetails.getId(), user.getUserName(), roles));
+					.body(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), roles));
 		} catch (AuthenticationException exception) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 					.body(new MessageResponse("Error: Invalid email or password."));
