@@ -60,7 +60,7 @@ public class AnswerActivityNotificationObserver {
         FrontendNotificationMessage payload = FrontendNotificationMessage.builder()
                 .type("ANSWER_TO_QUESTION")
                 .title("New activity on a followed question")
-                .message(actorName + " answered: " + question.getTitle())
+                .message(actorName + " answered: " + answer.getContent())
                 .referenceId(question.getId())
                 .referenceType("QUESTION")
                 .timestamp(LocalDateTime.now())
