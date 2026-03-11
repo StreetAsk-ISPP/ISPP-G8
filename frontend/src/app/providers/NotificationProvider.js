@@ -62,7 +62,7 @@ export function NotificationProvider({ children }) {
   const pushNotification = useCallback((notification) => {
     const normalized = {
       ...notification,
-      clientId: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      clientId: `${Date.now()}-${window.crypto.getRandomValues(new Uint32Array(1))[0].toString(16)}`,
     };
 
     setNotifications((previous) => [normalized, ...previous].slice(0, MAX_NOTIFICATIONS));
@@ -101,7 +101,7 @@ export function NotificationProvider({ children }) {
       if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.geolocation) {
         webWatcherId = navigator.geolocation.watchPosition(
           (position) => onPosition(position.coords.latitude, position.coords.longitude),
-          () => {},
+          () => { },
           { enableHighAccuracy: true, maximumAge: 15000, timeout: 10000 }
         );
         console.log('[notifications] zone tracking started (web)');
