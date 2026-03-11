@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: send email via SendGrid
-        uses: dawidd6/action-send-mail@4226df7daafa6fc901a43789c49bf7ab309066e7
+        uses: dawidd6/action-send-mail@v3
         with:
 
           server_address: smtp.sendgrid.net
@@ -21,7 +21,7 @@ jobs:
           to: ${{ secrets.PILOT_EMAILS }}
           
           
-          from: "streetask0@gmail.com"
+          from: "Streetask <streetask0@gmail.com>"
           
           subject: "Nueva actualización disponible: ${{ github.event.release.tag_name }}"
           
@@ -46,4 +46,4 @@ jobs:
             Si encontráis cualquier fallo o tenéis una idea de mejora, no dudéis en reflejarlo en el formulario. ¡Gracias por vuestro tiempo!
             
             Atentamente,
-            El Equipo de Desarrollo 
+            El Equipo de Desarrollo
