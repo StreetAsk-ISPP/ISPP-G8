@@ -1,148 +1,351 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
-import CustomButton from '../../../shared/components/CustomButton';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import {
+    View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
+    Switch, useWindowDimensions, Modal, Pressable,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import MapComponent from './components/MapComponent';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useNotifications } from '../../../app/providers/NotificationProvider';
-import { useWebSocket } from '../../../app/providers/WebSocketProvider';
-import { globalStyles } from '../../../shared/ui/theme/globalStyles';
-import { theme } from '../../../shared/ui/theme/theme';
 import apiClient from '../../../shared/services/http/apiClient';
+import { Image } from 'react-native';
 
 export default function HomeScreen({ navigation }) {
     const { logout } = useAuth();
-    const { currentZoneKey, ephemeralNotification, observeNotifications } = useNotifications();
-    const { isConnected } = useWebSocket();
+    const { ephemeralNotification, observeNotifications } = useNotifications();
+    const { width } = useWindowDimensions();
+    const isNarrow = width < 500;
+
     const [questions, setQuestions] = useState([]);
+    const [showQuestions, setShowQuestions] = useState(true);
+    const [comingSoon, setComingSoon] = useState(false);
+    const [modalType, setModalType] = useState('notifications');
+
+    const isFocused = useIsFocused();
+    const latestRequestRef = useRef(0);
 
     const loadQuestions = useCallback(async () => {
+        const requestId = ++latestRequestRef.current;
         try {
             const res = await apiClient.get('/api/v1/questions');
             const raw = res.data;
 
-            const list = Array.isArray(raw) ? raw : [];
-            setQuestions(list);
+            if (requestId !== latestRequestRef.current) {
+                return;
+            }
+
+            setQuestions(Array.isArray(raw) ? raw : []);
         } catch (e) {
             console.warn('Failed to load questions', e);
         }
     }, []);
 
-    useFocusEffect(
-        useCallback(() => {
-            loadQuestions();
-        }, [loadQuestions])
-        );
+    useFocusEffect(useCallback(() => { loadQuestions(); }, [loadQuestions]));
 
     useEffect(() => {
-        const unsubscribe = observeNotifications((notification) => {
-            if (notification?.type === 'NEARBY_QUESTION') {
+        const unsub = observeNotifications((n) => {
+
+            if (!isFocused) return;
+
+            if (n?.type === 'NEARBY_QUESTION') {
                 loadQuestions();
             }
         });
-        return unsubscribe;
-    }, [loadQuestions, observeNotifications]);
+
+        return unsub;
+    }, [isFocused, loadQuestions, observeNotifications]);
 
     return (
-        <SafeAreaView style={globalStyles.screen}>
+        <SafeAreaView style={styles.screen}>
             <View style={styles.container}>
-                <View style={styles.header}>
-                    <Text style={globalStyles.title}>StreetAsk</Text>
-                    <Text style={globalStyles.subtitle}>Questions around you</Text>
-                    <Text style={styles.zoneText}>
-                        {currentZoneKey ? `Listening zone: ${currentZoneKey}` : 'Listening zone: --'}
-                    </Text>
-                    <Text style={styles.zoneText}>
-                        {`WebSocket: ${isConnected ? 'connected' : 'disconnected'}`}
-                    </Text>
+                {/* ─── Top Bar ─── */}
+                <View style={[styles.topBar, isNarrow && { paddingHorizontal: 12 }]}>
+                    <View style={styles.topBarLeft}>
+                        <View style={styles.logoBadge}>
+                            <Image
+                            source={require("../../../../assets/logo.png")}
+                            style={{ width: 18, height: 28 }}
+                            />
+                        </View>
+                        <Text style={styles.appName}>StreetAsk</Text>
+                    </View>
+
+                    <View style={styles.topBarRight}>
+                        <TouchableOpacity
+                            style={styles.iconBtn}
+                            activeOpacity={0.7}
+                            onPress={() => { setModalType('search'); setComingSoon(true); }}
+                        >
+                            <Ionicons name="search-outline" size={20} color="#a52019" />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7} onPress={() => { setModalType('notifications'); setComingSoon(true); }}>
+                            <Ionicons name="notifications-outline" size={20} color="#a52019" />
+                            {ephemeralNotification ? <View style={styles.badge} /> : null}
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.iconBtn, styles.logoutBtn]}
+                            onPress={logout}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons name="log-out-outline" size={20} color="#ef4444" />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
+                {/* ─── Notification banner ─── */}
                 {ephemeralNotification ? (
-                    <View style={styles.notificationsPanel}>
-                        <View style={styles.notificationItem}>
-                            <Text style={styles.notificationTitle}>{ephemeralNotification.title || 'Notification'}</Text>
-                            <Text style={styles.notificationText}>{ephemeralNotification.message || ''}</Text>
+                    <View style={styles.notifBanner}>
+                        <Ionicons name="information-circle" size={18} color="#92400e" />
+                        <View style={{ flex: 1, marginLeft: 8 }}>
+                            <Text style={styles.notifTitle}>{ephemeralNotification.title || 'Notification'}</Text>
+                            <Text style={styles.notifMsg}>{ephemeralNotification.message || ''}</Text>
                         </View>
                     </View>
                 ) : null}
 
-                <View style={styles.mapContainer}>
+                {/* ─── Map ─── */}
+                <View style={styles.mapWrapper}>
                     <MapComponent
-                        questions={questions}
-                        onQuestionPress={(questionId) =>
-                            navigation.navigate('QuestionThread', { questionId })
-                        }
+                        questions={showQuestions ? questions : []}
+                        onQuestionPress={(qId) => navigation.navigate('QuestionThread', { questionId: qId })}
                     />
                 </View>
 
-                <View style={styles.footer}>
-                    <CustomButton
-                        label="Ask a question"
-                        onPress={() => navigation.navigate('CreateQuestion')}
+                {/* ─── Footer ─── */}
+                <View style={[styles.footer, isNarrow && { paddingHorizontal: 14 }]}>
+                    <Text style={styles.toggleLabel}>Show Questions</Text>
+                    <Switch
+                        value={showQuestions}
+                        onValueChange={setShowQuestions}
+                        trackColor={{ false: '#d1d5db', true: '#a52019' }}
+                        thumbColor="#fff"
                     />
-                    
-                    <View style={{ height: 12 }} />
-
-                    <CustomButton label="Sign out" onPress={logout}/>
                 </View>
+
+                {/* ─── Floating "Ask" button ─── */}
+                <TouchableOpacity
+                    style={[styles.fab, isNarrow && { width: 220 }]}
+                    onPress={() => navigation.navigate('CreateQuestion')}
+                    activeOpacity={0.85}
+                >
+                    <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
+                    <Text style={styles.fabText}>Ask a question</Text>
+                </TouchableOpacity>
             </View>
+
+            <Modal
+                visible={comingSoon}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setComingSoon(false)}
+            >
+                <Pressable style={styles.modalOverlay} onPress={() => setComingSoon(false)}>
+                    <View style={styles.modalBox}>
+                        <Ionicons
+                            name={modalType === 'search' ? 'search' : 'notifications'}
+                            size={28}
+                            color="#a52019"
+                        />
+
+                        <Text style={styles.modalTitle}>Coming Soon</Text>
+
+                        <Text style={styles.modalMsg}>
+                            {modalType === 'search'
+                                ? 'Search is not available yet.'
+                                : 'Notifications are not available yet.'}
+                        </Text>
+
+                        <TouchableOpacity
+                            style={styles.modalBtn}
+                            onPress={() => setComingSoon(false)}
+                            activeOpacity={0.8}
+                        >
+                            <Text style={styles.modalBtnText}>OK</Text>
+                        </TouchableOpacity>
+                    </View>
+                </Pressable>
+            </Modal>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
+    screen: {
+        flex: 1,
+        backgroundColor: '#f3f4f6',
+    },
     container: {
         flex: 1,
-        padding: theme.spacing?.md || 16,
+        position: 'relative',
     },
-    header: {
-        marginBottom: 12,
+
+    /* ── Top Bar ── */
+    topBar: {
+        backgroundColor: '#fff',
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottomWidth: 1,
+        borderBottomColor: '#e5e7eb',
     },
-    zoneText: {
-        marginTop: 6,
-        color: theme.colors?.textSecondary || '#64748B',
-        fontSize: 12,
+    topBarLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
     },
-    notificationsPanel: {
-        gap: 8,
-        marginBottom: 12,
+    logoBadge: {
+        width: 38,
+        height: 38,
+        borderRadius: 10,
+        backgroundColor: '#a52019',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    notificationItem: {
-        backgroundColor: '#FFF7E6',
-        borderColor: '#FCD34D',
-        borderWidth: 1,
-        borderRadius: 8,
-        paddingVertical: 8,
-        paddingHorizontal: 10,
+    appName: {
+        fontSize: 17,
+        fontWeight: '800',
+        color: '#1f2937',
     },
-    notificationTitle: {
-        color: '#92400E',
+    topBarRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    iconBtn: {
+        width: 38,
+        height: 38,
+        borderRadius: 12,
+        backgroundColor: '#f3f4f6',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    logoutBtn: {
+        backgroundColor: '#fef2f2',
+    },
+    badge: {
+        position: 'absolute',
+        top: 6,
+        right: 6,
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#a52019',
+    },
+
+    /* ── Notification ── */
+    notifBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fffbeb',
+        borderBottomWidth: 1,
+        borderBottomColor: '#fcd34d',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+    },
+    notifTitle: {
         fontSize: 13,
         fontWeight: '700',
+        color: '#92400e',
     },
-    notificationText: {
-        marginTop: 2,
-        color: '#78350F',
+    notifMsg: {
         fontSize: 13,
+        color: '#78350f',
+        marginTop: 1,
     },
-    mapContainer: {
+
+    /* ── Map ── */
+    mapWrapper: {
         flex: 1,
-        backgroundColor: theme.colors?.surface || '#F5F5F5',
-        borderColor: theme.colors?.border || '#E0E0E0',
-        borderWidth: 2,
-        borderStyle: 'dashed',
-        borderRadius: theme.radius?.md || 12,
+        overflow: 'hidden',
+    },
+
+    /* ── Footer ── */
+    footer: {
+        backgroundColor: '#fff',
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderTopWidth: 1,
+        borderTopColor: '#e5e7eb',
+    },
+    toggleLabel: {
+        flex: 1,
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#a52019',
+    },
+
+    /* ── FAB ── */
+    fab: {
+        position: 'absolute',
+        bottom: 76,
+        alignSelf: 'center',
+        width: 260,
+        height: 52,
+        borderRadius: 26,
+        backgroundColor: '#a52019',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+        shadowColor: '#a52019',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 16,
+        elevation: 10,
+    },
+    fabText: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '700',
+    },
+
+    /* ── Coming Soon Modal ── */
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.35)',
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 24,
     },
-    placeholderText: {
-        color: theme.colors?.textSecondary || '#757575',
-        fontSize: 16,
+    modalBox: {
+        backgroundColor: '#fff',
+        borderRadius: 18,
+        paddingVertical: 28,
+        paddingHorizontal: 32,
+        alignItems: 'center',
+        width: 260,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.15,
+        shadowRadius: 24,
+        elevation: 12,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#1f2937',
+        marginTop: 10,
+    },
+    modalMsg: {
+        fontSize: 13,
+        color: '#6b7280',
+        marginTop: 6,
         textAlign: 'center',
-        padding: 20,
     },
-    footer: {
-        paddingBottom: 10,
-    }
+    modalBtn: {
+        marginTop: 18,
+        backgroundColor: '#a52019',
+        borderRadius: 10,
+        paddingVertical: 8,
+        paddingHorizontal: 28,
+    },
+    modalBtnText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
+    },
 });

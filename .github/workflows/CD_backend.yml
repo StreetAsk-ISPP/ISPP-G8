@@ -38,10 +38,11 @@ jobs:
           inlineScript: |
             az config set extension.use_dynamic_install=yes_without_prompt
             az containerapp update \
-              --name sprint1-backend \
+              --name sprint2-backend \
               --resource-group sprint1-recursos \
               --image streetask/backend:latest \
               --max-replicas 4 \
+              --min-replicas 1 \
               --set-env-vars \
                 SPRING_PROFILES_ACTIVE=mysql \
                 MYSQL_URL=${{ secrets.MYSQL_URL }} \
