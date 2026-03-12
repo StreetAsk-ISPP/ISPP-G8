@@ -1,4 +1,4 @@
-/* global self, clients */
+/* global clients */
 
 self.addEventListener('push', (event) => {
     let data = {};
