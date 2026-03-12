@@ -29,13 +29,13 @@ public class WebPushNotificationService implements PushNotificationService {
     private final PushDeviceRepository pushDeviceRepository;
     private final ObjectMapper objectMapper;
 
-    @Value("${streetask.web-push.subject}")
+    @Value("${streetask.web-push.subject:mailto:streetask.notifications@gmail.com}")
     private String subject;
 
-    @Value("${streetask.web-push.public-key}")
+    @Value("${streetask.web-push.public-key:BCzmM4oFvgyIoji531RyMjAMxwSEcgRHivSvGBtDeP93MssCAQdfnZZlZ-24mpUMGlCRselBYpHj1onx9eHwqcQ}")
     private String publicKey;
 
-    @Value("${streetask.web-push.private-key}")
+    @Value("${streetask.web-push.private-key:xS6S6T2vAkW3mr43IsHOeb6J1DzkXA2AxcGn88z7uq8}")
     private String privateKey;
 
     @Override
