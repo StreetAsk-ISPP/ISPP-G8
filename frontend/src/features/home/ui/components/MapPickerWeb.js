@@ -76,9 +76,9 @@ export default function MapPickerWeb({
         width: 16px;
         height: 16px;
         border-radius: 50%;
-        background: #93c5fd;
-        border: 3px solid #0a84ff;
-        box-shadow: 0 2px 8px rgba(10,132,255,0.45);
+        background: #a52019;
+        border: 3px solid #ffffff;
+        box-shadow: 0 0 0 3px rgba(165,32,25,0.35);
       "></div>`,
       iconSize: [16, 16],
       iconAnchor: [8, 8],
@@ -127,10 +127,11 @@ export default function MapPickerWeb({
           center={[activeLat, activeLng]}
           radius={radiusKm * 1000}
           pathOptions={{
-            color: '#D40000',
+            color: '#a52019',
             weight: 3,
-            fillColor: '#D40000',
-            fillOpacity: 0.18,
+            fillColor: '#a52019',
+            fillOpacity: 0.2,
+            dashArray: '6 4',
           }}
         />
       ) : null}

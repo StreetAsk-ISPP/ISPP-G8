@@ -202,11 +202,33 @@ export default function CreateQuestionScreen({ navigation }) {
                         />
                     </View>
                     <View style={styles.mapOverlay} pointerEvents="box-none">
-                        <View style={styles.mapHint} pointerEvents="none">
-                            <Text style={styles.mapHintText}>Tap on the map to pick a location</Text>
+                        <View style={styles.mapHint} pointerEvents="auto">
+                            <Text style={styles.mapHintText}>Tap on the map to pick the question location</Text>
                             <Text style={styles.mapHintCoords}>
                                 {tempLat?.toFixed?.(5) ?? '--'}, {tempLng?.toFixed?.(5) ?? '--'}
                             </Text>
+                            <Text style={styles.mapRadiusLabel}>Response radius (km)</Text>
+                            <View style={[styles.mapRadiusInputWrapper, focusedField === 'radiusMap' && styles.inputFocused]}>
+                                <Ionicons name="ellipse-outline" size={18} color="#9ca3af" style={{ marginRight: 8 }} />
+                                <TextInput
+                                    value={radiusInput}
+                                    onChangeText={onRadiusInputChange}
+                                    keyboardType={Platform.OS === 'ios' ? 'decimal-pad' : 'numeric'}
+                                    placeholder="1.0"
+                                    placeholderTextColor="#9ca3af"
+                                    style={styles.input}
+                                    onFocus={() => setFocusedField('radiusMap')}
+                                    onBlur={() => {
+                                        setFocusedField(null);
+                                        const parsed = parseRadiusKm(radiusInput);
+                                        if (parsed !== null) {
+                                            setRadiusInput(String(parsed));
+                                            setRadiusKm(parsed);
+                                        }
+                                    }}
+                                />
+                            </View>
+                            <Text style={styles.mapZoneText}>The red circle is the response area for this question.</Text>
                         </View>
                         <View style={styles.mapBtnRow} pointerEvents="auto">
                             <TouchableOpacity style={styles.mapCancelBtn} onPress={cancelMapPick} activeOpacity={0.8}>
@@ -304,29 +326,7 @@ export default function CreateQuestionScreen({ navigation }) {
                             <Ionicons name="pin" size={14} color="#6b7280" />
                             <Text style={styles.selectedText} numberOfLines={1}>Selected: {selectedDisplay}</Text>
                         </View>
-
-                        <Text style={styles.sectionLabel}>Question Radius (km)</Text>
-                        <View style={[styles.inputWrapper, focusedField === 'radius' && styles.inputFocused]}>
-                            <Ionicons name="ellipse-outline" size={18} color="#9ca3af" style={{ marginRight: 8 }} />
-                            <TextInput
-                                value={radiusInput}
-                                onChangeText={onRadiusInputChange}
-                                keyboardType={Platform.OS === 'ios' ? 'decimal-pad' : 'numeric'}
-                                placeholder="1.0"
-                                placeholderTextColor="#9ca3af"
-                                style={styles.input}
-                                onFocus={() => setFocusedField('radius')}
-                                onBlur={() => {
-                                    setFocusedField(null);
-                                    const parsed = parseRadiusKm(radiusInput);
-                                    if (parsed !== null) {
-                                        setRadiusInput(String(parsed));
-                                        setRadiusKm(parsed);
-                                    }
-                                }}
-                            />
-                        </View>
-                        <Text style={styles.helperText}>Only users inside this radius can answer.</Text>
+                        <Text style={styles.helperText}>Radius: {radiusKm} km. You can edit it in Pick on map.</Text>
 
                         {/* Topic */}
                         <Text style={styles.sectionLabel}>Topic *</Text>
@@ -390,6 +390,9 @@ const styles = StyleSheet.create({
     mapHint: { backgroundColor: 'rgba(255,255,255,0.95)', padding: 16, borderRadius: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 12, elevation: 6 },
     mapHintText: { fontWeight: '700', fontSize: 15, color: '#1f2937', textAlign: 'center' },
     mapHintCoords: { fontSize: 13, color: '#6b7280', textAlign: 'center', marginTop: 6 },
+    mapRadiusLabel: { fontSize: 12, color: '#374151', fontWeight: '700', marginTop: 10, marginBottom: 6, textAlign: 'center' },
+    mapRadiusInputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#e5e7eb', borderRadius: 12, paddingHorizontal: 12, height: 42 },
+    mapZoneText: { fontSize: 12, color: '#a52019', textAlign: 'center', marginTop: 8, fontWeight: '600' },
     mapBtnRow: { flexDirection: 'row', gap: 12 },
     mapCancelBtn: { flex: 1, backgroundColor: '#fff', borderRadius: 14, paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6, elevation: 3 },
     mapOkBtn: { flex: 1, backgroundColor: '#667eea', borderRadius: 14, paddingVertical: 14, alignItems: 'center', shadowColor: '#667eea', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 5 },
