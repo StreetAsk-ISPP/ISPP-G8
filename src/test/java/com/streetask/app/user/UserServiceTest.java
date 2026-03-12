@@ -153,6 +153,25 @@ class UserServiceTest {
         assertEquals(TEST_EMAIL, currentUser.getEmail());
     }
 
+    @Test
+    @DisplayName("findCurrentUser should throw ResourceNotFoundException when nobody is authenticated")
+    void findCurrentUser_shouldThrowResourceNotFoundExceptionWhenAuthenticationIsMissing() {
+        SecurityContextHolder.clearContext();
+
+        assertThrows(ResourceNotFoundException.class, () -> userService.findCurrentUser());
+        verify(userRepository, never()).findByEmail(anyString());
+    }
+
+    @Test
+    @DisplayName("findCurrentUser should throw ResourceNotFoundException when authenticated user is missing in repository")
+    void findCurrentUser_shouldThrowResourceNotFoundExceptionWhenRepositoryUserIsMissing() {
+        setupSecurityContext(TEST_EMAIL);
+        when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> userService.findCurrentUser());
+        verify(userRepository).findByEmail(TEST_EMAIL);
+    }
+
     // ================= EXISTS =================
 
     @Test
@@ -184,6 +203,23 @@ class UserServiceTest {
 
         assertNotNull(result);
         verify(userRepository).findAll();
+    }
+
+    @Test
+    void findAllByAuthority_shouldReturnFilteredUsersWithReputation() {
+        UUID regularUserId = UUID.randomUUID();
+        User regularUser = createTestUserWithAuthority(regularUserId, "regular@example.com", "regular", "USER");
+
+        when(userRepository.findAllByAuthority("USER")).thenReturn(Collections.singletonList(regularUser));
+        when(answerRepository.aggregateVotesByUserIds(eq(List.of(regularUserId))))
+                .thenReturn(Collections.singletonList(new Object[] { regularUserId, 4L, 1L }));
+
+        List<User> result = (List<User>) userService.findAllByAuthority("USER");
+
+        assertEquals(1, result.size());
+        assertEquals(7, result.get(0).getReputation());
+        verify(userRepository).findAllByAuthority("USER");
+        verify(answerRepository).aggregateVotesByUserIds(eq(List.of(regularUserId)));
     }
 
     // ================= UPDATE =================
@@ -310,7 +346,7 @@ class UserServiceTest {
         when(questionRepository.countByCreatorId(testUserId)).thenReturn(5L);
         when(answerRepository.countByUserId(testUserId)).thenReturn(10L);
         when(answerRepository.aggregateVotesByUserIds(anyCollection()))
-                .thenReturn(Collections.singletonList(new Object[]{testUserId, 8L, 2L}));
+                .thenReturn(Collections.singletonList(new Object[] { testUserId, 8L, 2L }));
 
         Map<String, Object> stats = userService.getUserStats(testUserId);
 
@@ -456,7 +492,7 @@ class UserServiceTest {
         return user;
     }
 
-    private User createTestUser(UUID id,String email,String userName){
+    private User createTestUser(UUID id, String email, String userName) {
 
         User user = new User();
         user.setId(id);
