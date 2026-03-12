@@ -255,7 +255,7 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                     {/* Marcador de tu ubicación */}
                     <Marker
                         position={[location.latitude, location.longitude]}
-                        icon={createCustomIcon('#007AFF')}
+                        icon={createCustomIcon('#dc2626')}
                     >
                         <Popup>
                             <div style={{ fontSize: '12px' }}>
