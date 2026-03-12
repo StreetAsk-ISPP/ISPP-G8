@@ -7,13 +7,21 @@ import { Ionicons } from '@expo/vector-icons';
 import apiClient from '../../../shared/services/http/apiClient';
 import { crossAlert } from '../../../shared/utils/crossAlert';
 import MapPickerWeb from '../../home/ui/components/MapPickerWeb';
+import { useAuth } from '../../../app/providers/AuthProvider';
 
 const addHoursISO = (hours) => {
     const nowMs = Date.now();
     return new Date(nowMs + hours * 3600000).toISOString();
 };
 
+const parseRadiusKm = (rawValue) => {
+    const normalized = String(rawValue ?? '').replace(',', '.').trim();
+    const value = Number(normalized);
+    return Number.isFinite(value) && value > 0 ? value : null;
+};
+
 export default function CreateQuestionScreen({ navigation }) {
+    const { user } = useAuth();
     const { width } = useWindowDimensions();
     const isNarrow = width < 500;
 
@@ -21,7 +29,8 @@ export default function CreateQuestionScreen({ navigation }) {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const hours = 2;
-    const [radiusKm] = useState(1);
+    const [radiusKm, setRadiusKm] = useState(1);
+    const [radiusInput, setRadiusInput] = useState('1');
     const [latitude, setLatitude] = useState(null);
     const [longitude, setLongitude] = useState(null);
     const [searching, setSearching] = useState(false);
@@ -34,6 +43,27 @@ export default function CreateQuestionScreen({ navigation }) {
     const [userLng, setUserLng] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [focusedField, setFocusedField] = useState(null);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadUserAnswerRadius = async () => {
+            if (!user?.id) return;
+            try {
+                const response = await apiClient.get(`/api/v1/users/${user.id}`);
+                const value = Number(response?.data?.visibilityRadiusKm);
+                if (isMounted && Number.isFinite(value) && value > 0) {
+                    setRadiusKm(value);
+                    setRadiusInput(String(value));
+                }
+            } catch (e) {
+                console.warn('Unable to load user visibility radius:', e?.message || e);
+            }
+        };
+
+        loadUserAnswerRadius();
+        return () => { isMounted = false; };
+    }, [user?.id]);
 
     useEffect(() => {
         if (Platform.OS === 'web') {
@@ -54,7 +84,10 @@ export default function CreateQuestionScreen({ navigation }) {
         }
     }, []);
 
-    const canPost = useMemo(() => title.trim() && content.trim() && !isSubmitting, [title, content, isSubmitting]);
+    const canPost = useMemo(
+        () => title.trim() && content.trim() && parseRadiusKm(radiusInput) !== null && !isSubmitting,
+        [title, content, radiusInput, isSubmitting]
+    );
 
     const searchAddress = async () => {
         const q = place.trim();
@@ -115,14 +148,27 @@ export default function CreateQuestionScreen({ navigation }) {
         setPickMode(false);
     };
 
+    const onRadiusInputChange = (text) => {
+        setRadiusInput(text);
+        const parsed = parseRadiusKm(text);
+        if (parsed !== null) {
+            setRadiusKm(parsed);
+        }
+    };
+
     const onPost = async () => {
         if (!canPost) return;
+        const parsedRadiusKm = parseRadiusKm(radiusInput);
+        if (parsedRadiusKm === null) {
+            crossAlert('Invalid radius', 'Please enter a radius greater than 0 km.');
+            return;
+        }
         setIsSubmitting(true);
         try {
             const payload = {
                 title: title.trim(),
                 content: content.trim(),
-                radiusKm: Number(radiusKm),
+                radiusKm: parsedRadiusKm,
                 expiresAt: addHoursISO(hours),
                 location: { latitude, longitude },
             };
@@ -258,7 +304,29 @@ export default function CreateQuestionScreen({ navigation }) {
                             <Ionicons name="pin" size={14} color="#6b7280" />
                             <Text style={styles.selectedText} numberOfLines={1}>Selected: {selectedDisplay}</Text>
                         </View>
-                        <Text style={styles.helperText}>Answer radius: {radiusKm} km (fixed in free plan)</Text>
+
+                        <Text style={styles.sectionLabel}>Question Radius (km)</Text>
+                        <View style={[styles.inputWrapper, focusedField === 'radius' && styles.inputFocused]}>
+                            <Ionicons name="ellipse-outline" size={18} color="#9ca3af" style={{ marginRight: 8 }} />
+                            <TextInput
+                                value={radiusInput}
+                                onChangeText={onRadiusInputChange}
+                                keyboardType={Platform.OS === 'ios' ? 'decimal-pad' : 'numeric'}
+                                placeholder="1.0"
+                                placeholderTextColor="#9ca3af"
+                                style={styles.input}
+                                onFocus={() => setFocusedField('radius')}
+                                onBlur={() => {
+                                    setFocusedField(null);
+                                    const parsed = parseRadiusKm(radiusInput);
+                                    if (parsed !== null) {
+                                        setRadiusInput(String(parsed));
+                                        setRadiusKm(parsed);
+                                    }
+                                }}
+                            />
+                        </View>
+                        <Text style={styles.helperText}>Only users inside this radius can answer.</Text>
 
                         {/* Topic */}
                         <Text style={styles.sectionLabel}>Topic *</Text>

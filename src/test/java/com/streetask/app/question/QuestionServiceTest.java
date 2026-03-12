@@ -60,6 +60,7 @@ class QuestionServiceTest {
 		testCreator = new RegularUser();
 		testCreator.setId(UUID.randomUUID());
 		testCreator.setEmail(TEST_EMAIL);
+		testCreator.setVisibilityRadiusKm(10.0f);
 
 		testQuestion = new Question();
 		testQuestion.setId(testId);
@@ -146,6 +147,51 @@ class QuestionServiceTest {
 		assertThat(saved.getActive()).isFalse();
 		assertThat(saved.getAnswerCount()).isEqualTo(5);
 		assertThat(saved.getExpiresAt()).isEqualTo(specificExpiresAt);
+	}
+
+	@Test
+	void saveQuestion_shouldUseRequestedRadiusWhenProvided() {
+		Question newQuestion = new Question();
+		newQuestion.setTitle("Radius test");
+		newQuestion.setContent("Should use requested radius");
+		newQuestion.setRadiusKm(2.0f);
+
+		testCreator.setVisibilityRadiusKm(7.5f);
+		when(questionRepository.save(any(Question.class))).thenReturn(newQuestion);
+
+		Question saved = questionService.saveQuestion(newQuestion);
+
+		assertThat(saved.getRadiusKm()).isEqualTo(2.0f);
+	}
+
+	@Test
+	void saveQuestion_shouldUseCreatorVisibilityRadiusWhenRequestedRadiusIsMissing() {
+		Question newQuestion = new Question();
+		newQuestion.setTitle("Radius fallback");
+		newQuestion.setContent("Should use creator visibility radius");
+		newQuestion.setRadiusKm(null);
+
+		testCreator.setVisibilityRadiusKm(3.0f);
+		when(questionRepository.save(any(Question.class))).thenReturn(newQuestion);
+
+		Question saved = questionService.saveQuestion(newQuestion);
+
+		assertThat(saved.getRadiusKm()).isEqualTo(3.0f);
+	}
+
+	@Test
+	void saveQuestion_shouldSetDefaultRadiusWhenNoRadiusProvided() {
+		Question newQuestion = new Question();
+		newQuestion.setTitle("Default radius");
+		newQuestion.setContent("Should fallback to 1km");
+		newQuestion.setRadiusKm(null);
+
+		testCreator.setVisibilityRadiusKm(null);
+		when(questionRepository.save(any(Question.class))).thenReturn(newQuestion);
+
+		Question saved = questionService.saveQuestion(newQuestion);
+
+		assertThat(saved.getRadiusKm()).isEqualTo(1.0f);
 	}
 
 	// =============== FIND QUESTION TESTS ===============

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
     View,
     Text,
@@ -16,10 +16,6 @@ import { CountdownText } from './CountdownText';
 // Para web: importar Leaflet y CSS
 let MapContainer, TileLayer, Marker, Popup;
 let L;
-let Circle;
-
-// Halo visual around current user on the map (in meters).
-const USER_LOCATION_RING_RADIUS_METERS = 150;
 
 if (Platform.OS === 'web') {
     try {
@@ -28,7 +24,6 @@ if (Platform.OS === 'web') {
         TileLayer = require('react-leaflet').TileLayer;
         Marker = require('react-leaflet').Marker;
         Popup = require('react-leaflet').Popup;
-        Circle = require('react-leaflet').Circle;
         L = require('leaflet');
     } catch (e) {
         console.error('Error loading Leaflet:', e);
@@ -90,6 +85,23 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
     const [publishing, setPublishing] = useState(false);
     const mapRef = useRef(null);
     const [visibleQuestions, setVisibleQuestions] = useState([]);
+    const userLocationIcon = useMemo(() => {
+        if (!L) return undefined;
+        return L.divIcon({
+            className: '',
+            html: `<div style="
+                width: 16px;
+                height: 16px;
+                border-radius: 999px;
+                background: #1d9bf0;
+                border: 3px solid #ffffff;
+                box-shadow: 0 0 0 3px rgba(29,155,240,0.35);
+            "></div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+            popupAnchor: [0, -10],
+        });
+    }, []);
 
     useEffect(() => {
         let locationSubscription;
@@ -244,22 +256,15 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
-                    {Circle && (
-                        <Circle
-                            center={[location.latitude, location.longitude]}
-                            radius={USER_LOCATION_RING_RADIUS_METERS}
-                            pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.08, weight: 2 }}
-                        />
-                    )}
 
                     {/* Marcador de tu ubicación */}
                     <Marker
                         position={[location.latitude, location.longitude]}
-                        icon={createCustomIcon('#007AFF')}
+                        icon={userLocationIcon}
                     >
                         <Popup>
                             <div style={{ fontSize: '12px' }}>
-                                <strong>Mi ubicación</strong><br />
+                                <strong>Mi ubicación actual</strong><br />
                                 {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}<br />
                                 Precisión: {location.accuracy?.toFixed(2) || 'N/A'} m
                             </div>
@@ -269,6 +274,7 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                     {/* Question Markers */}
                     {(Array.isArray(visibleQuestions) ? visibleQuestions : []).map((q) => {
                         const coords = getQuestionCoords(q);
+                        if (!coords) return null;
                         const { lat, lng } = coords;
 
                         return (

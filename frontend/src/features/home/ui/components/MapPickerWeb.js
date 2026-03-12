@@ -34,15 +34,28 @@ function ClickHandler({ onPick, enabled }) {
   return null;
 }
 
-function Recenter({ lat, lng }) {
+function Recenter({ lat, lng, zoom }) {
   const map = useMap();
   useEffect(() => {
     if (typeof lat === 'number' && typeof lng === 'number') {
-      map.setView([lat, lng], map.getZoom(), { animate: true });
+      map.setView([lat, lng], zoom, { animate: true });
     }
-  }, [lat, lng, map]);
+  }, [lat, lng, map, zoom]);
   return null;
 }
+
+const getZoomForRadiusKm = (radiusKm) => {
+  const r = Number(radiusKm);
+  if (!Number.isFinite(r) || r <= 0) return 15;
+  if (r <= 0.3) return 16;
+  if (r <= 0.8) return 15;
+  if (r <= 1.5) return 14;
+  if (r <= 3) return 13;
+  if (r <= 6) return 12;
+  if (r <= 12) return 11;
+  if (r <= 25) return 10;
+  return 9;
+};
 
 export default function MapPickerWeb({
   latitude,
@@ -55,20 +68,20 @@ export default function MapPickerWeb({
   tempLat,
   tempLng,
 }) {
-  const redDotIcon = useMemo(() => {
+  const userLocationIcon = useMemo(() => {
     if (!L) return null;
     return L.divIcon({
       className: '',
       html: `<div style="
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         border-radius: 50%;
-        background: #D40000;
-        border: 3px solid white;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+        background: #93c5fd;
+        border: 3px solid #0a84ff;
+        box-shadow: 0 2px 8px rgba(10,132,255,0.45);
       "></div>`,
-      iconSize: [14, 14],
-      iconAnchor: [7, 7],
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
     });
   }, []);
 
@@ -81,13 +94,14 @@ export default function MapPickerWeb({
 
   const activeLat = pickEnabled && typeof tempLat === 'number' ? tempLat : baseLat;
   const activeLng = pickEnabled && typeof tempLng === 'number' ? tempLng : baseLng;
+  const zoom = getZoomForRadiusKm(radiusKm);
 
   if (typeof activeLat !== 'number' || typeof activeLng !== 'number') return null;
 
   return (
     <MapContainer
       center={[activeLat, activeLng]}
-      zoom={15}
+      zoom={zoom}
       style={{ width: '100%', height: '100%', zIndex: 1 }}
     >
       <TileLayer
@@ -95,11 +109,11 @@ export default function MapPickerWeb({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      <Recenter lat={activeLat} lng={activeLng} />
+      <Recenter lat={activeLat} lng={activeLng} zoom={zoom} />
       <ClickHandler enabled={pickEnabled} onPick={onPick} />
 
-      {typeof userLat === 'number' && typeof userLng === 'number' && redDotIcon ? (
-        <Marker position={[userLat, userLng]} icon={redDotIcon} interactive={false} />
+      {typeof userLat === 'number' && typeof userLng === 'number' && userLocationIcon ? (
+        <Marker position={[userLat, userLng]} icon={userLocationIcon} interactive={false} />
       ) : null}
 
       {pickEnabled && typeof tempLat === 'number' && typeof tempLng === 'number' ? (
