@@ -148,7 +148,7 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                 locationSubscription.remove();
             }
         };
-    }, []);
+    }, [onLocationChange]);
 
     const loadPublicLocations = async () => {
         try {

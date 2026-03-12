@@ -29,19 +29,6 @@ export default function HomeScreen({ navigation }) {
     const isFocused = useIsFocused();
     const latestRequestRef = useRef(0);
 
-    useEffect(() => {
-        async function ensureNotificationPermission() {
-            if (Platform.OS !== 'web') return;
-            if (typeof window === 'undefined' || !('Notification' in window)) return;
-
-            if (Notification.permission === 'default') {
-                const result = await Notification.requestPermission();
-            }
-        }
-
-        ensureNotificationPermission();
-    }, []);
-
     const loadQuestions = useCallback(async () => {
         const requestId = ++latestRequestRef.current;
         try {
