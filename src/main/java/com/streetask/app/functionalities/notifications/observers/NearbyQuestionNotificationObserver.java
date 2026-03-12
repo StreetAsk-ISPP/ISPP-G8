@@ -8,6 +8,8 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.streetask.app.functionalities.notifications.events.QuestionCreatedEvent;
+import com.streetask.app.functionalities.notifications.push.dto.PushMessage;
+import com.streetask.app.functionalities.notifications.push.service.PushNotificationService;
 import com.streetask.app.functionalities.notifications.realtime.FrontendNotificationGateway;
 import com.streetask.app.functionalities.notifications.realtime.FrontendNotificationMessage;
 import com.streetask.app.functionalities.notifications.realtime.ZoneResolver;
@@ -25,12 +27,14 @@ public class NearbyQuestionNotificationObserver {
     private final QuestionRepository questionRepository;
     private final ZoneResolver zoneResolver;
     private final FrontendNotificationGateway frontendNotificationGateway;
+    private final PushNotificationService pushNotificationService;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onQuestionCreated(QuestionCreatedEvent event) {
         Question question = questionRepository.findById(event.questionId()).orElse(null);
         if (question == null || question.getLocation() == null) {
-            log.info("Skipping NEARBY_QUESTION notification: question or location is null. questionId={}", event.questionId());
+            log.info("Skipping NEARBY_QUESTION notification: question or location is null. questionId={}",
+                    event.questionId());
             return;
         }
 
@@ -64,6 +68,16 @@ public class NearbyQuestionNotificationObserver {
         for (String zoneKey : zoneKeys) {
             frontendNotificationGateway.sendToZone(zoneKey, payload);
         }
+
+        PushMessage pushMessage = PushMessage.builder()
+                .title("New question in your area")
+                .body(question.getTitle())
+                .type("NEARBY_QUESTION")
+                .referenceId(question.getId())
+                .referenceType("QUESTION")
+                .build();
+
+        pushNotificationService.sendToZones(zoneKeys, pushMessage);
 
         log.info("Published NEARBY_QUESTION notification for questionId={} to zones={}", question.getId(), zoneKeys);
     }
