@@ -18,8 +18,8 @@ let MapContainer, TileLayer, Marker, Popup;
 let L;
 let Circle;
 
-// 150m a lo mejor es poco
-export const RADIO = 150;
+// Halo visual around current user on the map (in meters).
+const USER_LOCATION_RING_RADIUS_METERS = 150;
 
 if (Platform.OS === 'web') {
     try {
@@ -247,7 +247,7 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                     {Circle && (
                         <Circle
                             center={[location.latitude, location.longitude]}
-                            radius={RADIO}
+                            radius={USER_LOCATION_RING_RADIUS_METERS}
                             pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.08, weight: 2 }}
                         />
                     )}

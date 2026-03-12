@@ -258,7 +258,7 @@ export default function CreateQuestionScreen({ navigation }) {
                             <Ionicons name="pin" size={14} color="#6b7280" />
                             <Text style={styles.selectedText} numberOfLines={1}>Selected: {selectedDisplay}</Text>
                         </View>
-                        <Text style={styles.helperText}>Radius will be calculated automatically</Text>
+                        <Text style={styles.helperText}>Answer radius: {radiusKm} km (fixed in free plan)</Text>
 
                         {/* Topic */}
                         <Text style={styles.sectionLabel}>Topic *</Text>
