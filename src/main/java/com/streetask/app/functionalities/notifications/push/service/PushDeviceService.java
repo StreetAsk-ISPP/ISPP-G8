@@ -26,18 +26,20 @@ public class PushDeviceService {
 
     @Transactional
     public void registerDevice(RegisterPushDeviceRequest request) {
-        validateExpoPushToken(request.getPushToken());
+        validateSubscription(request);
 
         String currentUserEmail = getCurrentUserEmail();
         RegularUser user = regularUserRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
 
-        PushDevice device = pushDeviceRepository.findByPushToken(request.getPushToken())
+        PushDevice device = pushDeviceRepository.findByEndpoint(request.getEndpoint())
                 .orElseGet(PushDevice::new);
 
         device.setUser(user);
-        device.setPushToken(request.getPushToken());
-        device.setPlatform(request.getPlatform());
+        device.setEndpoint(request.getEndpoint());
+        device.setP256dh(request.getP256dh());
+        device.setAuth(request.getAuth());
+        device.setZoneKey(request.getZoneKey());
         device.setNotificationsEnabled(true);
         device.setLastSeenAt(LocalDateTime.now());
 
@@ -46,9 +48,9 @@ public class PushDeviceService {
 
     @Transactional
     public void updateDeviceZone(UpdatePushDeviceZoneRequest request) {
-        validateExpoPushToken(request.getPushToken());
+        validateEndpoint(request.getEndpoint());
 
-        PushDevice device = pushDeviceRepository.findByPushToken(request.getPushToken())
+        PushDevice device = pushDeviceRepository.findByEndpoint(request.getEndpoint())
                 .orElseThrow(() -> new IllegalArgumentException("Push device not found"));
 
         String currentUserEmail = getCurrentUserEmail();
@@ -65,9 +67,9 @@ public class PushDeviceService {
 
     @Transactional
     public void unregisterDevice(UnregisterPushDeviceRequest request) {
-        validateExpoPushToken(request.getPushToken());
+        validateEndpoint(request.getEndpoint());
 
-        PushDevice device = pushDeviceRepository.findByPushToken(request.getPushToken())
+        PushDevice device = pushDeviceRepository.findByEndpoint(request.getEndpoint())
                 .orElseThrow(() -> new IllegalArgumentException("Push device not found"));
 
         String currentUserEmail = getCurrentUserEmail();
@@ -82,13 +84,21 @@ public class PushDeviceService {
         pushDeviceRepository.save(device);
     }
 
-    private void validateExpoPushToken(String pushToken) {
-        if (pushToken == null || pushToken.isBlank()) {
-            throw new IllegalArgumentException("Push token is required");
+    private void validateSubscription(RegisterPushDeviceRequest request) {
+        validateEndpoint(request.getEndpoint());
+
+        if (request.getP256dh() == null || request.getP256dh().isBlank()) {
+            throw new IllegalArgumentException("p256dh is required");
         }
 
-        if (!pushToken.startsWith("ExponentPushToken[") && !pushToken.startsWith("ExpoPushToken[")) {
-            throw new IllegalArgumentException("Invalid Expo push token");
+        if (request.getAuth() == null || request.getAuth().isBlank()) {
+            throw new IllegalArgumentException("auth is required");
+        }
+    }
+
+    private void validateEndpoint(String endpoint) {
+        if (endpoint == null || endpoint.isBlank()) {
+            throw new IllegalArgumentException("Endpoint is required");
         }
     }
 

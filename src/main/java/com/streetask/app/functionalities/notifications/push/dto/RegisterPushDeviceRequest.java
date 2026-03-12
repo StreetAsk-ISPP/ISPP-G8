@@ -7,6 +7,8 @@ import lombok.Setter;
 @Setter
 public class RegisterPushDeviceRequest {
 
-    private String pushToken;
-    private String platform;
+    private String endpoint;
+    private String p256dh;
+    private String auth;
+    private String zoneKey;
 }

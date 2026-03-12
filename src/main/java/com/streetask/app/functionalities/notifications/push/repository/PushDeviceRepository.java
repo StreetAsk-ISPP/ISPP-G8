@@ -11,7 +11,7 @@ import com.streetask.app.functionalities.notifications.push.model.PushDevice;
 
 public interface PushDeviceRepository extends JpaRepository<PushDevice, UUID> {
 
-    Optional<PushDevice> findByPushToken(String pushToken);
+    Optional<PushDevice> findByEndpoint(String endpoint);
 
     List<PushDevice> findByZoneKeyInAndNotificationsEnabledTrue(Set<String> zoneKeys);
 

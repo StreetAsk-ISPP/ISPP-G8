@@ -23,11 +23,14 @@ public class PushDevice extends BaseEntity {
     @JoinColumn(name = "user_id")
     private RegularUser user;
 
-    @Column(nullable = false, unique = true, length = 500)
-    private String pushToken;
+    @Column(nullable = false, unique = true, length = 1000)
+    private String endpoint;
 
-    @Column(length = 30)
-    private String platform;
+    @Column(nullable = false, length = 512)
+    private String p256dh;
+
+    @Column(nullable = false, length = 512)
+    private String auth;
 
     @Column(length = 100)
     private String zoneKey;

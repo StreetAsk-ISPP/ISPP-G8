@@ -7,5 +7,5 @@ import lombok.Setter;
 @Setter
 public class UnregisterPushDeviceRequest {
 
-    private String pushToken;
+    private String endpoint;
 }

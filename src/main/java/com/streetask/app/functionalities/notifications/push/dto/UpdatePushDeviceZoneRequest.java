@@ -7,6 +7,6 @@ import lombok.Setter;
 @Setter
 public class UpdatePushDeviceZoneRequest {
 
-    private String pushToken;
+    private String endpoint;
     private String zoneKey;
 }
