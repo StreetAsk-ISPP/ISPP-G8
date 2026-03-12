@@ -82,7 +82,7 @@ const getQuestionCoords = (q) => {
     return { lat, lng };
 };
 
-export default function MapComponent({ questions = [], onQuestionPress }) {
+export default function MapComponent({ questions = [], onQuestionPress, onLocationChange }) {
     const [location, setLocation] = useState(null);
     const [publicLocations, setPublicLocations] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -109,6 +109,11 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                 });
 
                 setLocation(initialLocation.coords);
+
+                if (typeof onLocationChange === 'function') {
+                    onLocationChange(initialLocation.coords);
+                }
+
                 setLoading(false);
 
                 await loadPublicLocations();
@@ -123,6 +128,10 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                         },
                         (newLocation) => {
                             setLocation(newLocation.coords);
+
+                            if (typeof onLocationChange === 'function') {
+                                onLocationChange(newLocation.coords);
+                            }
                         }
                     );
                 }
@@ -269,6 +278,7 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                     {/* Question Markers */}
                     {(Array.isArray(visibleQuestions) ? visibleQuestions : []).map((q) => {
                         const coords = getQuestionCoords(q);
+                        if (!coords) return null;
                         const { lat, lng } = coords;
 
                         return (
