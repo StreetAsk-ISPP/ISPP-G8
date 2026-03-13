@@ -8,7 +8,26 @@ export const CountdownText = ({ expiresAt, onExpire }) => {
     useEffect(() => {
         const updateTime = () => {
             const now = Date.now();
-            const expiration = new Date(expiresAt).getTime();
+
+            // 1. Normalización inicial
+            let normalizedDate = typeof expiresAt === 'string'
+                ? expiresAt.trim().replace(' ', 'T')
+                : expiresAt;
+
+            // 2. CORRECCIÓN DE ZONA HORARIA (UTC)
+            // Si es un string y no termina en 'Z' ni tiene offset (+/-), le añadimos la Z para forzar UTC
+            if (typeof normalizedDate === 'string' && !normalizedDate.includes('Z') && !normalizedDate.match(/[+-]\d{2}:\d{2}$/)) {
+                normalizedDate += 'Z';
+            }
+
+            const expiration = new Date(normalizedDate).getTime();
+
+            if (isNaN(expiration)) {
+                console.warn('CountdownText: Formato de fecha inválido proporcionado en expiresAt:', expiresAt);
+                setTimeLeft('Error');
+                return;
+            }
+
             const diff = expiration - now;
 
             if (diff <= 0) {
@@ -30,10 +49,10 @@ export const CountdownText = ({ expiresAt, onExpire }) => {
         return () => clearInterval(timer);
     }, [expiresAt, onExpire]);
 
-    if (timeLeft === 'Expired') return null;
+    if (timeLeft === 'Expired' || timeLeft === 'Error') return null;
 
     return (
-        <Text style={[styles.timerText, isUrgent ? styles.urgent : styles.timerText]}>
+        <Text style={[styles.timerText, isUrgent ? styles.urgent : null]}>
             ⏱️ {timeLeft}
         </Text>
     );
@@ -47,6 +66,5 @@ const styles = StyleSheet.create({
     },
     urgent: {
         color: '#D40000',
-        fontWeight: '900',
     }
 });
