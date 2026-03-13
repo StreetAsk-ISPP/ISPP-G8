@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
         height: 50,
     },
     inputFocused: {
-        borderColor: '#667eea',
+        borderColor: '#dc2626',
         backgroundColor: '#fff',
     },
     inputIcon: {
@@ -220,12 +220,12 @@ const styles = StyleSheet.create({
         marginTop: 14,
     },
     primaryBtn: {
-        backgroundColor: '#667eea',
+        backgroundColor: '#dc2626',
         borderRadius: 14,
         paddingVertical: 16,
         alignItems: 'center',
         marginTop: 28,
-        shadowColor: '#667eea',
+        shadowColor: '#b91c1c',
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.25,
         shadowRadius: 16,
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     },
     forgotText: {
         fontSize: 13,
-        color: '#667eea',
+        color: '#b91c1c',
         fontWeight: '500',
     },
     divider: {

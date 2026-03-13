@@ -4,6 +4,7 @@ import {
     KeyboardAvoidingView, Platform, Pressable, ActivityIndicator,
     TouchableOpacity, useWindowDimensions,
 } from 'react-native';
+import { theme } from '../../../shared/ui/theme/theme';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import apiClient from '../../../shared/services/http/apiClient';
@@ -156,7 +157,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
         const content = draft.trim();
         if (!content || !question) return;
 
-        const optimistic = { id: `tmp-${Date.now()}`, author: '@me', minutesAgo: 0, text: content, likes: 0, dislikes: 0, color: '#dbeafe', optimistic: true };
+        const optimistic = { id: `tmp-${Date.now()}`, author: '@me', minutesAgo: 0, text: content, likes: 0, dislikes: 0, color: '#47d22b', optimistic: true };
         setAnswers((p) => [...p, optimistic]);
         setDraft('');
         inputRef.current?.blur();
@@ -201,7 +202,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
 
             const saved = res.data;
             setAnswers((p) => p.map((a) => a.id === optimistic.id ? {
-                id: saved.id, author: saved.user?.userName || saved.user?.username || 'Anonymous', color: '#dbeafe',
+                id: saved.id, author: saved.user?.userName || saved.user?.username || 'Anonymous', color: theme.colors.primary,
                 text: saved.content, likes: saved.upvotes || 0, dislikes: saved.downvotes || 0,
                 minutesAgo: 0, userId: saved.user?.id, isVerified: saved.isVerified,
             } : a));
@@ -358,7 +359,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
             >
                 {loading && (
                     <View style={styles.center}>
-                        <ActivityIndicator size="large" color="#667eea" />
+                        <ActivityIndicator size="large" color={theme.colors.accent} />
                     </View>
                 )}
 
@@ -379,7 +380,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
                                     onPress={() => navigation.goBack()}
                                     activeOpacity={0.7}
                                 >
-                                    <Ionicons name="chevron-back" size={22} color="#667eea" />
+                                    <Ionicons name="chevron-back" size={22} color="#b91c1c" />
                                 </TouchableOpacity>
                             )}
 
@@ -396,11 +397,11 @@ export default function QuestionThreadScreen({ route, navigation }) {
 
                             <View style={styles.chips}>
                                 <View style={styles.chip}>
-                                    <Ionicons name="chatbubbles-outline" size={14} color="#667eea" />
+                                    <Ionicons name="chatbubbles-outline" size={14} color="#f59e0b" />
                                     <Text style={styles.chipVal}>{answers.length}</Text>
                                 </View>
                                 <View style={styles.chip}>
-                                    <Ionicons name="time-outline" size={14} color="#f59e0b" />
+                                    <Ionicons name="time-outline" size={14} color="#1f2937" />
                                     <Text style={styles.chipVal}>{formatHms(timeLeft)}</Text>
                                 </View>
                             </View>
@@ -498,7 +499,7 @@ const styles = StyleSheet.create({
         width: 42,
         height: 42,
         borderRadius: 14,
-        backgroundColor: '#667eea',
+        backgroundColor: '#b91c1c',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -591,7 +592,7 @@ const styles = StyleSheet.create({
     threadAuthor: {
         fontSize: 13,
         fontWeight: '700',
-        color: '#667eea',
+        color: '#b91c1c',
     },
     threadTime: {
         fontSize: 11,
@@ -659,8 +660,8 @@ const styles = StyleSheet.create({
         borderRadius: 14,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#667eea',
-        shadowColor: '#667eea',
+        backgroundColor: '#dc2626',
+        shadowColor: '#b91c1c',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.25,
         shadowRadius: 10,
@@ -683,7 +684,7 @@ const styles = StyleSheet.create({
     mapBtnRow: { flexDirection: 'row', gap: 12 },
     mapCancelBtn: { flex: 1, backgroundColor: '#fff', borderRadius: 14, paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6, elevation: 3 },
     mapCancelText: { fontWeight: '700', fontSize: 15, color: '#6b7280' },
-    mapOkBtn: { flex: 1, backgroundColor: '#667eea', borderRadius: 14, paddingVertical: 14, alignItems: 'center', shadowColor: '#667eea', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 5 },
+    mapOkBtn: { flex: 1, backgroundColor: '#dc2626', borderRadius: 14, paddingVertical: 14, alignItems: 'center', shadowColor: '#b91c1c', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 5 },
     mapOkText: { fontWeight: '700', fontSize: 15, color: '#fff' },
     // Geolocation: estilo del banner de "fuera del radio"
     outOfRange: {
