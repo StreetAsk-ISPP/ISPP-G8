@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.streetask</groupId>
     <artifactId>streetask-app</artifactId>
@@ -79,14 +81,14 @@
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
-		
+
         <!-- H2 Database - for development and testing -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
-		
+
         <!-- caching -->
         <dependency>
             <groupId>javax.cache</groupId>
@@ -161,6 +163,22 @@
             <artifactId>maven-model</artifactId>
             <version>3.9.4</version>
         </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.78.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk18on</artifactId>
+            <version>1.79</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.martijndwars</groupId>
+            <artifactId>web-push</artifactId>
+            <version>5.1.1</version>
+        </dependency>
 
     </dependencies>
 
@@ -171,7 +189,8 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <!-- Spring Boot Actuator displays build-related information if a META-INF/build-info.properties
+                        <!-- Spring Boot Actuator displays build-related information if a
+                        META-INF/build-info.properties
                         file is present -->
                         <goals>
                             <goal>build-info</goal>
@@ -370,7 +389,8 @@
         </plugins>
     </build>
 
-    <!-- Add allure-bom to dependency management to ensure correct versions of all the dependencies are used -->
+    <!-- Add allure-bom to dependency management to ensure correct versions of all the dependencies
+    are used -->
     <dependencyManagement>
         <dependencies>
             <dependency>

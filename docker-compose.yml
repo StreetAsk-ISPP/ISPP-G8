@@ -64,6 +64,8 @@ services:
       - /app/node_modules
     environment:
       EXPO_PUBLIC_API_BASE_URL: http://localhost:8080
+      EXPO_PUBLIC_API_TIMEOUT_MS: 10000
+      EXPO_PUBLIC_VAPID_PUBLIC_KEY: BCzmM4oFvgyIoji531RyMjAMxwSEcgRHivSvGBtDeP93MssCAQdfnZZlZ-24mpUMGlCRselBYpHj1onx9eHwqcQ
       # Obliga a Expo a usar el método de "polling" para detectar cambios en los archivos
       # Esto es muy importante cuando se usan volúmenes de Docker en Windows o Mac
       WATCHPACK_POLLING: "true"

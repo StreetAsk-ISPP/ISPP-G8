@@ -76,6 +76,9 @@ public class SecurityConfiguration {
 								"/swagger-resources/**")
 						.permitAll()
 
+						// H2 console
+						.requestMatchers("/h2-console/**").permitAll()
+
 						// WebSocket handshake (SockJS uses /{endpoint}/** paths like /ws/info)
 						.requestMatchers(webSocketHandshakePattern()).permitAll()
 
@@ -123,6 +126,9 @@ public class SecurityConfiguration {
 						// Questions & Answers require auth
 						.requestMatchers("/api/v1/questions/**").authenticated()
 						.requestMatchers("/api/v1/answers", "/api/v1/answers/**").authenticated()
+
+						// Push devices require auth
+						.requestMatchers("/api/push-devices/**").authenticated()
 
 						// Deny everything else
 						.anyRequest().denyAll())
