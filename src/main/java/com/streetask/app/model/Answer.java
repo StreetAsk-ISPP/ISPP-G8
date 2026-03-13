@@ -5,6 +5,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.streetask.app.user.RegularUser;
 
@@ -33,7 +34,8 @@ public class Answer extends BaseEntity {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id")
-    @JsonBackReference("user-answers")
+    @JsonIgnoreProperties({ "password", "authority", "questions", "answers", "eventAttendances", "notifications",
+            "coinTransactions", "reports", "reputation", "active", "createdAt", "lastLogin" })
     private RegularUser user;
 
     @NotBlank(message = "Answer content is required")
