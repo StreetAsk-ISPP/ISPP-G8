@@ -7,7 +7,7 @@ import {
 import { resolveZoneKey } from './zoneService';
 import { notificationCenter } from './notificationCenter';
 
-const VAPID_PUBLIC_KEY = 'BCzmM4oFvgyIoji531RyMjAMxwSEcgRHivSvGBtDeP93MssCAQdfnZZlZ-24mpUMGlCRselBYpHj1onx9eHwqcQ';
+const VAPID_PUBLIC_KEY = process.env.EXPO_PUBLIC_VAPID_PUBLIC_KEY;
 
 export async function bootstrapWebPushNotifications({
     authToken,
@@ -17,6 +17,11 @@ export async function bootstrapWebPushNotifications({
     onNotificationClick,
 }) {
     if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+        return { registration: null, subscription: null };
+    }
+
+    if (!VAPID_PUBLIC_KEY) {
+        console.warn('Web push disabled: missing EXPO_PUBLIC_VAPID_PUBLIC_KEY');
         return { registration: null, subscription: null };
     }
 
