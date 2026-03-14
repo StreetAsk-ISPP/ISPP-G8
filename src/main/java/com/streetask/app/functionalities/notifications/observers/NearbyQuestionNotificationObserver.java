@@ -62,6 +62,9 @@ public class NearbyQuestionNotificationObserver {
                 .referenceId(question.getId())
                 .referenceType("QUESTION")
                 .zoneKey(primaryZoneKey)
+                .questionLatitude(latitude)
+                .questionLongitude(longitude)
+                .radiusKm(radiusKm)
                 .timestamp(LocalDateTime.now())
                 .build();
 
@@ -75,6 +78,9 @@ public class NearbyQuestionNotificationObserver {
                 .type("NEARBY_QUESTION")
                 .referenceId(question.getId())
                 .referenceType("QUESTION")
+                .questionLatitude(latitude)
+                .questionLongitude(longitude)
+                .radiusKm(radiusKm)
                 .build();
 
         pushNotificationService.sendToZones(zoneKeys, pushMessage);

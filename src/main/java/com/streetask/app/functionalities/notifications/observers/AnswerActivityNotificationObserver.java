@@ -16,15 +16,19 @@ import com.streetask.app.functionalities.notifications.realtime.FrontendNotifica
 import com.streetask.app.functionalities.notifications.realtime.FrontendNotificationMessage;
 import com.streetask.app.model.Answer;
 import com.streetask.app.model.Question;
+import com.streetask.app.question.QuestionRepository;
 import com.streetask.app.user.RegularUser;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class AnswerActivityNotificationObserver {
 
     private final AnswerRepository answerRepository;
+    private final QuestionRepository questionRepository;
     private final FrontendNotificationGateway frontendNotificationGateway;
     private final PushNotificationService pushNotificationService;
 
@@ -35,7 +39,8 @@ public class AnswerActivityNotificationObserver {
             return;
         }
 
-        Question question = answer.getQuestion();
+        Question answerQuestion = answer.getQuestion();
+        Question question = questionRepository.findById(answerQuestion.getId()).orElse(answerQuestion);
         RegularUser actor = answer.getUser();
         String actorEmail = actor != null ? actor.getEmail() : null;
         String actorName = actor != null && actor.getUserName() != null ? actor.getUserName() : "Someone";
@@ -57,6 +62,8 @@ public class AnswerActivityNotificationObserver {
         }
 
         if (recipientEmails.isEmpty()) {
+            log.info("Skipping ANSWER_TO_QUESTION notification: no recipients. questionId={} actorEmail={}",
+                    question.getId(), actorEmail);
             return;
         }
 
@@ -81,5 +88,8 @@ public class AnswerActivityNotificationObserver {
             frontendNotificationGateway.sendToUser(recipientEmail, payload);
             pushNotificationService.sendToUser(recipientEmail, pushMessage);
         }
+
+        log.info("Published ANSWER_TO_QUESTION notification. questionId={} actorEmail={} recipients={}",
+                question.getId(), actorEmail, recipientEmails);
     }
 }

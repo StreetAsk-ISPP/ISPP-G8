@@ -53,10 +53,46 @@ public class ZoneResolver {
 
         for (int latBucket = minLatBucket; latBucket <= maxLatBucket; latBucket++) {
             for (int lonBucket = minLonBucket; lonBucket <= maxLonBucket; lonBucket++) {
-                zoneKeys.add(latBucket + "_" + lonBucket);
+                if (cellIntersectsRadius(latitude, longitude, safeRadiusKm, latBucket, lonBucket)) {
+                    zoneKeys.add(latBucket + "_" + lonBucket);
+                }
             }
         }
 
         return zoneKeys;
+    }
+
+    private boolean cellIntersectsRadius(double latitude, double longitude, double radiusKm, int latBucket,
+            int lonBucket) {
+        double minLat = (latBucket * cellSizeDegrees) - 90d;
+        double maxLat = minLat + cellSizeDegrees;
+        double minLon = (lonBucket * cellSizeDegrees) - 180d;
+        double maxLon = minLon + cellSizeDegrees;
+
+        double closestLat = clamp(latitude, minLat, maxLat);
+        double closestLon = clamp(longitude, minLon, maxLon);
+
+        return haversineDistanceKm(latitude, longitude, closestLat, closestLon) <= radiusKm;
+    }
+
+    private double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    private double haversineDistanceKm(double latitude1, double longitude1, double latitude2, double longitude2) {
+        double lat1Radians = Math.toRadians(latitude1);
+        double lon1Radians = Math.toRadians(longitude1);
+        double lat2Radians = Math.toRadians(latitude2);
+        double lon2Radians = Math.toRadians(longitude2);
+
+        double latitudeDifference = lat2Radians - lat1Radians;
+        double longitudeDifference = lon2Radians - lon1Radians;
+
+        double a = Math.sin(latitudeDifference / 2d) * Math.sin(latitudeDifference / 2d)
+                + Math.cos(lat1Radians) * Math.cos(lat2Radians)
+                        * Math.sin(longitudeDifference / 2d) * Math.sin(longitudeDifference / 2d);
+        double c = 2d * Math.atan2(Math.sqrt(a), Math.sqrt(1d - a));
+
+        return 6371d * c;
     }
 }
