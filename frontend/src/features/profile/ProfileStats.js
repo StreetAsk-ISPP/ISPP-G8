@@ -8,15 +8,16 @@ import apiClient from '../../shared/services/http/apiClient';
 export default function ProfileStats() {
     const navigation = useNavigation();
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState('preguntas');
+    const [activeTab, setActiveTab] = useState('questions');
 
-    // Estados para datos del servidor
     const [serverStats, setServerStats] = useState({
-        preguntas: 0,
-        respuestas: 0,
+        questions: 0,
+        answers: 0,
         username: '',
         role: '',
-        likes: 0
+        likes: 0,
+        dislikes: 0,
+        reputation: 0
     });
     const [userQuestions, setUserQuestions] = useState([]);
     const [userAnswers, setUserAnswers] = useState([]);
@@ -40,11 +41,13 @@ export default function ProfileStats() {
                 if (resStats.data) {
                     const data = resStats.data;
                     setServerStats({
-                        preguntas: data.questionsCount,
-                        respuestas: data.answersCount,
+                        questions: data.questionsCount,
+                        answers: data.answersCount,
                         username: data.username,
-                        role: data.role === 'ADMIN' ? 'Moderador' : 'Sabio Local',
-                        likes: data.likesCount || 0
+                        role: data.role === 'ADMIN' ? 'Moderator' : 'Local Expert',
+                        likes: data.likesCount || 0,
+                        dislikes: data.dislikesCount || 0,
+                        reputation: data.reputation || 0
                     });
                 }
 
@@ -52,7 +55,7 @@ export default function ProfileStats() {
                 if (resAnswers.data) setUserAnswers(resAnswers.data);
 
             } catch (error) {
-                console.error("Error cargando datos de perfil:", error);
+                console.error("Error loading profile data:", error);
             } finally {
                 setLoading(false);
             }
@@ -65,18 +68,18 @@ export default function ProfileStats() {
         <View key={item.id} style={styles.historyItem}>
             <View style={styles.iconCircle}>
                 <Ionicons
-                    name={type === 'preguntas' ? "help-circle-outline" : "chatbubble-ellipses-outline"}
+                    name={type === 'questions' ? "help-circle-outline" : "chatbubble-ellipses-outline"}
                     size={24}
                     color="#d90429"
                 />
             </View>
             <View style={styles.historyText}>
                 <Text style={styles.itemTitle} numberOfLines={2}>
-                    {type === 'preguntas' ? 'Q: ' : 'A: '}
-                    {item.text || item.title || "Sin contenido"}
+                    {type === 'questions' ? 'Q: ' : 'A: '}
+                    {item.text || item.title || "No content"}
                 </Text>
                 <Text style={styles.itemDate}>
-                    {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Fecha desconocida'}
+                    {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Unknown date'}
                 </Text>
             </View>
         </View>
@@ -86,7 +89,7 @@ export default function ProfileStats() {
         return (
             <SafeAreaView style={[styles.safeArea, styles.center]}>
                 <ActivityIndicator size="large" color="white" />
-                <Text style={styles.loadingText}>Sincronizando con Streetask...</Text>
+                <Text style={styles.loadingText}>Syncing with Streetask...</Text>
             </SafeAreaView>
         );
     }
@@ -100,12 +103,12 @@ export default function ProfileStats() {
                 </TouchableOpacity>
                 <View style={styles.logoContainer}>
                     <Ionicons name="location" size={24} color="white" />
-                    <Text style={styles.logoText}>{serverStats.username || 'Mi Perfil'}</Text>
+                    <Text style={styles.logoText}>{serverStats.username || 'My Profile'}</Text>
                 </View>
             </View>
 
             <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-                {/* Card de Rango y Coins */}
+                {/* Rank & Coins Card */}
                 <View style={styles.headerCard}>
                     <Text style={styles.rangoText}>{serverStats.role}</Text>
                     <Text style={styles.userEmailText}>{user?.username}</Text>
@@ -118,50 +121,65 @@ export default function ProfileStats() {
                 {/* Grid de Estadísticas */}
                 <View style={styles.statsGrid}>
                     <View style={styles.statBox}>
-                        <Text style={styles.statValue}>{serverStats.preguntas}</Text>
-                        <Text style={styles.statLabel}>Preguntas Creadas</Text>
+                        <Text style={styles.statValue}>{serverStats.questions}</Text>
+                        <Text style={styles.statLabel}>Asked questions</Text>
                     </View>
                     <View style={styles.statBox}>
-                        <Text style={styles.statValue}>{serverStats.respuestas}</Text>
-                        <Text style={styles.statLabel}>Respuestas Dadas</Text>
+                        <Text style={styles.statValue}>{serverStats.answers}</Text>
+                        <Text style={styles.statLabel}>Answered questions</Text>
                     </View>
                     <View style={[styles.statBox, styles.borderGreen]}>
                         <Text style={styles.statValue}>{serverStats.likes} 👍</Text>
-                        <Text style={styles.statLabel}>Likes Recibidos</Text>
+                        <Text style={styles.statLabel}>Likes received</Text>
                     </View>
                     <View style={[styles.statBox, styles.borderRed]}>
-                        <Text style={styles.statValue}>0 👎</Text>
-                        <Text style={styles.statLabel}>Dislikes Recibidos</Text>
+                        <Text style={styles.statValue}>{serverStats.dislikes} 👎</Text>
+                        <Text style={styles.statLabel}>Dislikes received</Text>
                     </View>
                 </View>
 
-                {/* Tabs de Historial */}
-                <Text style={styles.sectionTitle}>Historial de Actividad</Text>
+                {/* Reputation Card */}
+                <View style={styles.reputationCard}>
+                    <View style={styles.reputationLeft}>
+                        <Ionicons name="trophy" size={36} color="#F5A623" />
+                    </View>
+                    <View style={styles.reputationCenter}>
+                        <Text style={styles.reputationTitle}>Reputation Score</Text>
+                        <Text style={styles.reputationSub}>{"Based on your answers' votes"}</Text>
+                    </View>
+                    <View style={styles.reputationRight}>
+                        <Text style={styles.reputationValue}>{serverStats.reputation}</Text>
+                        <Text style={styles.reputationPts}>pts</Text>
+                    </View>
+                </View>
+
+                {/* Activity History */}
+                <Text style={styles.sectionTitle}>Activity History</Text>
                 <View style={styles.tabContainer}>
                     <TouchableOpacity
-                        style={[styles.tab, activeTab === 'preguntas' && styles.activeTab]}
-                        onPress={() => setActiveTab('preguntas')}
+                        style={[styles.tab, activeTab === 'questions' && styles.activeTab]}
+                        onPress={() => setActiveTab('questions')}
                     >
-                        <Text style={activeTab === 'preguntas' ? styles.activeTabText : styles.tabText}>Mis Preguntas</Text>
+                        <Text style={activeTab === 'questions' ? styles.activeTabText : styles.tabText}>My Questions</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        style={[styles.tab, activeTab === 'respuestas' && styles.activeTab]}
-                        onPress={() => setActiveTab('respuestas')}
+                        style={[styles.tab, activeTab === 'answers' && styles.activeTab]}
+                        onPress={() => setActiveTab('answers')}
                     >
-                        <Text style={activeTab === 'respuestas' ? styles.activeTabText : styles.tabText}>Mis Respuestas</Text>
+                        <Text style={activeTab === 'answers' ? styles.activeTabText : styles.tabText}>My Answers</Text>
                     </TouchableOpacity>
                 </View>
 
-                {/* Lista de Historial */}
+                {/* History List */}
                 <View style={styles.historyList}>
-                    {activeTab === 'preguntas' ? (
+                    {activeTab === 'questions' ? (
                         userQuestions.length > 0
-                            ? userQuestions.map(q => renderHistoryItem(q, 'preguntas'))
-                            : <Text style={styles.emptyText}>Aún no has hecho preguntas.</Text>
+                            ? userQuestions.map(q => renderHistoryItem(q, 'questions'))
+                            : <Text style={styles.emptyText}>{"You haven't asked any questions yet."}</Text>
                     ) : (
                         userAnswers.length > 0
-                            ? userAnswers.map(a => renderHistoryItem(a, 'respuestas'))
-                            : <Text style={styles.emptyText}>Aún no has respondido ninguna duda.</Text>
+                            ? userAnswers.map(a => renderHistoryItem(a, 'answers'))
+                            : <Text style={styles.emptyText}>{"You haven't answered any questions yet."}</Text>
                     )}
                 </View>
                 <View style={{ height: 40 }} />
@@ -215,6 +233,28 @@ const styles = StyleSheet.create({
     },
     borderGreen: { borderBottomColor: '#4CAF50', borderBottomWidth: 4 },
     borderRed: { borderBottomColor: '#F44336', borderBottomWidth: 4 },
+    reputationCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 18,
+        marginBottom: 25,
+        borderWidth: 1,
+        borderColor: '#F5A623',
+        elevation: 3,
+        shadowColor: '#F5A623',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+    },
+    reputationLeft: { marginRight: 14 },
+    reputationCenter: { flex: 1 },
+    reputationTitle: { fontSize: 16, fontWeight: 'bold', color: '#333' },
+    reputationSub: { fontSize: 12, color: '#999', marginTop: 2 },
+    reputationRight: { alignItems: 'center' },
+    reputationValue: { fontSize: 32, fontWeight: 'bold', color: '#F5A623' },
+    reputationPts: { fontSize: 12, color: '#F5A623', fontWeight: '600', marginTop: -4 },
     statValue: { fontSize: 20, fontWeight: 'bold', color: '#333' },
     statLabel: { fontSize: 12, color: '#666', marginTop: 5, textAlign: 'center' },
     sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#333', textAlign: 'center' },

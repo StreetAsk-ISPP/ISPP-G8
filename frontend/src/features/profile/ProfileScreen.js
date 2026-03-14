@@ -1,11 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../app/providers/AuthProvider';
+import apiClient from '../../shared/services/http/apiClient';
 
 export default function ProfileScreen({ navigation }) {
     const { user, logout } = useAuth();
-    console.log(user)
+    const [stats, setStats] = useState({ questions: 0, answers: 0, rating: 0 });
+
+    useEffect(() => {
+        if (!user?.id) return;
+        apiClient.get(`/api/v1/users/${user.id}/stats`)
+            .then(res => {
+                if (res.data) {
+                    setStats({
+                        questions: res.data.questionsCount || 0,
+                        answers: res.data.answersCount || 0,
+                        rating: res.data.rating != null ? res.data.rating : 0,
+                    });
+                }
+            })
+            .catch(() => { });
+    }, [user]);
     return (
         <SafeAreaView style={styles.screen}>
             <View style={styles.headerRed}>
@@ -24,6 +40,27 @@ export default function ProfileScreen({ navigation }) {
                         <Text style={styles.userSub}>Seville, Spain</Text>
                         <Text style={styles.userSub}>{user?.email}</Text>
                     </View>
+                </View>
+            </View>
+
+            {/* Stats card — floats above menu */}
+            <View style={styles.statsBar}>
+                <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>{stats.questions}</Text>
+                    <Text style={styles.statItemLabel}>Asked{"\n"}questions</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>{stats.answers}</Text>
+                    <Text style={styles.statItemLabel}>Answered{"\n"}questions</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>
+                        {parseFloat(stats.rating).toFixed(1)}
+                        <Text style={styles.statNumberSub}>/5</Text>
+                    </Text>
+                    <Text style={styles.statItemLabel}>Rated{"\n"}with</Text>
                 </View>
             </View>
 
@@ -77,13 +114,12 @@ export default function ProfileScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: '#e5e7eb' },
+    screen: { flex: 1, backgroundColor: '#fff' },
     headerRed: {
         backgroundColor: '#d90429',
         padding: 20,
         paddingTop: 40,
-        borderBottomWidth: 1,
-        borderBottomColor: '#b90421'
+        paddingBottom: 35,
     },
     backBtn: { marginBottom: 10 },
     userInfoRow: { flexDirection: 'row', alignItems: 'center' },
@@ -98,7 +134,7 @@ const styles = StyleSheet.create({
     userTextInfo: { marginLeft: 20 },
     userName: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
     userSub: { color: '#fff', fontSize: 14, marginTop: 2 },
-    menuContainer: { padding: 20 },
+    menuContainer: { padding: 20, paddingTop: 8 },
     editBtn: {
         backgroundColor: '#d90429',
         padding: 15,
@@ -120,5 +156,45 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#fff'
+    },
+    statsBar: {
+        flexDirection: 'row',
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        marginHorizontal: 16,
+        marginTop: -28,
+        marginBottom: 0,
+        paddingVertical: 14,
+        elevation: 6,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 6,
+        zIndex: 10,
+    },
+    statItem: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    statNumber: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#d90429',
+    },
+    statNumberSub: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#d90429',
+    },
+    statItemLabel: {
+        fontSize: 11,
+        color: '#666',
+        textAlign: 'center',
+        marginTop: 2,
+    },
+    statDivider: {
+        width: 1,
+        backgroundColor: '#e5e7eb',
+        marginVertical: 4,
     },
 });
