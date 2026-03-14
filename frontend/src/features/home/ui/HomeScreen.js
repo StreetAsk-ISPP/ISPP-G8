@@ -12,6 +12,8 @@ import { APP_CONFIG } from '../../../app/config/config';
 import apiClient from '../../../shared/services/http/apiClient';
 import { Image } from 'react-native';
 import { bootstrapWebPushNotifications } from '../../../shared/services/notifications/webPushBootstrap';
+import { updateWebPushZone } from '../../../shared/services/notifications/webPushService';
+import { resolveZoneKey } from '../../../shared/services/notifications/zoneService';
 
 export default function HomeScreen({ navigation }) {
     const { logout, token } = useAuth();
@@ -26,6 +28,8 @@ export default function HomeScreen({ navigation }) {
     const [currentLocation, setCurrentLocation] = useState(null);
 
     const pushBootstrappedRef = useRef(false);
+    const pushSubscriptionRef = useRef(null);
+    const pushZoneKeyRef = useRef(null);
 
     const isFocused = useIsFocused();
     const latestRequestRef = useRef(0);
@@ -72,16 +76,14 @@ export default function HomeScreen({ navigation }) {
     useEffect(() => {
         async function initPush() {
             try {
-
                 if (Platform.OS !== 'web') {
                     return;
                 }
 
-                if (
-                    !token ||
-                    typeof currentLocation?.latitude !== 'number' ||
-                    typeof currentLocation?.longitude !== 'number'
-                ) {
+                if (!token) {
+                    pushBootstrappedRef.current = false;
+                    pushSubscriptionRef.current = null;
+                    pushZoneKeyRef.current = null;
                     return;
                 }
 
@@ -92,13 +94,12 @@ export default function HomeScreen({ navigation }) {
                 // Keep push registration aligned with the same backend used by the API client.
                 const apiBaseUrl = APP_CONFIG.apiBaseUrl;
 
-                await bootstrapWebPushNotifications({
+                const { subscription } = await bootstrapWebPushNotifications({
                     authToken: token,
                     apiBaseUrl,
-                    latitude: currentLocation.latitude,
-                    longitude: currentLocation.longitude,
+                    latitude: currentLocation?.latitude,
+                    longitude: currentLocation?.longitude,
                     onNotificationClick: (data) => {
-
                         if (
                             (data?.type === 'NEARBY_QUESTION' || data?.type === 'ANSWER_TO_QUESTION') &&
                             data?.referenceId
@@ -108,7 +109,10 @@ export default function HomeScreen({ navigation }) {
                     },
                 });
 
-                pushBootstrappedRef.current = true;
+                if (subscription) {
+                    pushSubscriptionRef.current = subscription;
+                    pushBootstrappedRef.current = true;
+                }
             } catch (error) {
                 console.error('Error bootstrapping web push notifications:', error);
             }
@@ -116,6 +120,40 @@ export default function HomeScreen({ navigation }) {
 
         initPush();
     }, [token, currentLocation, navigation]);
+
+    useEffect(() => {
+        async function syncPushZone() {
+            try {
+                if (Platform.OS !== 'web' || !token || !pushSubscriptionRef.current) {
+                    return;
+                }
+
+                if (
+                    typeof currentLocation?.latitude !== 'number' ||
+                    typeof currentLocation?.longitude !== 'number'
+                ) {
+                    return;
+                }
+
+                const zoneKey = resolveZoneKey(currentLocation.latitude, currentLocation.longitude);
+                if (!zoneKey || pushZoneKeyRef.current === zoneKey) {
+                    return;
+                }
+
+                await updateWebPushZone(
+                    pushSubscriptionRef.current,
+                    zoneKey,
+                    token,
+                    APP_CONFIG.apiBaseUrl
+                );
+                pushZoneKeyRef.current = zoneKey;
+            } catch (error) {
+                console.error('Error updating push notification zone:', error);
+            }
+        }
+
+        syncPushZone();
+    }, [token, currentLocation]);
 
     return (
         <SafeAreaView style={styles.screen}>
