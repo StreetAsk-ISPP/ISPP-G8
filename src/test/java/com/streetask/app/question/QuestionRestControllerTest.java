@@ -70,6 +70,7 @@ class QuestionRestControllerTest {
 		testCreator.setUserName("testcreator");
 		testCreator.setFirstName("Test");
 		testCreator.setLastName("Creator");
+		testCreator.setVisibilityRadiusKm(10.0f);
 		testCreator.setAuthority(userAuthority);
 		testCreator = userRepository.save(testCreator);
 
@@ -245,6 +246,19 @@ class QuestionRestControllerTest {
 				.andExpect(jsonPath("$.answerCount").value(0))
 				.andExpect(jsonPath("$.createdAt").exists())
 				.andExpect(jsonPath("$.expiresAt").exists());
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldUsePayloadRadiusWhenProvided() throws Exception {
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("radiusKm", 2.0);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.radiusKm").value(2.0));
 	}
 
 	@Test

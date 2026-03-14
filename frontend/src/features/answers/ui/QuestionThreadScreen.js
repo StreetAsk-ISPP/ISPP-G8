@@ -12,7 +12,6 @@ import { useAuth } from '../../../app/providers/AuthProvider';
 import { crossAlert } from '../../../shared/utils/crossAlert';
 import MapPickerWeb from '../../home/ui/components/MapPickerWeb';
 import { calculateDistanceInKm } from '../../../shared/utils/helpers'; // Haversine formula para calcular distancia entre 2 puntos
-import { RADIO } from '../../home/ui/components/MapComponent'; // Radio permitido (150m) importado desde MapComponent para sincronización
 
 const pad2 = (n) => String(n).padStart(2, '0');
 const formatHms = (t) => {
@@ -20,6 +19,10 @@ const formatHms = (t) => {
     return `${Math.floor(s / 3600)}:${pad2(Math.floor((s % 3600) / 60))}:${pad2(s % 60)}`;
 };
 const avatarColors = ['#dbeafe', '#fce7f3', '#fef3c7', '#d1fae5', '#ede9fe', '#e0e7ff'];
+const parsePositiveNumber = (value) => {
+    const num = Number(value);
+    return Number.isFinite(num) && num > 0 ? num : null;
+};
 
 export default function QuestionThreadScreen({ route, navigation }) {
     const { questionId } = route?.params || {};
@@ -52,20 +55,31 @@ export default function QuestionThreadScreen({ route, navigation }) {
     }, []);
 
     const canSend = useMemo(() => draft.trim().length > 0, [draft]);
+    const questionRadiusKm = useMemo(() => parsePositiveNumber(question?.radiusKm), [question?.radiusKm]);
+    const questionCoords = useMemo(() => {
+        const qLat = Number(question?.location?.latitude);
+        const qLng = Number(question?.location?.longitude);
+        if (!Number.isFinite(qLat) || !Number.isFinite(qLng)) return null;
+        return { latitude: qLat, longitude: qLng };
+    }, [question?.location?.latitude, question?.location?.longitude]);
+    const hasGeoRestriction = useMemo(
+        () => questionCoords !== null && questionRadiusKm != null,
+        [questionCoords, questionRadiusKm]
+    );
 
     const isWithinRadius = useMemo(() => {
-        if (!userLocation || !question) return null;
-        const qLat = question.location?.latitude;
-        const qLng = question.location?.longitude;
-        if (qLat == null || qLng == null) return false;
+        if (!hasGeoRestriction) {
+            return true;
+        }
+        if (!userLocation) return null;
 
-        const distM = calculateDistanceInKm(
+        const distKm = calculateDistanceInKm(
             { latitude: userLocation.latitude, longitude: userLocation.longitude },
-            { latitude: parseFloat(qLat), longitude: parseFloat(qLng) }
-        ) * 1000;
+            questionCoords
+        );
 
-        return distM <= RADIO;
-    }, [userLocation, question]);
+        return distKm <= questionRadiusKm;
+    }, [hasGeoRestriction, questionCoords, questionRadiusKm, userLocation]);
 
     useEffect(() => {
         if (Platform.OS === 'web' && navigator.geolocation) {
@@ -198,6 +212,25 @@ export default function QuestionThreadScreen({ route, navigation }) {
                 payload.userLocation = { latitude: loc.latitude, longitude: loc.longitude };
             }
 
+            if (hasGeoRestriction) {
+                if (!loc) {
+                    setAnswers((p) => p.filter((a) => a.id !== optimistic.id));
+                    setDraft(content);
+                    crossAlert('Location required', 'Debes activar tu ubicación para responder esta pregunta.');
+                    return;
+                }
+                const distKm = calculateDistanceInKm(
+                    { latitude: loc.latitude, longitude: loc.longitude },
+                    questionCoords
+                );
+                if (distKm > questionRadiusKm) {
+                    setAnswers((p) => p.filter((a) => a.id !== optimistic.id));
+                    setDraft(content);
+                    crossAlert('Fuera de radio', 'No puedes responder esta pregunta porque estás fuera del radio.');
+                    return;
+                }
+            }
+
             const res = await apiClient.post('/api/v1/answers', payload);
 
             const saved = res.data;
@@ -325,7 +358,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
                         <MapPickerWeb
                             latitude={tempLat} longitude={tempLng}
                             userLat={userLocation?.latitude} userLng={userLocation?.longitude}
-                            radiusKm={1} pickEnabled tempLat={tempLat} tempLng={tempLng}
+                            radiusKm={questionRadiusKm} pickEnabled tempLat={tempLat} tempLng={tempLng}
                             onPick={(lat, lng) => { setTempLat(lat); setTempLng(lng); }}
                         />
                     </View>
@@ -422,11 +455,13 @@ export default function QuestionThreadScreen({ route, navigation }) {
 
                 {/* ── Composer ── */}
                 {!loading && !error && (
-                    isWithinRadius === false ? (
+                    hasGeoRestriction && isWithinRadius !== true ? (
                         <View style={styles.outOfRange}>
                             <Ionicons name="location-outline" size={18} color="#ef4444" />
                             <Text style={styles.outOfRangeText}>
-                                No estás en la zona de la pregunta, acércate para poder responder.
+                                {isWithinRadius === false
+                                    ? 'No estás en la zona de la pregunta, acércate para poder responder.'
+                                    : 'No se pudo validar tu ubicación para responder esta pregunta.'}
                             </Text>
                         </View>
                     ) : (
@@ -688,7 +723,7 @@ const styles = StyleSheet.create({
     mapOkText: { fontWeight: '700', fontSize: 15, color: '#fff' },
     // Geolocation: estilo del banner de "fuera del radio"
     outOfRange: {
-        // Banner rojo con icono de ubicación, se muestra cuando usuario está fuera del radio de 150m
+        // Banner rojo con icono de ubicación, se muestra cuando usuario está fuera del radio permitido.
         flexDirection: 'row', alignItems: 'center', gap: 10,
         margin: 12, padding: 14,
         backgroundColor: '#fef2f2', borderRadius: 14, // Fondo rojo claro
