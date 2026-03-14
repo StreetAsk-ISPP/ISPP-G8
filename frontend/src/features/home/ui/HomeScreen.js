@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import MapComponent from './components/MapComponent';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useNotifications } from '../../../app/providers/NotificationProvider';
+import { APP_CONFIG } from '../../../app/config/config';
 import apiClient from '../../../shared/services/http/apiClient';
 import { Image } from 'react-native';
 import { bootstrapWebPushNotifications } from '../../../shared/services/notifications/webPushBootstrap';
@@ -88,11 +89,8 @@ export default function HomeScreen({ navigation }) {
                     return;
                 }
 
-                // Backend base URL (Azure in production, localhost in development)
-                const apiBaseUrl =
-                    process.env.NODE_ENV === 'development'
-                        ? 'http://localhost:8080'
-                        : 'https://sprint2-backend.livelywave-7ff67039.spaincentral.azurecontainerapps.io';
+                // Keep push registration aligned with the same backend used by the API client.
+                const apiBaseUrl = APP_CONFIG.apiBaseUrl;
 
                 await bootstrapWebPushNotifications({
                     authToken: token,
