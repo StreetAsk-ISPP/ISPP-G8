@@ -74,7 +74,7 @@ const getQuestionCoords = (q) => {
   return { lat, lng };
 };
 
-export default function MapComponent({ questions = [], onQuestionPress }) {
+export default function MapComponent({ questions = [], onQuestionPress, onLocationChange }) {
   const [location, setLocation] = useState(null);
   const [publicLocations, setPublicLocations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -118,6 +118,9 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
         });
 
         setLocation(initialLocation.coords);
+        if (typeof onLocationChange === 'function') {
+          onLocationChange(initialLocation.coords);
+        }
         setLoading(false);
 
         await loadPublicLocations();
@@ -132,6 +135,9 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
             },
             (newLocation) => {
               setLocation(newLocation.coords);
+              if (typeof onLocationChange === 'function') {
+                onLocationChange(newLocation.coords);
+              }
             }
           );
         }
@@ -148,7 +154,7 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
         locationSubscription.remove();
       }
     };
-  }, []);
+  }, [onLocationChange]);
 
   const loadPublicLocations = async () => {
     try {
@@ -265,6 +271,8 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
             <Popup>
               <div style={{ fontSize: '12px' }}>
                 <strong>Your location</strong>
+                <br />
+                {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
                 <br />
                 Precisión: {location.accuracy?.toFixed(2) || 'N/A'} m
               </div>

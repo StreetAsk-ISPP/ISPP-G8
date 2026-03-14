@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import {
     View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
-    Switch, useWindowDimensions, Modal, Pressable,
+    Switch, useWindowDimensions, Modal, Pressable, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MapComponent from './components/MapComponent';
@@ -10,9 +10,10 @@ import { useAuth } from '../../../app/providers/AuthProvider';
 import { useNotifications } from '../../../app/providers/NotificationProvider';
 import apiClient from '../../../shared/services/http/apiClient';
 import { Image } from 'react-native';
+import { bootstrapWebPushNotifications } from '../../../shared/services/notifications/webPushBootstrap';
 
 export default function HomeScreen({ navigation }) {
-    const { logout } = useAuth();
+    const { logout, token } = useAuth();
     const { ephemeralNotification, observeNotifications } = useNotifications();
     const { width } = useWindowDimensions();
     const isNarrow = width < 500;
@@ -21,6 +22,9 @@ export default function HomeScreen({ navigation }) {
     const [showQuestions, setShowQuestions] = useState(true);
     const [comingSoon, setComingSoon] = useState(false);
     const [modalType, setModalType] = useState('notifications');
+    const [currentLocation, setCurrentLocation] = useState(null);
+
+    const pushBootstrappedRef = useRef(false);
 
     const isFocused = useIsFocused();
     const latestRequestRef = useRef(0);
@@ -45,27 +49,85 @@ export default function HomeScreen({ navigation }) {
 
     useEffect(() => {
         const unsub = observeNotifications((n) => {
-
             if (!isFocused) return;
 
             if (n?.type === 'NEARBY_QUESTION') {
                 loadQuestions();
+            }
+
+            if (
+                (n?.type === 'NEARBY_QUESTION' || n?.type === 'ANSWER_TO_QUESTION') &&
+                n?.referenceId
+            ) {
+                // TODO: enable automatic navigation to the question thread when a notification is received.
+                // This should open the QuestionThread screen using the referenceId provided in the notification payload.
+                // navigation.navigate('QuestionThread', { questionId: n.referenceId });
             }
         });
 
         return unsub;
     }, [isFocused, loadQuestions, observeNotifications]);
 
+    useEffect(() => {
+        async function initPush() {
+            try {
+
+                if (Platform.OS !== 'web') {
+                    return;
+                }
+
+                if (
+                    !token ||
+                    typeof currentLocation?.latitude !== 'number' ||
+                    typeof currentLocation?.longitude !== 'number'
+                ) {
+                    return;
+                }
+
+                if (pushBootstrappedRef.current) {
+                    return;
+                }
+
+                // Backend base URL (Azure in production, localhost in development)
+                const apiBaseUrl =
+                    process.env.NODE_ENV === 'development'
+                        ? 'http://localhost:8080'
+                        : 'https://sprint2-backend.livelywave-7ff67039.spaincentral.azurecontainerapps.io';
+
+                await bootstrapWebPushNotifications({
+                    authToken: token,
+                    apiBaseUrl,
+                    latitude: currentLocation.latitude,
+                    longitude: currentLocation.longitude,
+                    onNotificationClick: (data) => {
+
+                        if (
+                            (data?.type === 'NEARBY_QUESTION' || data?.type === 'ANSWER_TO_QUESTION') &&
+                            data?.referenceId
+                        ) {
+                            navigation.navigate('QuestionThread', { questionId: data.referenceId });
+                        }
+                    },
+                });
+
+                pushBootstrappedRef.current = true;
+            } catch (error) {
+                console.error('Error bootstrapping web push notifications:', error);
+            }
+        }
+
+        initPush();
+    }, [token, currentLocation, navigation]);
+
     return (
         <SafeAreaView style={styles.screen}>
             <View style={styles.container}>
-                {/* ─── Top Bar ─── */}
                 <View style={[styles.topBar, isNarrow && { paddingHorizontal: 12 }]}>
                     <View style={styles.topBarLeft}>
                         <View style={styles.logoBadge}>
                             <Image
-                            source={require("../../../../assets/logo.png")}
-                            style={{ width: 18, height: 28 }}
+                                source={require("../../../../assets/logo.png")}
+                                style={{ width: 18, height: 28 }}
                             />
                         </View>
                         <Text style={styles.appName}>StreetAsk</Text>
@@ -75,11 +137,22 @@ export default function HomeScreen({ navigation }) {
                         <TouchableOpacity
                             style={styles.iconBtn}
                             activeOpacity={0.7}
+                            onPress={() => navigation.navigate('Profile')}
+                        >
+                            <Ionicons name="person-outline" size={20} color="#374151" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.iconBtn}
+                            activeOpacity={0.7}
                             onPress={() => { setModalType('search'); setComingSoon(true); }}
                         >
                             <Ionicons name="search-outline" size={20} color="#a52019" />
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7} onPress={() => { setModalType('notifications'); setComingSoon(true); }}>
+                        <TouchableOpacity
+                            style={styles.iconBtn}
+                            activeOpacity={0.7}
+                            onPress={() => { setModalType('notifications'); setComingSoon(true); }}
+                        >
                             <Ionicons name="notifications-outline" size={20} color="#a52019" />
                             {ephemeralNotification ? <View style={styles.badge} /> : null}
                         </TouchableOpacity>
@@ -93,7 +166,6 @@ export default function HomeScreen({ navigation }) {
                     </View>
                 </View>
 
-                {/* ─── Notification banner ─── */}
                 {ephemeralNotification ? (
                     <View style={styles.notifBanner}>
                         <Ionicons name="information-circle" size={18} color="#92400e" />
@@ -104,15 +176,14 @@ export default function HomeScreen({ navigation }) {
                     </View>
                 ) : null}
 
-                {/* ─── Map ─── */}
                 <View style={styles.mapWrapper}>
                     <MapComponent
                         questions={showQuestions ? questions : []}
                         onQuestionPress={(qId) => navigation.navigate('QuestionThread', { questionId: qId })}
+                        onLocationChange={setCurrentLocation}
                     />
                 </View>
 
-                {/* ─── Footer ─── */}
                 <View style={[styles.footer, isNarrow && { paddingHorizontal: 14 }]}>
                     <Text style={styles.toggleLabel}>Show Questions</Text>
                     <Switch
@@ -123,7 +194,6 @@ export default function HomeScreen({ navigation }) {
                     />
                 </View>
 
-                {/* ─── Floating "Ask" button ─── */}
                 <TouchableOpacity
                     style={[styles.fab, isNarrow && { width: 220 }]}
                     onPress={() => navigation.navigate('CreateQuestion')}
@@ -179,8 +249,6 @@ const styles = StyleSheet.create({
         flex: 1,
         position: 'relative',
     },
-
-    /* ── Top Bar ── */
     topBar: {
         backgroundColor: '#fff',
         paddingVertical: 10,
@@ -234,8 +302,6 @@ const styles = StyleSheet.create({
         borderRadius: 4,
         backgroundColor: '#a52019',
     },
-
-    /* ── Notification ── */
     notifBanner: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -255,14 +321,10 @@ const styles = StyleSheet.create({
         color: '#78350f',
         marginTop: 1,
     },
-
-    /* ── Map ── */
     mapWrapper: {
         flex: 1,
         overflow: 'hidden',
     },
-
-    /* ── Footer ── */
     footer: {
         backgroundColor: '#fff',
         paddingVertical: 12,
@@ -278,8 +340,6 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#a52019',
     },
-
-    /* ── FAB ── */
     fab: {
         position: 'absolute',
         bottom: 76,
@@ -303,8 +363,6 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '700',
     },
-
-    /* ── Coming Soon Modal ── */
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.35)',

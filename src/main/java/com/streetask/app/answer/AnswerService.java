@@ -3,20 +3,31 @@ package com.streetask.app.answer;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataAccessException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.streetask.app.exceptions.ResourceNotFoundException;
 import com.streetask.app.functionalities.notifications.events.AnswerCreatedEvent;
 import com.streetask.app.model.Answer;
+import com.streetask.app.model.AnswerVote;
 import com.streetask.app.model.GeoPoint;
 import com.streetask.app.model.Question;
+import com.streetask.app.model.enums.VoteType;
+import com.streetask.app.user.RegularUser;
+import com.streetask.app.user.RegularUserRepository;
 
 import jakarta.validation.Valid;
 
@@ -24,16 +35,22 @@ import jakarta.validation.Valid;
 public class AnswerService {
 
 	private final AnswerRepository answerRepository;
+	private final AnswerVoteRepository answerVoteRepository;
+	private final RegularUserRepository regularUserRepository;
 	private final ApplicationEventPublisher eventPublisher;
 
 	@Autowired
-	public AnswerService(AnswerRepository answerRepository, ApplicationEventPublisher eventPublisher) {
+	public AnswerService(AnswerRepository answerRepository, AnswerVoteRepository answerVoteRepository,
+			RegularUserRepository regularUserRepository, ApplicationEventPublisher eventPublisher) {
 		this.answerRepository = answerRepository;
+		this.answerVoteRepository = answerVoteRepository;
+		this.regularUserRepository = regularUserRepository;
 		this.eventPublisher = eventPublisher;
 	}
 
 	@Transactional
 	public Answer saveAnswer(@Valid Answer answer, Question question) throws DataAccessException {
+		attachAuthenticatedUser(answer);
 		// Validate location before saving
 		validateAnswerLocation(answer, question);
 		applyDefaults(answer);
@@ -103,16 +120,67 @@ public class AnswerService {
 	}
 
 	@Transactional
-	public Answer updateVotes(UUID answerId, int upvotesDelta, int downvotesDelta) {
+	public Answer updateVotes(UUID answerId, UUID userId, VoteType voteType) {
 		Answer answer = findAnswer(answerId);
 
-		int newUpvotes = Math.max(0, answer.getUpvotes() + upvotesDelta);
-		int newDownvotes = Math.max(0, answer.getDownvotes() + downvotesDelta);
+		Optional<AnswerVote> existingOpt = answerVoteRepository.findByUserIdAndAnswerId(userId, answerId);
 
-		answer.setUpvotes(newUpvotes);
-		answer.setDownvotes(newDownvotes);
+		if (existingOpt.isPresent()) {
+			AnswerVote existing = existingOpt.get();
+			if (existing.getVoteType() == voteType) {
+				// Same vote, nothing to do
+				return answer;
+			}
+			// Change vote: swap counters
+			if (voteType == VoteType.LIKE) {
+				answer.setUpvotes(answer.getUpvotes() + 1);
+				answer.setDownvotes(Math.max(0, answer.getDownvotes() - 1));
+			} else {
+				answer.setDownvotes(answer.getDownvotes() + 1);
+				answer.setUpvotes(Math.max(0, answer.getUpvotes() - 1));
+			}
+			existing.setVoteType(voteType);
+			existing.setVotedAt(LocalDateTime.now());
+			answerVoteRepository.save(existing);
+		} else {
+			RegularUser user = regularUserRepository.findById(userId)
+					.orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+			AnswerVote vote = new AnswerVote();
+			vote.setAnswer(answer);
+			vote.setUser(user);
+			vote.setVoteType(voteType);
+			vote.setVotedAt(LocalDateTime.now());
+			answerVoteRepository.save(vote);
+			if (voteType == VoteType.LIKE) {
+				answer.setUpvotes(answer.getUpvotes() + 1);
+			} else {
+				answer.setDownvotes(answer.getDownvotes() + 1);
+			}
+		}
 
 		return answerRepository.save(answer);
+	}
+
+	@Transactional
+	public Answer removeVote(UUID answerId, UUID userId) {
+		Answer answer = findAnswer(answerId);
+		AnswerVote existing = answerVoteRepository.findByUserIdAndAnswerId(userId, answerId)
+				.orElseThrow(() -> new IllegalArgumentException("No vote found for this user on this answer"));
+		if (existing.getVoteType() == VoteType.LIKE) {
+			answer.setUpvotes(Math.max(0, answer.getUpvotes() - 1));
+		} else {
+			answer.setDownvotes(Math.max(0, answer.getDownvotes() - 1));
+		}
+		answerVoteRepository.delete(existing);
+		return answerRepository.save(answer);
+	}
+
+	@Transactional(readOnly = true)
+	public Map<UUID, String> getUserVotesForQuestion(UUID userId, UUID questionId) {
+		List<AnswerVote> votes = answerVoteRepository.findByUserIdAndAnswerQuestionId(userId, questionId);
+		return votes.stream().collect(Collectors.toMap(
+				v -> v.getAnswer().getId(),
+				v -> v.getVoteType().name()));
 	}
 
 	@Transactional
@@ -192,6 +260,23 @@ public class AnswerService {
 		if (answer.getDownvotes() == null) {
 			answer.setDownvotes(0);
 		}
+	}
+
+	private void attachAuthenticatedUser(Answer answer) {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		if (auth == null || auth.getName() == null || auth.getName().isBlank()) {
+			if (answer.getUser() != null) {
+				return;
+			}
+			throw new AccessDeniedException("Only authenticated regular users can create answers");
+		}
+
+		String identifier = auth.getName().trim();
+		RegularUser regularUser = regularUserRepository.findByEmail(identifier)
+				.or(() -> regularUserRepository.findByUserNameIgnoreCase(identifier))
+				.orElseThrow(() -> new AccessDeniedException("Only regular users can create answers"));
+
+		answer.setUser(regularUser);
 	}
 
 }

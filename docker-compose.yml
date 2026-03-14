@@ -37,7 +37,7 @@ services:
       - "5005:5005"
     volumes:
       - .:/app
-      - ~/.m2:/root/.m2
+      - maven_cache:/root/.m2
     environment:
       SPRING_PROFILES_ACTIVE: default
       # For MySQL, uncomment these and comment out the line above:
@@ -49,9 +49,10 @@ services:
     #   db:
     #     condition: service_healthy
     restart: unless-stopped
+    command: ./mvnw spring-boot:run -DskipTests
 
   frontend:
-    build: 
+    build:
       context: ./frontend
       dockerfile: Dockerfile.dev
     container_name: streetask-frontend
@@ -60,15 +61,18 @@ services:
     volumes:
       # Sincroniza tu código local con el contenedor en tiempo real
       - ./frontend:/app
-      - /app/node_modules 
+      - /app/node_modules
     environment:
       EXPO_PUBLIC_API_BASE_URL: http://localhost:8080
+      EXPO_PUBLIC_API_TIMEOUT_MS: 10000
+      EXPO_PUBLIC_VAPID_PUBLIC_KEY: BCzmM4oFvgyIoji531RyMjAMxwSEcgRHivSvGBtDeP93MssCAQdfnZZlZ-24mpUMGlCRselBYpHj1onx9eHwqcQ
       # Obliga a Expo a usar el método de "polling" para detectar cambios en los archivos
       # Esto es muy importante cuando se usan volúmenes de Docker en Windows o Mac
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
 
 # Uncomment if using MySQL
-# volumes:
-#   mysql_data:
-#     driver: local
+volumes:
+#  mysql_data:
+#    driver: local
+  maven_cache:

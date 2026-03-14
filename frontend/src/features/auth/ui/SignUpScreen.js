@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
 		height: 48,
 	},
 	inputFocused: {
-		borderColor: '#667eea',
+		borderColor: '#dc2626',
 		backgroundColor: '#fff',
 	},
 	input: {
@@ -333,6 +333,6 @@ const styles = StyleSheet.create({
 	},
 	linkText: {
 		fontSize: 14,
-		color: '#667eea',
+		color: '#b91c1c',
 	},
 });

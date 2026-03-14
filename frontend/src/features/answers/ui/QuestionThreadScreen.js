@@ -4,6 +4,7 @@ import {
     KeyboardAvoidingView, Platform, Pressable, ActivityIndicator,
     TouchableOpacity, useWindowDimensions,
 } from 'react-native';
+import { theme } from '../../../shared/ui/theme/theme';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import apiClient from '../../../shared/services/http/apiClient';
@@ -129,6 +130,16 @@ export default function QuestionThreadScreen({ route, navigation }) {
                     userId: a.user?.id,
                     isVerified: a.isVerified,
                 })));
+                // Cargar los votos previos del usuario para esta pregunta
+                if (user?.id) {
+                    try {
+                        const vRes = await apiClient.get(`/api/v1/answers/votes?userId=${user.id}&questionId=${questionId}`);
+                        // vRes.data es un mapa { answerId: 'LIKE'|'DISLIKE' }
+                        if (vRes.data && typeof vRes.data === 'object') {
+                            setMyVotes(vRes.data);
+                        }
+                    } catch (_) { /* ignorar si falla la carga de votos */ }
+                }
             } catch (e) {
                 setError(e.message || 'Error loading data');
             } finally {
@@ -160,7 +171,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
         const content = draft.trim();
         if (!content || !question) return;
 
-        const optimistic = { id: `tmp-${Date.now()}`, author: '@me', minutesAgo: 0, text: content, likes: 0, dislikes: 0, color: '#dbeafe', optimistic: true };
+        const optimistic = { id: `tmp-${Date.now()}`, author: '@me', minutesAgo: 0, text: content, likes: 0, dislikes: 0, color: '#47d22b', optimistic: true };
         setAnswers((p) => [...p, optimistic]);
         setDraft('');
         inputRef.current?.blur();
@@ -224,7 +235,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
 
             const saved = res.data;
             setAnswers((p) => p.map((a) => a.id === optimistic.id ? {
-                id: saved.id, author: saved.user?.userName || saved.user?.username || 'Anonymous', color: '#dbeafe',
+                id: saved.id, author: saved.user?.userName || saved.user?.username || 'Anonymous', color: theme.colors.primary,
                 text: saved.content, likes: saved.upvotes || 0, dislikes: saved.downvotes || 0,
                 minutesAgo: 0, userId: saved.user?.id, isVerified: saved.isVerified,
             } : a));
@@ -249,58 +260,44 @@ export default function QuestionThreadScreen({ route, navigation }) {
     const vote = async (answerId, type) => {
         const cur = myVotes[answerId];
 
-        // 1. Calculamos los deltas a enviar al backend
-        let upDelta = 0;
-        let downDelta = 0;
-        let newVoteState = type;
-
         if (cur === type) {
-            // Caso 1: Quitar el voto actual (toggle)
-            if (type === 'LIKE') upDelta = -1;
-            else downDelta = -1;
-            newVoteState = null; // Ya no hay voto
-        } else if (cur) {
-            // Caso 2: Cambiar el voto (de LIKE a DISLIKE o viceversa)
-            if (type === 'LIKE') { upDelta = 1; downDelta = -1; }
-            else { upDelta = -1; downDelta = 1; }
-        } else {
-            // Caso 3: Voto nuevo
-            if (type === 'LIKE') upDelta = 1;
-            else downDelta = 1;
+            // Deseleccionar: quitar el voto
+            setAnswers((pa) => pa.map((a) => {
+                if (a.id !== answerId) return a;
+                return {
+                    ...a,
+                    likes: type === 'LIKE' ? Math.max(0, (a.likes || 0) - 1) : (a.likes || 0),
+                    dislikes: type === 'DISLIKE' ? Math.max(0, (a.dislikes || 0) - 1) : (a.dislikes || 0),
+                };
+            }));
+            setMyVotes((prev) => { const n = { ...prev }; delete n[answerId]; return n; });
+            try {
+                await apiClient.delete(`/api/v1/answers/${answerId}/votes?userId=${user.id}`);
+            } catch (error) {
+                console.error('Error al quitar voto:', error);
+            }
+            return;
         }
 
-        // 2. Guardamos un respaldo por si falla la API (Rollback)
-        const previousAnswers = [...answers];
-        const previousVotes = { ...myVotes };
-
-        // 3. Actualización Optimista (Visual e inmediata)
+        // Actualización optimista (voto nuevo o cambio)
         setAnswers((pa) => pa.map((a) => {
             if (a.id !== answerId) return a;
-            return {
-                ...a,
-                likes: Math.max(0, (a.likes || 0) + upDelta),
-                dislikes: Math.max(0, (a.dislikes || 0) + downDelta)
-            };
+            const newLikes = type === 'LIKE'
+                ? (a.likes || 0) + 1
+                : cur === 'LIKE' ? Math.max(0, (a.likes || 0) - 1) : (a.likes || 0);
+            const newDislikes = type === 'DISLIKE'
+                ? (a.dislikes || 0) + 1
+                : cur === 'DISLIKE' ? Math.max(0, (a.dislikes || 0) - 1) : (a.dislikes || 0);
+            return { ...a, likes: newLikes, dislikes: newDislikes };
         }));
+        setMyVotes((prev) => ({ ...prev, [answerId]: type }));
 
-        setMyVotes((prev) => {
-            const nextVotes = { ...prev };
-            if (newVoteState) nextVotes[answerId] = newVoteState;
-            else delete nextVotes[answerId];
-            return nextVotes;
-        });
-
-        // 4. Llamada real al backend
         try {
             await apiClient.put(
-                `/api/v1/answers/${answerId}/votes?upvotesDelta=${upDelta}&downvotesDelta=${downDelta}`
+                `/api/v1/answers/${answerId}/votes?userId=${user.id}&voteType=${type}`
             );
         } catch (error) {
-            // 5. Si algo sale mal, revertimos la interfaz y avisamos al usuario
-            console.error("Error al votar:", error);
-            setAnswers(previousAnswers);
-            setMyVotes(previousVotes);
-            crossAlert('Error', 'No se pudo registrar el voto. Verifica tu conexión.');
+            console.error('Error al votar:', error);
         }
     };
 
@@ -340,11 +337,11 @@ export default function QuestionThreadScreen({ route, navigation }) {
                     <Text style={styles.threadBody}>{item.text}</Text>
                     <View style={styles.threadActions}>
                         <Pressable onPress={() => vote(item.id, 'LIKE')} style={[styles.threadVoteBtn, v === 'DISLIKE' && { opacity: 0.3 }]}>
-                            <Ionicons name={v === 'LIKE' ? 'arrow-up-circle' : 'arrow-up-circle-outline'} size={18} color={v === 'LIKE' ? '#667eea' : '#9ca3af'} />
-                            <Text style={[styles.threadVoteCount, v === 'LIKE' && { color: '#667eea' }]}>{item.likes || 0}</Text>
+                            <Ionicons name={v === 'LIKE' ? 'thumbs-up' : 'thumbs-up-outline'} size={18} color={v === 'LIKE' ? '#22c55e' : '#9ca3af'} />
+                            <Text style={[styles.threadVoteCount, v === 'LIKE' && { color: '#22c55e' }]}>{item.likes || 0}</Text>
                         </Pressable>
                         <Pressable onPress={() => vote(item.id, 'DISLIKE')} style={[styles.threadVoteBtn, v === 'LIKE' && { opacity: 0.3 }]}>
-                            <Ionicons name={v === 'DISLIKE' ? 'arrow-down-circle' : 'arrow-down-circle-outline'} size={18} color={v === 'DISLIKE' ? '#ef4444' : '#9ca3af'} />
+                            <Ionicons name={v === 'DISLIKE' ? 'thumbs-down' : 'thumbs-down-outline'} size={18} color={v === 'DISLIKE' ? '#ef4444' : '#9ca3af'} />
                             <Text style={[styles.threadVoteCount, v === 'DISLIKE' && { color: '#ef4444' }]}>{item.dislikes || 0}</Text>
                         </Pressable>
                     </View>
@@ -395,7 +392,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
             >
                 {loading && (
                     <View style={styles.center}>
-                        <ActivityIndicator size="large" color="#667eea" />
+                        <ActivityIndicator size="large" color={theme.colors.accent} />
                     </View>
                 )}
 
@@ -416,7 +413,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
                                     onPress={() => navigation.goBack()}
                                     activeOpacity={0.7}
                                 >
-                                    <Ionicons name="chevron-back" size={22} color="#667eea" />
+                                    <Ionicons name="chevron-back" size={22} color="#b91c1c" />
                                 </TouchableOpacity>
                             )}
 
@@ -433,11 +430,11 @@ export default function QuestionThreadScreen({ route, navigation }) {
 
                             <View style={styles.chips}>
                                 <View style={styles.chip}>
-                                    <Ionicons name="chatbubbles-outline" size={14} color="#667eea" />
+                                    <Ionicons name="chatbubbles-outline" size={14} color="#f59e0b" />
                                     <Text style={styles.chipVal}>{answers.length}</Text>
                                 </View>
                                 <View style={styles.chip}>
-                                    <Ionicons name="time-outline" size={14} color="#f59e0b" />
+                                    <Ionicons name="time-outline" size={14} color="#1f2937" />
                                     <Text style={styles.chipVal}>{formatHms(timeLeft)}</Text>
                                 </View>
                             </View>
@@ -537,7 +534,7 @@ const styles = StyleSheet.create({
         width: 42,
         height: 42,
         borderRadius: 14,
-        backgroundColor: '#667eea',
+        backgroundColor: '#b91c1c',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -630,7 +627,7 @@ const styles = StyleSheet.create({
     threadAuthor: {
         fontSize: 13,
         fontWeight: '700',
-        color: '#667eea',
+        color: '#b91c1c',
     },
     threadTime: {
         fontSize: 11,
@@ -698,8 +695,8 @@ const styles = StyleSheet.create({
         borderRadius: 14,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#667eea',
-        shadowColor: '#667eea',
+        backgroundColor: '#dc2626',
+        shadowColor: '#b91c1c',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.25,
         shadowRadius: 10,
@@ -722,7 +719,7 @@ const styles = StyleSheet.create({
     mapBtnRow: { flexDirection: 'row', gap: 12 },
     mapCancelBtn: { flex: 1, backgroundColor: '#fff', borderRadius: 14, paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6, elevation: 3 },
     mapCancelText: { fontWeight: '700', fontSize: 15, color: '#6b7280' },
-    mapOkBtn: { flex: 1, backgroundColor: '#667eea', borderRadius: 14, paddingVertical: 14, alignItems: 'center', shadowColor: '#667eea', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 5 },
+    mapOkBtn: { flex: 1, backgroundColor: '#dc2626', borderRadius: 14, paddingVertical: 14, alignItems: 'center', shadowColor: '#b91c1c', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 5 },
     mapOkText: { fontWeight: '700', fontSize: 15, color: '#fff' },
     // Geolocation: estilo del banner de "fuera del radio"
     outOfRange: {

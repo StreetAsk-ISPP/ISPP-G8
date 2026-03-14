@@ -30,4 +30,6 @@ public interface AnswerRepository extends CrudRepository<Answer, UUID> {
 			+ "FROM Answer a WHERE a.user.id IN :userIds GROUP BY a.user.id")
 	List<Object[]> aggregateVotesByUserIds(Collection<UUID> userIds);
 
+	long countByUserId(UUID userId);
+
 }

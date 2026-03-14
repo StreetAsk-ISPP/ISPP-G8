@@ -76,6 +76,9 @@ public class SecurityConfiguration {
 								"/swagger-resources/**")
 						.permitAll()
 
+						// H2 console
+						.requestMatchers("/h2-console/**").permitAll()
+
 						// WebSocket handshake (SockJS uses /{endpoint}/** paths like /ws/info)
 						.requestMatchers(webSocketHandshakePattern()).permitAll()
 
@@ -93,6 +96,11 @@ public class SecurityConfiguration {
 						// Authenticated users can view their own reputation
 						.requestMatchers(HttpMethod.GET, "/api/v1/users/me/reputation").authenticated()
 						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/reputation").authenticated()
+
+						// Authenticated users can view stats, questions and answers
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/stats").authenticated()
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/questions").authenticated()
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/answers").authenticated()
 
 						// Restricted API for owners
 						.requestMatchers("/api/v1/plan").hasAuthority("OWNER")
@@ -118,6 +126,9 @@ public class SecurityConfiguration {
 						// Questions & Answers require auth
 						.requestMatchers("/api/v1/questions/**").authenticated()
 						.requestMatchers("/api/v1/answers", "/api/v1/answers/**").authenticated()
+
+						// Push devices require auth
+						.requestMatchers("/api/push-devices/**").authenticated()
 
 						// Deny everything else
 						.anyRequest().denyAll())

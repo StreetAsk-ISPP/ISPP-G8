@@ -132,6 +132,58 @@ class QuestionRestControllerTest {
 				.andExpect(jsonPath("$", hasSize(1)));
 	}
 
+	@Test
+	@WithMockUser
+	void findAll_withEventIdParam_shouldReturnFilteredQuestions() throws Exception {
+		UUID eventId = UUID.randomUUID();
+
+		mockMvc.perform(get("/api/v1/questions")
+				.param("eventId", eventId.toString())
+				.contentType(APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$", hasSize(0)));
+	}
+
+	@Test
+	@WithMockUser
+	void findAll_withEventIdAndActiveParams_shouldReturnFilteredQuestions() throws Exception {
+		UUID eventId = UUID.randomUUID();
+
+		mockMvc.perform(get("/api/v1/questions")
+				.param("eventId", eventId.toString())
+				.param("active", "true")
+				.contentType(APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$", hasSize(0)));
+	}
+
+	@Test
+	@WithMockUser
+	void findAll_withCreatorIdAndEventIdParams_shouldReturnFilteredQuestions() throws Exception {
+		UUID eventId = UUID.randomUUID();
+
+		mockMvc.perform(get("/api/v1/questions")
+				.param("creatorId", testCreator.getId().toString())
+				.param("eventId", eventId.toString())
+				.contentType(APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$", hasSize(0)));
+	}
+
+	@Test
+	@WithMockUser
+	void findAll_withCreatorIdEventIdAndActiveParams_shouldReturnFilteredQuestions() throws Exception {
+		UUID eventId = UUID.randomUUID();
+
+		mockMvc.perform(get("/api/v1/questions")
+				.param("creatorId", testCreator.getId().toString())
+				.param("eventId", eventId.toString())
+				.param("active", "true")
+				.contentType(APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$", hasSize(0)));
+	}
+
 	// =============== GET QUESTION BY ID TESTS ===============
 
 	@Test
@@ -150,7 +202,7 @@ class QuestionRestControllerTest {
 	@WithMockUser
 	void findById_shouldReturnNotFoundWhenQuestionDoesNotExist() throws Exception {
 		UUID nonExistentId = UUID.randomUUID();
-		
+
 		mockMvc.perform(get("/api/v1/questions/{id}", nonExistentId)
 				.contentType(APPLICATION_JSON))
 				.andExpect(status().isNotFound());
