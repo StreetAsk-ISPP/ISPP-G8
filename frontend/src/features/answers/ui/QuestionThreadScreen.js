@@ -12,7 +12,6 @@ import { useAuth } from '../../../app/providers/AuthProvider';
 import { crossAlert } from '../../../shared/utils/crossAlert';
 import MapPickerWeb from '../../home/ui/components/MapPickerWeb';
 import { calculateDistanceInKm } from '../../../shared/utils/helpers'; // Haversine formula para calcular distancia entre 2 puntos
-import { RADIO } from '../../home/ui/components/MapComponent'; // Radio permitido (150m) importado desde MapComponent para sincronización
 
 const pad2 = (n) => String(n).padStart(2, '0');
 const formatHms = (t) => {
@@ -57,14 +56,17 @@ export default function QuestionThreadScreen({ route, navigation }) {
         if (!userLocation || !question) return null;
         const qLat = question.location?.latitude;
         const qLng = question.location?.longitude;
-        if (qLat == null || qLng == null) return false;
+        const allowedRadiusKm = Number(question.radiusKm);
 
-        const distM = calculateDistanceInKm(
+        if (qLat == null || qLng == null) return true;
+        if (!Number.isFinite(allowedRadiusKm) || allowedRadiusKm <= 0) return true;
+
+        const distanceKm = calculateDistanceInKm(
             { latitude: userLocation.latitude, longitude: userLocation.longitude },
             { latitude: parseFloat(qLat), longitude: parseFloat(qLng) }
-        ) * 1000;
+        );
 
-        return distM <= RADIO;
+        return distanceKm <= allowedRadiusKm;
     }, [userLocation, question]);
 
     useEffect(() => {
