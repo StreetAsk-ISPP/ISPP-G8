@@ -144,7 +144,9 @@ export default function HomeScreen({ navigation }) {
                     pushSubscriptionRef.current,
                     zoneKey,
                     token,
-                    APP_CONFIG.apiBaseUrl
+                    APP_CONFIG.apiBaseUrl,
+                    currentLocation.latitude,
+                    currentLocation.longitude
                 );
                 pushZoneKeyRef.current = zoneKey;
             } catch (error) {

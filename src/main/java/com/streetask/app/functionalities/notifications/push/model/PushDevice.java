@@ -35,6 +35,10 @@ public class PushDevice extends BaseEntity {
     @Column(length = 100)
     private String zoneKey;
 
+    private Double latitude;
+
+    private Double longitude;
+
     @Column(nullable = false)
     private Boolean notificationsEnabled = true;
 
