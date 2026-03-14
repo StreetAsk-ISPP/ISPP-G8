@@ -127,6 +127,9 @@ public class SecurityConfiguration {
 						.requestMatchers("/api/v1/questions/**").authenticated()
 						.requestMatchers("/api/v1/answers", "/api/v1/answers/**").authenticated()
 
+						// Feedback requires auth
+						.requestMatchers("/api/v1/feedback", "/api/v1/feedback/**").authenticated()
+
 						// Push devices require auth
 						.requestMatchers("/api/push-devices/**").authenticated()
 
