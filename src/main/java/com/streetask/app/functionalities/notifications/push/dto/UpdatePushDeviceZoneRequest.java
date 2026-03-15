@@ -9,4 +9,6 @@ public class UpdatePushDeviceZoneRequest {
 
     private String endpoint;
     private String zoneKey;
+    private Double latitude;
+    private Double longitude;
 }

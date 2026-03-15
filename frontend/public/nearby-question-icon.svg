@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+  <defs>
+    <linearGradient id="nearbyGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ef4444" />
+      <stop offset="100%" stop-color="#991b1b" />
+    </linearGradient>
+  </defs>
+  <circle cx="48" cy="48" r="44" fill="#fff1f2" />
+  <path fill="url(#nearbyGradient)" d="M48 12c-14.36 0-26 11.64-26 26 0 17.33 26 46 26 46s26-28.67 26-46c0-14.36-11.64-26-26-26Z"/>
+  <circle cx="48" cy="38" r="10" fill="#ffffff" />
+</svg>

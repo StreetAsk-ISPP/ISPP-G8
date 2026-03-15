@@ -49,7 +49,14 @@ export async function subscribeToWebPush(registration, vapidPublicKey) {
     return subscription;
 }
 
-export async function registerWebPushSubscription(subscription, zoneKey, authToken, apiBaseUrl) {
+export async function registerWebPushSubscription(
+    subscription,
+    zoneKey,
+    authToken,
+    apiBaseUrl,
+    latitude,
+    longitude
+) {
     const json = subscription.toJSON();
 
     const response = await fetch(`${apiBaseUrl}/api/push-devices/register`, {
@@ -63,6 +70,8 @@ export async function registerWebPushSubscription(subscription, zoneKey, authTok
             p256dh: json.keys.p256dh,
             auth: json.keys.auth,
             zoneKey,
+            latitude,
+            longitude,
         }),
     });
 
@@ -72,7 +81,7 @@ export async function registerWebPushSubscription(subscription, zoneKey, authTok
     }
 }
 
-export async function updateWebPushZone(subscription, zoneKey, authToken, apiBaseUrl) {
+export async function updateWebPushZone(subscription, zoneKey, authToken, apiBaseUrl, latitude, longitude) {
     const json = subscription.toJSON();
 
     const response = await fetch(`${apiBaseUrl}/api/push-devices/zone`, {
@@ -84,6 +93,8 @@ export async function updateWebPushZone(subscription, zoneKey, authToken, apiBas
         body: JSON.stringify({
             endpoint: json.endpoint,
             zoneKey,
+            latitude,
+            longitude,
         }),
     });
 

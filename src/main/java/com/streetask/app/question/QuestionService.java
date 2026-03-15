@@ -25,6 +25,8 @@ import jakarta.validation.Valid;
 @Service
 public class QuestionService {
 
+	private static final float DEFAULT_QUESTION_RADIUS_KM = 1.0f;
+
 	private final QuestionRepository questionRepository;
 	private final RegularUserRepository regularUserRepository;
 	private final ApplicationEventPublisher eventPublisher;
@@ -48,6 +50,7 @@ public class QuestionService {
 				.orElseThrow(() -> new AccessDeniedException("Only regular users can create questions"));
 
 		question.setCreator(ru);
+		question.setRadiusKm(resolveRadiusKm(question.getRadiusKm(), ru.getVisibilityRadiusKm()));
 		applyDefaults(question);
 		questionRepository.save(question);
 		eventPublisher.publishEvent(new QuestionCreatedEvent(question.getId()));
@@ -144,5 +147,15 @@ public class QuestionService {
 		}
 		// Para próximo sprint cuando pongamos planes de usuario regular, añadir: 
 		// if (question.getCreator().getPlan() == PREMIUM) {...}
+	}
+
+	private Float resolveRadiusKm(Float requestedRadiusKm, Float userVisibilityRadiusKm) {
+		if (requestedRadiusKm != null && requestedRadiusKm > 0f) {
+			return requestedRadiusKm;
+		}
+		if (userVisibilityRadiusKm != null && userVisibilityRadiusKm > 0f) {
+			return userVisibilityRadiusKm;
+		}
+		return DEFAULT_QUESTION_RADIUS_KM;
 	}
 }

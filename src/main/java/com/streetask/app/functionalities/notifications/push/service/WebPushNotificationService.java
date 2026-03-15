@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.http.HttpResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,14 +61,39 @@ public class WebPushNotificationService implements PushNotificationService {
 
         List<PushDevice> devices = pushDeviceRepository.findByZoneKeyInAndNotificationsEnabledTrue(zoneKeys);
 
-        if (devices.isEmpty()) {
-            log.info("No web push devices found for zones={}", zoneKeys);
+        List<PushDevice> filteredDevices = filterDevicesByDistanceIfRequired(devices, message);
+
+        if (filteredDevices.isEmpty()) {
+            log.info("No web push devices found for zones={} after distance filtering", zoneKeys);
             return;
         }
 
-        for (PushDevice device : devices) {
+        for (PushDevice device : filteredDevices) {
             sendToDevice(device, message);
         }
+    }
+
+    private List<PushDevice> filterDevicesByDistanceIfRequired(List<PushDevice> devices, PushMessage message) {
+        if (devices == null || devices.isEmpty()) {
+            return List.of();
+        }
+
+        Double questionLatitude = message.getQuestionLatitude();
+        Double questionLongitude = message.getQuestionLongitude();
+        Double radiusKm = message.getRadiusKm();
+
+        if (questionLatitude == null || questionLongitude == null || radiusKm == null || radiusKm <= 0d) {
+            return devices;
+        }
+
+        return devices.stream()
+                .filter(device -> device.getLatitude() != null && device.getLongitude() != null)
+                .filter(device -> haversineDistanceKm(
+                        questionLatitude,
+                        questionLongitude,
+                        device.getLatitude(),
+                        device.getLongitude()) <= radiusKm)
+                .collect(Collectors.toList());
     }
 
     private void sendToDevice(PushDevice device, PushMessage message) {
@@ -83,6 +109,16 @@ public class WebPushNotificationService implements PushNotificationService {
 
             if (message.getReferenceType() != null) {
                 payloadMap.put("referenceType", message.getReferenceType());
+            }
+
+            if (message.getQuestionLatitude() != null) {
+                payloadMap.put("questionLatitude", message.getQuestionLatitude());
+            }
+            if (message.getQuestionLongitude() != null) {
+                payloadMap.put("questionLongitude", message.getQuestionLongitude());
+            }
+            if (message.getRadiusKm() != null) {
+                payloadMap.put("radiusKm", message.getRadiusKm());
             }
 
             String payload = objectMapper.writeValueAsString(payloadMap);
@@ -120,5 +156,22 @@ public class WebPushNotificationService implements PushNotificationService {
         device.setNotificationsEnabled(false);
         pushDeviceRepository.save(device);
         log.info("Disabled web push device for endpoint={}", device.getEndpoint());
+    }
+
+    private double haversineDistanceKm(double latitude1, double longitude1, double latitude2, double longitude2) {
+        double lat1Radians = Math.toRadians(latitude1);
+        double lon1Radians = Math.toRadians(longitude1);
+        double lat2Radians = Math.toRadians(latitude2);
+        double lon2Radians = Math.toRadians(longitude2);
+
+        double latitudeDifference = lat2Radians - lat1Radians;
+        double longitudeDifference = lon2Radians - lon1Radians;
+
+        double a = Math.sin(latitudeDifference / 2d) * Math.sin(latitudeDifference / 2d)
+                + Math.cos(lat1Radians) * Math.cos(lat2Radians)
+                        * Math.sin(longitudeDifference / 2d) * Math.sin(longitudeDifference / 2d);
+        double c = 2d * Math.atan2(Math.sqrt(a), Math.sqrt(1d - a));
+
+        return 6371d * c;
     }
 }

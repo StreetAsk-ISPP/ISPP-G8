@@ -28,6 +28,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService {
 
+	private static final float DEFAULT_VISIBILITY_RADIUS_KM = 10.0f;
+
 	@PersistenceContext
 	private EntityManager entityManager;
 
@@ -68,6 +70,7 @@ public class AuthService {
 		user.setCoinBalance(0);
 		user.setRating(0.0f);
 		user.setVerified(false);
+		user.setVisibilityRadiusKm(DEFAULT_VISIBILITY_RADIUS_KM);
 
 		// Assign USER authority
 		Authorities role = authoritiesService.findByAuthority("USER");

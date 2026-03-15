@@ -21,7 +21,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     public WebSocketConfig(
             @Value("${streetask.websocket.endpoint:/ws}") String endpoint,
-            @Value("${streetask.websocket.allowed-origin-patterns:http://localhost:*,http://127.0.0.1:*, https://streetask.expo.app, https://sprint2-streetask.expo.app}") String[] allowedOriginPatterns,
+            @Value("${streetask.websocket.allowed-origin-patterns:http://localhost:*,http://127.0.0.1:*, https://streetask.expo.app, https://sprint2-streetask.expo.app, https://streetask-preprod-frontend.onrender.com/}") String[] allowedOriginPatterns,
             WebSocketAuthChannelInterceptor webSocketAuthChannelInterceptor) {
         this.endpoint = endpoint;
         this.allowedOriginPatterns = allowedOriginPatterns;
@@ -31,7 +31,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(@NonNull MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/topic", "/location", "/queue")
-                .setHeartbeatValue(new long[]{10000, 10000})
+                .setHeartbeatValue(new long[] { 10000, 10000 })
                 .setTaskScheduler(taskScheduler());
 
         registry.setApplicationDestinationPrefixes("/app");

@@ -165,6 +165,9 @@ public class UserService {
 		long questionsCount = questionRepository.countByCreatorId(userId);
 		long answersCount = answerRepository.countByUserId(userId);
 
+
+		// Aggregate likes (upvotes) and dislikes (downvotes) for all answers by this
+		// user
 		List<Object[]> aggregates = answerRepository.aggregateVotesByUserIds(List.of(userId));
 		int likesCount = 0;
 		int dislikesCount = 0;
@@ -182,6 +185,22 @@ public class UserService {
 		stats.put("likesCount", likesCount);
 		stats.put("dislikesCount", dislikesCount);
 		stats.put("reputation", user.getReputation());
+
+		// Calculate rating based on interactions on the user's answers:
+		// ratio = likes / (likes + dislikes) scaled to 0-5.
+		int totalInteractions = likesCount + dislikesCount;
+		double rating = 0.0;
+		if (totalInteractions > 0) {
+			rating = ((double) likesCount / (double) totalInteractions) * 5.0;
+			if (rating < 0.0) {
+				rating = 0.0;
+			} else if (rating > 5.0) {
+				rating = 5.0;
+			}
+			rating = Math.round(rating * 10.0) / 10.0;
+		}
+
+		stats.put("rating", rating);
 
 		return stats;
 	}
