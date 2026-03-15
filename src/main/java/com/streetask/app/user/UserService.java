@@ -1,18 +1,3 @@
-/*
- * Copyright 2002-2013 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.streetask.app.user;
 
 import java.util.ArrayList;
@@ -31,6 +16,7 @@ import com.streetask.app.answer.AnswerRepository;
 import com.streetask.app.exceptions.ResourceNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.streetask.app.question.QuestionRepository;
@@ -42,15 +28,18 @@ public class UserService {
 	private UserRepository userRepository;
 	private AnswerRepository answerRepository;
 	private QuestionRepository questionRepository;
+	private PasswordEncoder passwordEncoder;
+
 	private static final int LIKE_WEIGHT = 2;
 	private static final int DISLIKE_WEIGHT = 1;
 
 	@Autowired
 	public UserService(UserRepository userRepository, AnswerRepository answerRepository,
-			QuestionRepository questionRepository) {
+			QuestionRepository questionRepository, PasswordEncoder passwordEncoder) {
 		this.userRepository = userRepository;
 		this.answerRepository = answerRepository;
 		this.questionRepository = questionRepository;
+		this.passwordEncoder = passwordEncoder;
 	}
 
 	@Transactional
@@ -104,9 +93,18 @@ public class UserService {
 	@Transactional
 	public User updateUser(@Valid User user, UUID idToUpdate) {
 		User toUpdate = findUser(idToUpdate);
-		BeanUtils.copyProperties(user, toUpdate, "id");
-		userRepository.save(toUpdate);
 
+		String previousPassword = toUpdate.getPassword();
+
+		BeanUtils.copyProperties(user, toUpdate, "id");
+
+		if (user.getPassword() == null || user.getPassword().isBlank()) {
+			toUpdate.setPassword(previousPassword);
+		} else {
+			toUpdate.setPassword(passwordEncoder.encode(user.getPassword()));
+		}
+
+		userRepository.save(toUpdate);
 		return enrichReputation(toUpdate);
 	}
 
@@ -162,7 +160,6 @@ public class UserService {
 		long questionsCount = questionRepository.countByCreatorId(userId);
 		long answersCount = answerRepository.countByUserId(userId);
 
-		// Aggregate likes (upvotes) and dislikes (downvotes) for all answers by this user
 		List<Object[]> aggregates = answerRepository.aggregateVotesByUserIds(List.of(userId));
 		int likesCount = 0;
 		int dislikesCount = 0;
@@ -193,5 +190,4 @@ public class UserService {
 	public Iterable<com.streetask.app.model.Answer> findAnswersByUserId(UUID userId) {
 		return answerRepository.findByUserId(userId);
 	}
-
 }

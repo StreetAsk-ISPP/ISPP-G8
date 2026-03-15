@@ -5,7 +5,6 @@ import { useAuth } from '../../app/providers/AuthProvider';
 
 export default function ProfileScreen({ navigation }) {
     const { user, logout } = useAuth();
-    console.log(user)
     return (
         <SafeAreaView style={styles.screen}>
             <View style={styles.headerRed}>
@@ -28,7 +27,8 @@ export default function ProfileScreen({ navigation }) {
             </View>
 
             <ScrollView style={styles.menuContainer}>
-                <TouchableOpacity style={styles.editBtn}>
+                <TouchableOpacity style={styles.editBtn}
+                    onPress={() => navigation.navigate('EditProfile')}>
                     <Text style={styles.editBtnText}>EDIT PROFILE</Text>
                 </TouchableOpacity>
 

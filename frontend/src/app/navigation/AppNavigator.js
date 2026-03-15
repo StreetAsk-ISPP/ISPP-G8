@@ -11,6 +11,7 @@ import CreateQuestionScreen from '../../features/questions/ui/CreateQuestionScre
 import QuestionThreadScreen from '../../features/answers/ui/QuestionThreadScreen';
 import ProfileScreen from '../../features/profile/ProfileScreen';
 import ProfileStats from '../../features/profile/ProfileStats';
+import EditProfileScreen from '../../features/profile/EditProfileScreen';
 
 import { useAuth } from '../providers/AuthProvider';
 import { theme } from '../../shared/ui/theme/theme';
@@ -44,6 +45,8 @@ export default function AppNavigator() {
                     <Stack.Screen name="QuestionThread" component={QuestionThreadScreen} />
                     <Stack.Screen name="Profile" component={ProfileScreen} />
                     <Stack.Screen name="ProfileStats" component={ProfileStats} options={{ headerShown: false }} />
+                    <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+
                 </>
             )}
         </Stack.Navigator>

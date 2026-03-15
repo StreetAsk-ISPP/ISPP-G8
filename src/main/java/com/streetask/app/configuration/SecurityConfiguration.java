@@ -50,7 +50,6 @@ public class SecurityConfiguration {
 	private String[] allowedHttpOriginPatterns;
 
 	private static final String ADMIN = "ADMIN";
-	private static final String CLINIC_OWNER = "CLINIC_OWNER";
 
 	@Bean
 	protected SecurityFilterChain configure(HttpSecurity http) throws Exception {
@@ -86,7 +85,6 @@ public class SecurityConfiguration {
 						.requestMatchers("/api/v1/auth/**").permitAll()
 						.requestMatchers("/api/v1/developers").permitAll()
 						.requestMatchers("/api/v1/plan").permitAll()
-						.requestMatchers("/api/v1/clinics").permitAll()
 
 						// Locations public endpoints
 						.requestMatchers("/api/v1/locations/public/**").permitAll()
@@ -101,27 +99,11 @@ public class SecurityConfiguration {
 						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/stats").authenticated()
 						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/questions").authenticated()
 						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/answers").authenticated()
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*").authenticated()
+						.requestMatchers(HttpMethod.PUT, "/api/v1/users/*").authenticated()
 
 						// Restricted API for owners
 						.requestMatchers("/api/v1/plan").hasAuthority("OWNER")
-
-						// Restricted API for administrators
-						.requestMatchers("/api/v1/users/**").hasAuthority(ADMIN)
-						.requestMatchers("/api/v1/clinicOwners/all").hasAuthority(ADMIN)
-						.requestMatchers(HttpMethod.DELETE, "/api/v1/consultations/**").hasAuthority(ADMIN)
-						.requestMatchers("/api/v1/owners/**").hasAuthority(ADMIN)
-						.requestMatchers("/api/v1/pets/stats").hasAuthority(ADMIN)
-						.requestMatchers("/api/v1/vets/stats").hasAuthority(ADMIN)
-
-						// Other access-control rules
-						.requestMatchers("/api/v1/clinicOwners/**").hasAnyAuthority(ADMIN, CLINIC_OWNER)
-						.requestMatchers("/api/v1/visits/**").authenticated()
-						.requestMatchers("/api/v1/pets").authenticated()
-						.requestMatchers("/api/v1/pets/**").authenticated()
-						.requestMatchers("/api/v1/consultations/**").authenticated()
-						.requestMatchers("/api/v1/clinics/**").hasAnyAuthority(CLINIC_OWNER, ADMIN)
-						.requestMatchers(HttpMethod.GET, "/api/v1/vets/**").authenticated()
-						.requestMatchers("/api/v1/vets/**").hasAnyAuthority(ADMIN, "VET", CLINIC_OWNER)
 
 						// Questions & Answers require auth
 						.requestMatchers("/api/v1/questions/**").authenticated()
