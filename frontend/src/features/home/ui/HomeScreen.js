@@ -14,18 +14,15 @@ import {
     TextInput,
     Alert,
     ActivityIndicator,
+    Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MapComponent from './components/MapComponent';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useNotifications } from '../../../app/providers/NotificationProvider';
 import { APP_CONFIG } from '../../../app/config/config';
-import { APP_CONFIG } from '../../../app/config/config';
 import apiClient from '../../../shared/services/http/apiClient';
-import { Image } from 'react-native';
 import { bootstrapWebPushNotifications } from '../../../shared/services/notifications/webPushBootstrap';
-import { updateWebPushZone } from '../../../shared/services/notifications/webPushService';
-import { resolveZoneKey } from '../../../shared/services/notifications/zoneService';
 import { updateWebPushZone } from '../../../shared/services/notifications/webPushService';
 import { resolveZoneKey } from '../../../shared/services/notifications/zoneService';
 
@@ -49,8 +46,6 @@ export default function HomeScreen({ navigation }) {
     const [feedbackSuccessMessage, setFeedbackSuccessMessage] = useState('');
 
     const pushBootstrappedRef = useRef(false);
-    const pushSubscriptionRef = useRef(null);
-    const pushZoneKeyRef = useRef(null);
     const pushSubscriptionRef = useRef(null);
     const pushZoneKeyRef = useRef(null);
 
@@ -110,10 +105,6 @@ export default function HomeScreen({ navigation }) {
                     pushBootstrappedRef.current = false;
                     pushSubscriptionRef.current = null;
                     pushZoneKeyRef.current = null;
-                if (!token) {
-                    pushBootstrappedRef.current = false;
-                    pushSubscriptionRef.current = null;
-                    pushZoneKeyRef.current = null;
                     return;
                 }
 
@@ -122,14 +113,10 @@ export default function HomeScreen({ navigation }) {
                 }
 
                 const apiBaseUrl = APP_CONFIG.apiBaseUrl;
-                const apiBaseUrl = APP_CONFIG.apiBaseUrl;
 
-                const { subscription } = await bootstrapWebPushNotifications({
                 const { subscription } = await bootstrapWebPushNotifications({
                     authToken: token,
                     apiBaseUrl,
-                    latitude: currentLocation?.latitude,
-                    longitude: currentLocation?.longitude,
                     latitude: currentLocation?.latitude,
                     longitude: currentLocation?.longitude,
                     onNotificationClick: (data) => {
@@ -142,10 +129,6 @@ export default function HomeScreen({ navigation }) {
                     },
                 });
 
-                if (subscription) {
-                    pushSubscriptionRef.current = subscription;
-                    pushBootstrappedRef.current = true;
-                }
                 if (subscription) {
                     pushSubscriptionRef.current = subscription;
                     pushBootstrappedRef.current = true;
@@ -173,43 +156,7 @@ export default function HomeScreen({ navigation }) {
                 }
 
                 const zoneKey = resolveZoneKey(currentLocation.latitude, currentLocation.longitude);
-                if (!zoneKey || pushZoneKeyRef.current === zoneKey) {
-                    return;
-                }
 
-                await updateWebPushZone(
-                    pushSubscriptionRef.current,
-                    zoneKey,
-                    token,
-                    APP_CONFIG.apiBaseUrl,
-                    currentLocation.latitude,
-                    currentLocation.longitude
-                );
-
-                pushZoneKeyRef.current = zoneKey;
-            } catch (error) {
-                console.error('Error updating push notification zone:', error);
-            }
-        }
-
-        syncPushZone();
-    }, [token, currentLocation]);
-
-    useEffect(() => {
-        async function syncPushZone() {
-            try {
-                if (Platform.OS !== 'web' || !token || !pushSubscriptionRef.current) {
-                    return;
-                }
-
-                if (
-                    typeof currentLocation?.latitude !== 'number' ||
-                    typeof currentLocation?.longitude !== 'number'
-                ) {
-                    return;
-                }
-
-                const zoneKey = resolveZoneKey(currentLocation.latitude, currentLocation.longitude);
                 if (!zoneKey || pushZoneKeyRef.current === zoneKey) {
                     return;
                 }
@@ -259,7 +206,6 @@ export default function HomeScreen({ navigation }) {
                 message: trimmedMessage,
             });
 
-
             setFeedbackVisible(false);
             resetFeedbackForm();
             setFeedbackSuccessMessage('Thank you for helping us improve StreetAsk.');
@@ -286,28 +232,7 @@ export default function HomeScreen({ navigation }) {
                             </View>
                             <Text style={styles.appName}>StreetAsk</Text>
                         </View>
-        <>
-            <SafeAreaView style={styles.screen}>
-                <View style={styles.container}>
-                    <View style={[styles.topBar, isNarrow && { paddingHorizontal: 12 }]}>
-                        <View style={styles.topBarLeft}>
-                            <View style={styles.logoBadge}>
-                                <Image
-                                    source={require('../../../../assets/logo.png')}
-                                    style={{ width: 18, height: 28 }}
-                                />
-                            </View>
-                            <Text style={styles.appName}>StreetAsk</Text>
-                        </View>
 
-                        <View style={styles.topBarRight}>
-                            <TouchableOpacity
-                                style={styles.iconBtn}
-                                activeOpacity={0.7}
-                                onPress={() => navigation.navigate('Profile')}
-                            >
-                                <Ionicons name="person-outline" size={20} color="#374151" />
-                            </TouchableOpacity>
                         <View style={styles.topBarRight}>
                             <TouchableOpacity
                                 style={styles.iconBtn}
@@ -324,24 +249,7 @@ export default function HomeScreen({ navigation }) {
                             >
                                 <Ionicons name="chatbox-ellipses-outline" size={20} color="#a52019" />
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.iconBtn}
-                                activeOpacity={0.7}
-                                onPress={() => setFeedbackVisible(true)}
-                            >
-                                <Ionicons name="chatbox-ellipses-outline" size={20} color="#a52019" />
-                            </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={styles.iconBtn}
-                                activeOpacity={0.7}
-                                onPress={() => {
-                                    setModalType('search');
-                                    setComingSoon(true);
-                                }}
-                            >
-                                <Ionicons name="search-outline" size={20} color="#a52019" />
-                            </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.iconBtn}
                                 activeOpacity={0.7}
@@ -364,27 +272,7 @@ export default function HomeScreen({ navigation }) {
                                 <Ionicons name="notifications-outline" size={20} color="#a52019" />
                                 {ephemeralNotification ? <View style={styles.badge} /> : null}
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.iconBtn}
-                                activeOpacity={0.7}
-                                onPress={() => {
-                                    setModalType('notifications');
-                                    setComingSoon(true);
-                                }}
-                            >
-                                <Ionicons name="notifications-outline" size={20} color="#a52019" />
-                                {ephemeralNotification ? <View style={styles.badge} /> : null}
-                            </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={[styles.iconBtn, styles.logoutBtn]}
-                                onPress={logout}
-                                activeOpacity={0.7}
-                            >
-                                <Ionicons name="log-out-outline" size={20} color="#ef4444" />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
                             <TouchableOpacity
                                 style={[styles.iconBtn, styles.logoutBtn]}
                                 onPress={logout}
@@ -408,29 +296,7 @@ export default function HomeScreen({ navigation }) {
                             </View>
                         </View>
                     ) : null}
-                    {ephemeralNotification ? (
-                        <View style={styles.notifBanner}>
-                            <Ionicons name="information-circle" size={18} color="#92400e" />
-                            <View style={{ flex: 1, marginLeft: 8 }}>
-                                <Text style={styles.notifTitle}>
-                                    {ephemeralNotification.title || 'Notification'}
-                                </Text>
-                                <Text style={styles.notifMsg}>
-                                    {ephemeralNotification.message || ''}
-                                </Text>
-                            </View>
-                        </View>
-                    ) : null}
 
-                    <View style={styles.mapWrapper}>
-                        <MapComponent
-                            questions={showQuestions ? questions : []}
-                            onQuestionPress={(qId) =>
-                                navigation.navigate('QuestionThread', { questionId: qId })
-                            }
-                            onLocationChange={setCurrentLocation}
-                        />
-                    </View>
                     <View style={styles.mapWrapper}>
                         <MapComponent
                             questions={showQuestions ? questions : []}
@@ -450,26 +316,7 @@ export default function HomeScreen({ navigation }) {
                             thumbColor="#fff"
                         />
                     </View>
-                    <View style={[styles.footer, isNarrow && { paddingHorizontal: 14 }]}>
-                        <Text style={styles.toggleLabel}>Show Questions</Text>
-                        <Switch
-                            value={showQuestions}
-                            onValueChange={setShowQuestions}
-                            trackColor={{ false: '#d1d5db', true: '#a52019' }}
-                            thumbColor="#fff"
-                        />
-                    </View>
 
-                    <TouchableOpacity
-                        style={[styles.fab, isNarrow && { width: 220 }]}
-                        onPress={() => navigation.navigate('CreateQuestion')}
-                        activeOpacity={0.85}
-                    >
-                        <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
-                        <Text style={styles.fabText}>Ask a question</Text>
-                    </TouchableOpacity>
-                </View>
-            </SafeAreaView>
                     <TouchableOpacity
                         style={[styles.fab, isNarrow && { width: 220 }]}
                         onPress={() => navigation.navigate('CreateQuestion')}
@@ -518,7 +365,7 @@ export default function HomeScreen({ navigation }) {
                 onRequestClose={closeFeedbackModal}
             >
                 <Pressable style={styles.modalOverlay} onPress={closeFeedbackModal}>
-                    <Pressable style={styles.feedbackModalBox} onPress={() => {}}>
+                    <Pressable style={styles.feedbackModalBox} onPress={() => { }}>
                         <View style={styles.feedbackHeader}>
                             <View style={styles.feedbackHeaderLeft}>
                                 <View style={styles.feedbackIconWrap}>
