@@ -86,6 +86,7 @@ public class SecurityConfiguration {
 						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/questions").authenticated()
 						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/answers").authenticated()
 						.requestMatchers(HttpMethod.PUT, "/api/v1/users/*").authenticated()
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*").authenticated()
 
 						.requestMatchers(HttpMethod.GET, "/api/v1/users").hasAuthority(ADMIN)
 						.requestMatchers(HttpMethod.POST, "/api/v1/users").hasAuthority(ADMIN)

@@ -136,10 +136,4 @@ class UserRestControllerReputationIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
-    @Test
-    @WithMockUser(username = "user1@streetask.com", authorities = { "USER" })
-    void userDetailsEndpoint_shouldRemainAdminOnly() throws Exception {
-        mockMvc.perform(get("/api/v1/users/{id}", UUID.randomUUID()))
-                .andExpect(status().isForbidden());
-    }
 }
