@@ -6,8 +6,81 @@ import { AuthProvider } from './src/app/providers/AuthProvider';
 import AppNavigator from './src/app/navigation/AppNavigator';
 import { WebSocketProvider } from './src/app/providers/WebSocketProvider';
 import { NotificationProvider } from './src/app/providers/NotificationProvider';
+import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 
 const isWeb = Platform.OS === 'web';
+
+// Configuración personalizada para mover las alertas a la derecha
+const toastConfig = {
+  // 1. Diseño para alertas de éxito
+  success: (props) => (
+    <BaseToast
+      {...props}
+      style={{
+        borderLeftColor: '#47d22b',
+        borderLeftWidth: 8,
+        alignSelf: 'flex-end',
+        marginRight: 20,
+        marginTop: 80,
+        width: '90%',           // <-- Ocupa hasta el 90% de la pantalla en móviles
+        maxWidth: 400,          // <-- Pero no se hace más grande que 400px en web
+        height: 'auto',
+        minHeight: 80,
+        paddingVertical: 15,
+      }}
+      contentContainerStyle={{ paddingHorizontal: 20 }}
+      text1Style={{ fontSize: 18, fontWeight: '700' }}
+      text2Style={{ fontSize: 15, color: '#4b5563' }}
+      text2NumberOfLines={0}
+    />
+  ),
+
+  // 2. Diseño para alertas de error
+  error: (props) => (
+    <ErrorToast
+      {...props}
+      style={{
+        borderLeftColor: '#a52019',
+        borderLeftWidth: 8,
+        alignSelf: 'flex-end',
+        marginRight: 20,
+        marginTop: 10,
+        width: '90%',
+        maxWidth: 400,
+        height: 'auto',
+        minHeight: 80,
+        paddingVertical: 15,
+      }}
+      contentContainerStyle={{ paddingHorizontal: 20 }}
+      text1Style={{ fontSize: 18, fontWeight: '700' }}
+      text2Style={{ fontSize: 15, color: '#4b5563' }}
+      text2NumberOfLines={0}
+    />
+  ),
+
+  // 3. Diseño para alertas de información
+  info: (props) => (
+    <BaseToast
+      {...props}
+      style={{
+        borderLeftColor: '#764ba2',
+        borderLeftWidth: 8,
+        alignSelf: 'flex-end',
+        marginRight: 20,
+        marginTop: 10,
+        width: '90%',
+        maxWidth: 400,
+        height: 'auto',
+        minHeight: 80,
+        paddingVertical: 15,
+      }}
+      contentContainerStyle={{ paddingHorizontal: 20 }}
+      text1Style={{ fontSize: 18, fontWeight: '700' }}
+      text2Style={{ fontSize: 15, color: '#4b5563' }}
+      text2NumberOfLines={0}
+    />
+  )
+};
 
 export default function App() {
   const webContainerStyle = {
@@ -31,6 +104,7 @@ export default function App() {
                 <AppNavigator />
               )}
             </NavigationContainer>
+            <Toast config={toastConfig} position="top" />
           </NotificationProvider>
         </WebSocketProvider>
       </AuthProvider>

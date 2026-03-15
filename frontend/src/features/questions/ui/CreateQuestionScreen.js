@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import apiClient from '../../../shared/services/http/apiClient';
-import { crossAlert } from '../../../shared/utils/crossAlert';
+import Toast from 'react-native-toast-message';
 import MapPickerWeb from '../../home/ui/components/MapPickerWeb';
 import { useAuth } from '../../../app/providers/AuthProvider';
 
@@ -89,7 +89,7 @@ export default function CreateQuestionScreen({ navigation }) {
           setLongitude((prev) => (typeof prev === 'number' ? prev : lng));
           setPlace((prev) => (prev?.trim() ? prev : `(${lat.toFixed(5)}, ${lng.toFixed(5)})`));
         },
-        () => {},
+        () => { },
         { enableHighAccuracy: true, timeout: 8000 }
       );
     }
@@ -103,7 +103,12 @@ export default function CreateQuestionScreen({ navigation }) {
   const searchAddress = async () => {
     const q = place.trim();
     if (!q) {
-      crossAlert('Address is missing', 'Enter a street or place name to search.');
+      Toast.show({
+        type: 'info',
+        text1: 'Falta la dirección',
+        text2: 'Ingresa una calle o lugar para buscar.',
+        position: 'top'
+      });
       return;
     }
 
@@ -122,7 +127,13 @@ export default function CreateQuestionScreen({ navigation }) {
       }));
       setSearchResults(items);
       if (items.length === 0) {
-        crossAlert('No results', 'No addresses found. Try being more specific.');
+        Toast.show({
+          type: 'info',
+          text1: 'Sin resultados',
+          text2: 'No se encontraron direcciones. Intenta ser más específico.',
+          position: 'top'
+        });
+
       }
       if (items.length === 1) {
         setLatitude(items[0].lat);
@@ -132,7 +143,12 @@ export default function CreateQuestionScreen({ navigation }) {
       }
     } catch (e) {
       console.error('Nominatim search error:', e);
-      crossAlert('Error', 'The address could not be found. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error en la búsqueda',
+        text2: 'No se pudo encontrar la dirección. Por favor, inténtalo de nuevo.',
+        position: 'top'
+      });
     } finally {
       setSearching(false);
     }
@@ -156,7 +172,12 @@ export default function CreateQuestionScreen({ navigation }) {
 
   const confirmMapPick = () => {
     if (typeof tempLat !== 'number' || typeof tempLng !== 'number') {
-      crossAlert('Pick a point', 'Click on the map to choose a location.');
+      Toast.show({
+        type: 'info',
+        text1: 'Selecciona un punto',
+        text2: 'Toca en el mapa para elegir una ubicación.',
+        position: 'top'
+      });
       return;
     }
     setLatitude(tempLat);
@@ -179,7 +200,12 @@ export default function CreateQuestionScreen({ navigation }) {
     if (!canPost) return;
     const parsedRadiusKm = parseRadiusKm(radiusInput);
     if (parsedRadiusKm === null) {
-      crossAlert('Invalid radius', 'Please enter a radius greater than 0 km.');
+      Toast.show({
+        type: 'error',
+        text1: 'Radio inválido',
+        text2: 'Por favor ingresa un radio mayor a 0 km.',
+        position: 'top'
+      });
       return;
     }
     setIsSubmitting(true);
@@ -192,10 +218,22 @@ export default function CreateQuestionScreen({ navigation }) {
         location: { latitude, longitude },
       };
       await apiClient.post('/api/v1/questions', payload);
-      crossAlert('Success', 'Question created!');
+
+      Toast.show({
+        type: 'success',
+        text1: '¡Listo!',
+        text2: '¡La pregunta ha sido creada con éxito!',
+        position: 'top'
+      });
       navigation.goBack();
     } catch (e) {
-      crossAlert('Error', e.response?.data?.message || e.message);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: e.response?.data?.message || 'Hubo un problema al crear la pregunta.',
+        position: 'top'
+      });
+
     } finally {
       setIsSubmitting(false);
     }
@@ -306,7 +344,7 @@ export default function CreateQuestionScreen({ navigation }) {
             pickEnabled={false}
             tempLat={tempLat}
             tempLng={tempLng}
-            onPick={() => {}}
+            onPick={() => { }}
           />
         </View>
 
