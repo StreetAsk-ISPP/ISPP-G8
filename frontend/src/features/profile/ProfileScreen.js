@@ -6,6 +6,7 @@ import apiClient from '../../shared/services/http/apiClient';
 
 export default function ProfileScreen({ navigation }) {
     const { user, logout } = useAuth();
+
     const [stats, setStats] = useState({ questions: 0, answers: 0, rating: 0 });
 
     useEffect(() => {
@@ -65,7 +66,8 @@ export default function ProfileScreen({ navigation }) {
             </View>
 
             <ScrollView style={styles.menuContainer}>
-                <TouchableOpacity style={styles.editBtn}>
+                <TouchableOpacity style={styles.editBtn}
+                    onPress={() => navigation.navigate('EditProfile')}>
                     <Text style={styles.editBtnText}>EDIT PROFILE</Text>
                 </TouchableOpacity>
 
