@@ -61,58 +61,41 @@ public class SecurityConfiguration {
 				.exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedHandler))
 
 				.authorizeHttpRequests(auth -> auth
-						// Public common static resources (css, js, images, webjars...)
 						.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-
-						// Root / public pages
 						.requestMatchers("/", "/oups").permitAll()
-
-						// Accessible Swagger / OpenAPI
 						.requestMatchers(
 								"/v3/api-docs/**",
 								"/swagger-ui.html",
 								"/swagger-ui/**",
 								"/swagger-resources/**")
 						.permitAll()
-
-						// H2 console
 						.requestMatchers("/h2-console/**").permitAll()
-
-						// WebSocket handshake (SockJS uses /{endpoint}/** paths like /ws/info)
 						.requestMatchers(webSocketHandshakePattern()).permitAll()
 
-						// Public API
 						.requestMatchers("/api/v1/auth/**").permitAll()
 						.requestMatchers("/api/v1/developers").permitAll()
-						.requestMatchers("/api/v1/plan").permitAll()
 
-						// Locations public endpoints
 						.requestMatchers("/api/v1/locations/public/**").permitAll()
-						// Public only GET of user locations
 						.requestMatchers(HttpMethod.GET, "/api/v1/locations/user/**").permitAll()
 
-						// Authenticated users can view their own reputation
+						.requestMatchers("/api/v1/plan").hasAuthority("OWNER")
+
 						.requestMatchers(HttpMethod.GET, "/api/v1/users/me/reputation").authenticated()
 						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/reputation").authenticated()
-
-						// Authenticated users can view stats, questions and answers
 						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/stats").authenticated()
 						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/questions").authenticated()
 						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/answers").authenticated()
-						.requestMatchers(HttpMethod.GET, "/api/v1/users/*").authenticated()
 						.requestMatchers(HttpMethod.PUT, "/api/v1/users/*").authenticated()
 
-						// Restricted API for owners
-						.requestMatchers("/api/v1/plan").hasAuthority("OWNER")
+						.requestMatchers(HttpMethod.GET, "/api/v1/users").hasAuthority(ADMIN)
+						.requestMatchers(HttpMethod.POST, "/api/v1/users").hasAuthority(ADMIN)
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*").hasAuthority(ADMIN)
+						.requestMatchers(HttpMethod.DELETE, "/api/v1/users/*").hasAuthority(ADMIN)
 
-						// Questions & Answers require auth
 						.requestMatchers("/api/v1/questions/**").authenticated()
 						.requestMatchers("/api/v1/answers", "/api/v1/answers/**").authenticated()
-
-						// Push devices require auth
 						.requestMatchers("/api/push-devices/**").authenticated()
 
-						// Deny everything else
 						.anyRequest().denyAll())
 
 				.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
