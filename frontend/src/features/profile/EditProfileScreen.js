@@ -7,22 +7,12 @@ import {
     TouchableOpacity,
     ScrollView,
     TextInput,
-    Alert,
     ActivityIndicator,
+    Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../app/providers/AuthProvider';
 import apiClient from '../../shared/services/http/apiClient';
-import { Platform } from 'react-native';
-
-const showAlert = (title, message) => {
-    if (Platform.OS === 'web') {
-        window.alert(`${title}\n\n${message}`);
-        return;
-    }
-
-    Alert.alert(title, message);
-};
 
 export default function EditProfileScreen({ navigation }) {
     const { user, setUser } = useAuth();
@@ -30,7 +20,6 @@ export default function EditProfileScreen({ navigation }) {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [originalUser, setOriginalUser] = useState(null);
-
 
     const [form, setForm] = useState({
         email: '',
@@ -47,7 +36,39 @@ export default function EditProfileScreen({ navigation }) {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+    const [feedback, setFeedback] = useState({
+        visible: false,
+        title: '',
+        message: '',
+        type: 'success', // success | error
+        goBackOnClose: false,
+    });
+
     const userId = useMemo(() => user?.id, [user]);
+
+    const showFeedback = (title, message, type = 'success', goBackOnClose = false) => {
+        setFeedback({
+            visible: true,
+            title,
+            message,
+            type,
+            goBackOnClose,
+        });
+    };
+
+    const closeFeedback = () => {
+        const shouldGoBack = feedback.goBackOnClose;
+
+        setFeedback(prev => ({
+            ...prev,
+            visible: false,
+            goBackOnClose: false,
+        }));
+
+        if (shouldGoBack) {
+            navigation.goBack();
+        }
+    };
 
     useEffect(() => {
         if (!userId) {
@@ -59,6 +80,7 @@ export default function EditProfileScreen({ navigation }) {
             try {
                 const res = await apiClient.get(`/api/v1/users/${userId}`);
                 const currentUser = res.data;
+
                 setOriginalUser(currentUser);
                 setForm({
                     email: currentUser?.email || '',
@@ -68,12 +90,13 @@ export default function EditProfileScreen({ navigation }) {
                 });
             } catch (error) {
                 if (error?.response?.status === 401) {
-                    showAlert(
+                    showFeedback(
                         'Sesión no válida',
-                        'No se pudo cargar el perfil porque la petición no está autorizada.'
+                        'No se pudo cargar el perfil porque la petición no está autorizada.',
+                        'error'
                     );
                 } else {
-                    showAlert('Error', 'No se pudieron cargar tus datos.');
+                    showFeedback('Error', 'No se pudieron cargar tus datos.', 'error');
                 }
             } finally {
                 setLoading(false);
@@ -93,41 +116,42 @@ export default function EditProfileScreen({ navigation }) {
 
     const validateForm = () => {
         if (!form.email.trim()) {
-            showAlert('Validación', 'El email es obligatorio.');
+            showFeedback('Validación', 'El email es obligatorio.', 'error');
             return false;
         }
 
         if (!/\S+@\S+\.\S+/.test(form.email.trim())) {
-            showAlert('Validación', 'Introduce un email válido.');
+            showFeedback('Validación', 'Introduce un email válido.', 'error');
             return false;
         }
 
         if (!form.userName.trim()) {
-            showAlert('Validación', 'El nombre de usuario es obligatorio.');
+            showFeedback('Validación', 'El nombre de usuario es obligatorio.', 'error');
             return false;
         }
 
         if (!form.firstName.trim()) {
-            showAlert('Validación', 'El nombre es obligatorio.');
+            showFeedback('Validación', 'El nombre es obligatorio.', 'error');
             return false;
         }
 
         if (!form.lastName.trim()) {
-            showAlert('Validación', 'Los apellidos son obligatorios.');
+            showFeedback('Validación', 'Los apellidos son obligatorios.', 'error');
             return false;
         }
 
         if (passwords.newPassword || passwords.confirmPassword) {
             if (passwords.newPassword.length < 6) {
-                showAlert(
+                showFeedback(
                     'Validación',
-                    'La nueva contraseña debe tener al menos 6 caracteres.'
+                    'La nueva contraseña debe tener al menos 6 caracteres.',
+                    'error'
                 );
                 return false;
             }
 
             if (passwords.newPassword !== passwords.confirmPassword) {
-                showAlert('Validación', 'Las contraseñas no coinciden.');
+                showFeedback('Validación', 'Las contraseñas no coinciden.', 'error');
                 return false;
             }
         }
@@ -189,19 +213,24 @@ export default function EditProfileScreen({ navigation }) {
                 }));
             }
 
-            showAlert('Perfil actualizado', 'Tus datos se han guardado correctamente.');
-            navigation.goBack();
+            showFeedback(
+                'Perfil actualizado',
+                'Tus datos se han guardado correctamente.',
+                'success',
+                true
+            );
         } catch (error) {
             if (error?.response?.status === 401) {
-                showAlert(
+                showFeedback(
                     'Sesión no válida',
-                    'No se pudo guardar porque la petición no está autorizada.'
+                    'No se pudo guardar porque la petición no está autorizada.',
+                    'error'
                 );
             } else {
                 const message =
                     error?.response?.data?.message ||
                     'No se pudo actualizar el perfil.';
-                showAlert('Error', message);
+                showFeedback('Error', message, 'error');
             }
         } finally {
             setSaving(false);
@@ -286,7 +315,7 @@ export default function EditProfileScreen({ navigation }) {
                 <View style={styles.card}>
                     <Text style={styles.sectionTitle}>Seguridad</Text>
                     <Text style={styles.helperText}>
-                        La contraseña actual no se muestra nunca. Solo se actualizará si escribes una nueva.
+                        Actualizar contraseña
                     </Text>
 
                     <Text style={styles.label}>Nueva contraseña</Text>
@@ -348,6 +377,51 @@ export default function EditProfileScreen({ navigation }) {
                     )}
                 </TouchableOpacity>
             </ScrollView>
+
+            <Modal
+                transparent
+                visible={feedback.visible}
+                animationType="fade"
+                onRequestClose={closeFeedback}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalCard}>
+                        <View
+                            style={[
+                                styles.modalIconWrap,
+                                feedback.type === 'success'
+                                    ? styles.modalSuccess
+                                    : styles.modalError,
+                            ]}
+                        >
+                            <Ionicons
+                                name={
+                                    feedback.type === 'success'
+                                        ? 'checkmark-outline'
+                                        : 'close-outline'
+                                }
+                                size={28}
+                                color="#fff"
+                            />
+                        </View>
+
+                        <Text style={styles.modalTitle}>{feedback.title}</Text>
+                        <Text style={styles.modalMessage}>{feedback.message}</Text>
+
+                        <TouchableOpacity
+                            style={[
+                                styles.modalButton,
+                                feedback.type === 'success'
+                                    ? styles.modalButtonSuccess
+                                    : styles.modalButtonError,
+                            ]}
+                            onPress={closeFeedback}
+                        >
+                            <Text style={styles.modalButtonText}>Aceptar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -465,5 +539,73 @@ const styles = StyleSheet.create({
         marginTop: 12,
         fontSize: 15,
         color: '#4b5563',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.45)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+    },
+    modalCard: {
+        width: '100%',
+        maxWidth: 380,
+        backgroundColor: '#fff',
+        borderRadius: 22,
+        paddingHorizontal: 24,
+        paddingTop: 24,
+        paddingBottom: 20,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.18,
+        shadowRadius: 16,
+        elevation: 12,
+    },
+    modalIconWrap: {
+        width: 62,
+        height: 62,
+        borderRadius: 31,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    modalSuccess: {
+        backgroundColor: '#16a34a',
+    },
+    modalError: {
+        backgroundColor: '#dc2626',
+    },
+    modalTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#111827',
+        textAlign: 'center',
+        marginBottom: 10,
+    },
+    modalMessage: {
+        fontSize: 15,
+        color: '#4b5563',
+        textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: 22,
+    },
+    modalButton: {
+        minWidth: 140,
+        paddingVertical: 14,
+        paddingHorizontal: 22,
+        borderRadius: 14,
+        alignItems: 'center',
+    },
+    modalButtonSuccess: {
+        backgroundColor: '#16a34a',
+    },
+    modalButtonError: {
+        backgroundColor: '#dc2626',
+    },
+    modalButtonText: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '700',
     },
 });
