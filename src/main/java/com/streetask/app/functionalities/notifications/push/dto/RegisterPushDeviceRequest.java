@@ -11,4 +11,6 @@ public class RegisterPushDeviceRequest {
     private String p256dh;
     private String auth;
     private String zoneKey;
+    private Double latitude;
+    private Double longitude;
 }

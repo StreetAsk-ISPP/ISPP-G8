@@ -37,10 +37,17 @@ export async function bootstrapWebPushNotifications({
 
     const zoneKey = resolveZoneKey(latitude, longitude);
 
-    await registerWebPushSubscription(subscription, zoneKey, authToken, apiBaseUrl);
+    await registerWebPushSubscription(
+        subscription,
+        zoneKey,
+        authToken,
+        apiBaseUrl,
+        latitude,
+        longitude
+    );
 
     if (zoneKey) {
-        await updateWebPushZone(subscription, zoneKey, authToken, apiBaseUrl);
+        await updateWebPushZone(subscription, zoneKey, authToken, apiBaseUrl, latitude, longitude);
     }
 
     if (navigator.serviceWorker) {

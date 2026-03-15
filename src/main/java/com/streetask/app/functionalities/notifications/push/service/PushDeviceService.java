@@ -40,6 +40,8 @@ public class PushDeviceService {
         device.setP256dh(request.getP256dh());
         device.setAuth(request.getAuth());
         device.setZoneKey(request.getZoneKey());
+        device.setLatitude(validateLatitude(request.getLatitude()));
+        device.setLongitude(validateLongitude(request.getLongitude()));
         device.setNotificationsEnabled(true);
         device.setLastSeenAt(LocalDateTime.now());
 
@@ -60,6 +62,8 @@ public class PushDeviceService {
         }
 
         device.setZoneKey(request.getZoneKey());
+        device.setLatitude(validateLatitude(request.getLatitude()));
+        device.setLongitude(validateLongitude(request.getLongitude()));
         device.setLastSeenAt(LocalDateTime.now());
 
         pushDeviceRepository.save(device);
@@ -110,5 +114,25 @@ public class PushDeviceService {
         }
 
         return authentication.getName();
+    }
+
+    private Double validateLatitude(Double latitude) {
+        if (latitude == null) {
+            return null;
+        }
+        if (latitude < -90d || latitude > 90d) {
+            throw new IllegalArgumentException("Latitude must be between -90 and 90");
+        }
+        return latitude;
+    }
+
+    private Double validateLongitude(Double longitude) {
+        if (longitude == null) {
+            return null;
+        }
+        if (longitude < -180d || longitude > 180d) {
+            throw new IllegalArgumentException("Longitude must be between -180 and 180");
+        }
+        return longitude;
     }
 }

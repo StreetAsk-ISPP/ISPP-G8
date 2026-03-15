@@ -1,5 +1,42 @@
 /* global clients */
 
+const NEARBY_QUESTION_ICON = '/nearby-question-icon.svg';
+const NEARBY_QUESTION_BADGE = '/nearby-question-badge.svg';
+const ANSWER_ACTIVITY_ICON = '/answer-activity-icon.svg';
+const ANSWER_ACTIVITY_BADGE = '/answer-activity-badge.svg';
+
+function buildNotificationOptions(data) {
+    const type = data.type || 'GENERIC';
+
+    if (type === 'NEARBY_QUESTION') {
+        return {
+            body: data.body || '',
+            icon: NEARBY_QUESTION_ICON,
+            badge: NEARBY_QUESTION_BADGE,
+            tag: data.referenceId ? `nearby-question-${data.referenceId}` : 'nearby-question',
+            requireInteraction: true,
+            data,
+        };
+    }
+
+    if (type === 'ANSWER_TO_QUESTION') {
+        return {
+            body: data.body || '',
+            icon: ANSWER_ACTIVITY_ICON,
+            badge: ANSWER_ACTIVITY_BADGE,
+            tag: data.referenceId ? `answer-activity-${data.referenceId}` : 'answer-activity',
+            data,
+        };
+    }
+
+    return {
+        body: data.body || '',
+        icon: ANSWER_ACTIVITY_ICON,
+        badge: ANSWER_ACTIVITY_BADGE,
+        data,
+    };
+}
+
 self.addEventListener('push', (event) => {
     let data = {};
 
@@ -13,12 +50,7 @@ self.addEventListener('push', (event) => {
     }
 
     const title = data.title || 'StreetAsk notification';
-    const options = {
-        body: data.body || '',
-        icon: '/favicon.png',
-        badge: '/favicon.png',
-        data,
-    };
+    const options = buildNotificationOptions(data);
 
     event.waitUntil(
         self.registration.showNotification(title, options)
