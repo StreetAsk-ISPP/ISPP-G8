@@ -8,6 +8,8 @@ import com.streetask.app.user.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -24,6 +26,10 @@ public class FeedbackMessage extends BaseEntity {
 
     @Column(nullable = false, length = 1000)
     private String message;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private FeedbackType type;
 
     @Column(nullable = false)
     private String userName;

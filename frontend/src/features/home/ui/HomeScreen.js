@@ -1,8 +1,19 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import {
-    View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
-    Switch, useWindowDimensions, Modal, Pressable, Platform,
+    View,
+    Text,
+    StyleSheet,
+    SafeAreaView,
+    TouchableOpacity,
+    Switch,
+    useWindowDimensions,
+    Modal,
+    Pressable,
+    Platform,
+    TextInput,
+    Alert,
+    ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MapComponent from './components/MapComponent';
@@ -23,6 +34,13 @@ export default function HomeScreen({ navigation }) {
     const [comingSoon, setComingSoon] = useState(false);
     const [modalType, setModalType] = useState('notifications');
     const [currentLocation, setCurrentLocation] = useState(null);
+
+    const [feedbackVisible, setFeedbackVisible] = useState(false);
+    const [feedbackType, setFeedbackType] = useState('SUGGESTION');
+    const [feedbackMessage, setFeedbackMessage] = useState('');
+    const [sendingFeedback, setSendingFeedback] = useState(false);
+    const [feedbackSuccessVisible, setFeedbackSuccessVisible] = useState(false);
+    const [feedbackSuccessMessage, setFeedbackSuccessMessage] = useState('');
 
     const pushBootstrappedRef = useRef(false);
 
@@ -45,7 +63,11 @@ export default function HomeScreen({ navigation }) {
         }
     }, []);
 
-    useFocusEffect(useCallback(() => { loadQuestions(); }, [loadQuestions]));
+    useFocusEffect(
+        useCallback(() => {
+            loadQuestions();
+        }, [loadQuestions])
+    );
 
     useEffect(() => {
         const unsub = observeNotifications((n) => {
@@ -71,7 +93,6 @@ export default function HomeScreen({ navigation }) {
     useEffect(() => {
         async function initPush() {
             try {
-
                 if (Platform.OS !== 'web') {
                     return;
                 }
@@ -88,7 +109,6 @@ export default function HomeScreen({ navigation }) {
                     return;
                 }
 
-                // Backend base URL (Azure in production, localhost in development)
                 const apiBaseUrl =
                     process.env.NODE_ENV === 'development'
                         ? 'http://localhost:8080'
@@ -100,7 +120,6 @@ export default function HomeScreen({ navigation }) {
                     latitude: currentLocation.latitude,
                     longitude: currentLocation.longitude,
                     onNotificationClick: (data) => {
-
                         if (
                             (data?.type === 'NEARBY_QUESTION' || data?.type === 'ANSWER_TO_QUESTION') &&
                             data?.referenceId
@@ -119,14 +138,86 @@ export default function HomeScreen({ navigation }) {
         initPush();
     }, [token, currentLocation, navigation]);
 
+    const resetFeedbackForm = () => {
+        setFeedbackType('SUGGESTION');
+        setFeedbackMessage('');
+    };
+
+    const closeFeedbackModal = () => {
+        if (sendingFeedback) return;
+        setFeedbackVisible(false);
+        resetFeedbackForm();
+    };
+
+    const sendFeedback = async () => {
+        const trimmedMessage = feedbackMessage.trim();
+
+        if (!trimmedMessage) {
+            Alert.alert('Feedback required', 'Please write a message before sending.');
+            return;
+        }
+
+        try {
+            setSendingFeedback(true);
+
+            await apiClient.post('/api/v1/feedback', {
+                type: feedbackType,
+                message: trimmedMessage,
+            });
+            setFeedbackVisible(false);
+            resetFeedbackForm();
+            setFeedbackSuccessMessage('Thank you for helping us improve StreetAsk.');
+            setFeedbackSuccessVisible(true);
+        } catch (error) {
+            console.error('Error sending feedback:', error);
+            Alert.alert('Error', 'Your feedback could not be sent. Please try again later.');
+        } finally {
+            setSendingFeedback(false);
+        }
+    };
+
+
+
     return (
+        <Modal
+        visible={feedbackSuccessVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setFeedbackSuccessVisible(false)}
+    >
+        <Pressable
+            style={styles.modalOverlay}
+            onPress={() => setFeedbackSuccessVisible(false)}
+        >
+            <View style={styles.successModalBox}>
+                <View style={styles.successIconWrap}>
+                    <Ionicons name="checkmark" size={28} color="#fff" />
+                </View>
+
+                <Text style={styles.successTitle}>Feedback sent</Text>
+
+                <Text style={styles.successMsg}>
+                    {feedbackSuccessMessage}
+                </Text>
+
+                <TouchableOpacity
+                    style={styles.successBtn}
+                    onPress={() => setFeedbackSuccessVisible(false)}
+                    activeOpacity={0.85}
+                >
+                    <Text style={styles.successBtnText}>Great</Text>
+                </TouchableOpacity>
+            </View>
+        </Pressable>
+    </Modal>    
+
         <SafeAreaView style={styles.screen}>
             <View style={styles.container}>
                 <View style={[styles.topBar, isNarrow && { paddingHorizontal: 12 }]}>
                     <View style={styles.topBarLeft}>
                         <View style={styles.logoBadge}>
                             <Image
-                                source={require("../../../../assets/logo.png")}
+                                source={require('../../../../assets/logo.png')}
                                 style={{ width: 18, height: 28 }}
                             />
                         </View>
@@ -141,21 +232,40 @@ export default function HomeScreen({ navigation }) {
                         >
                             <Ionicons name="person-outline" size={20} color="#374151" />
                         </TouchableOpacity>
+
+
                         <TouchableOpacity
                             style={styles.iconBtn}
                             activeOpacity={0.7}
-                            onPress={() => { setModalType('search'); setComingSoon(true); }}
+                            onPress={() => setFeedbackVisible(true)}
+                        >
+                            <Ionicons name="chatbox-ellipses-outline" size={20} color="#a52019" />
+                        </TouchableOpacity>
+
+
+                        <TouchableOpacity
+                            style={styles.iconBtn}
+                            activeOpacity={0.7}
+                            onPress={() => {
+                                setModalType('search');
+                                setComingSoon(true);
+                            }}
                         >
                             <Ionicons name="search-outline" size={20} color="#a52019" />
                         </TouchableOpacity>
+
                         <TouchableOpacity
                             style={styles.iconBtn}
                             activeOpacity={0.7}
-                            onPress={() => { setModalType('notifications'); setComingSoon(true); }}
+                            onPress={() => {
+                                setModalType('notifications');
+                                setComingSoon(true);
+                            }}
                         >
                             <Ionicons name="notifications-outline" size={20} color="#a52019" />
                             {ephemeralNotification ? <View style={styles.badge} /> : null}
                         </TouchableOpacity>
+
                         <TouchableOpacity
                             style={[styles.iconBtn, styles.logoutBtn]}
                             onPress={logout}
@@ -170,8 +280,12 @@ export default function HomeScreen({ navigation }) {
                     <View style={styles.notifBanner}>
                         <Ionicons name="information-circle" size={18} color="#92400e" />
                         <View style={{ flex: 1, marginLeft: 8 }}>
-                            <Text style={styles.notifTitle}>{ephemeralNotification.title || 'Notification'}</Text>
-                            <Text style={styles.notifMsg}>{ephemeralNotification.message || ''}</Text>
+                            <Text style={styles.notifTitle}>
+                                {ephemeralNotification.title || 'Notification'}
+                            </Text>
+                            <Text style={styles.notifMsg}>
+                                {ephemeralNotification.message || ''}
+                            </Text>
                         </View>
                     </View>
                 ) : null}
@@ -179,7 +293,9 @@ export default function HomeScreen({ navigation }) {
                 <View style={styles.mapWrapper}>
                     <MapComponent
                         questions={showQuestions ? questions : []}
-                        onQuestionPress={(qId) => navigation.navigate('QuestionThread', { questionId: qId })}
+                        onQuestionPress={(qId) =>
+                            navigation.navigate('QuestionThread', { questionId: qId })
+                        }
                         onLocationChange={setCurrentLocation}
                     />
                 </View>
@@ -234,6 +350,127 @@ export default function HomeScreen({ navigation }) {
                             <Text style={styles.modalBtnText}>OK</Text>
                         </TouchableOpacity>
                     </View>
+                </Pressable>
+            </Modal>
+
+            <Modal
+                visible={feedbackVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={closeFeedbackModal}
+            >
+                <Pressable style={styles.modalOverlay} onPress={closeFeedbackModal}>
+                    <Pressable style={styles.feedbackModalBox} onPress={() => { }}>
+                        <View style={styles.feedbackHeader}>
+                            <View style={styles.feedbackHeaderLeft}>
+                                <View style={styles.feedbackIconWrap}>
+                                    <Ionicons name="chatbox-ellipses-outline" size={20} color="#a52019" />
+                                </View>
+                                <View>
+                                    <Text style={styles.feedbackTitle}>Pilot feedback</Text>
+                                    <Text style={styles.feedbackSubtitle}>
+                                        Help us improve StreetAsk
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <TouchableOpacity
+                                onPress={closeFeedbackModal}
+                                disabled={sendingFeedback}
+                                style={styles.feedbackCloseBtn}
+                            >
+                                <Ionicons name="close" size={20} color="#6b7280" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <Text style={styles.feedbackLabel}>Type</Text>
+                        <View style={styles.feedbackTypeRow}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.feedbackTypeChip,
+                                    feedbackType === 'BUG' && styles.feedbackTypeChipActive,
+                                ]}
+                                onPress={() => setFeedbackType('BUG')}
+                                disabled={sendingFeedback}
+                            >
+                                <Text
+                                    style={[
+                                        styles.feedbackTypeText,
+                                        feedbackType === 'BUG' && styles.feedbackTypeTextActive,
+                                    ]}
+                                >
+                                    Bug
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[
+                                    styles.feedbackTypeChip,
+                                    feedbackType === 'SUGGESTION' && styles.feedbackTypeChipActive,
+                                ]}
+                                onPress={() => setFeedbackType('SUGGESTION')}
+                                disabled={sendingFeedback}
+                            >
+                                <Text
+                                    style={[
+                                        styles.feedbackTypeText,
+                                        feedbackType === 'SUGGESTION' && styles.feedbackTypeTextActive,
+                                    ]}
+                                >
+                                    Suggestion
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[
+                                    styles.feedbackTypeChip,
+                                    feedbackType === 'OTHER' && styles.feedbackTypeChipActive,
+                                ]}
+                                onPress={() => setFeedbackType('OTHER')}
+                                disabled={sendingFeedback}
+                            >
+                                <Text
+                                    style={[
+                                        styles.feedbackTypeText,
+                                        feedbackType === 'OTHER' && styles.feedbackTypeTextActive,
+                                    ]}
+                                >
+                                    Other
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <Text style={styles.feedbackLabel}>Message</Text>
+                        <TextInput
+                            style={styles.feedbackInput}
+                            placeholder="Tell us what happened or what we could improve..."
+                            placeholderTextColor="#9ca3af"
+                            multiline
+                            value={feedbackMessage}
+                            onChangeText={setFeedbackMessage}
+                            editable={!sendingFeedback}
+                            textAlignVertical="top"
+                        />
+
+                        <TouchableOpacity
+                            style={[
+                                styles.feedbackSendBtn,
+                                sendingFeedback && styles.feedbackSendBtnDisabled,
+                            ]}
+                            onPress={sendFeedback}
+                            activeOpacity={0.85}
+                            disabled={sendingFeedback}
+                        >
+                            {sendingFeedback ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <>
+                                    <Ionicons name="send-outline" size={18} color="#fff" />
+                                    <Text style={styles.feedbackSendBtnText}>Send feedback</Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+                    </Pressable>
                 </Pressable>
             </Modal>
         </SafeAreaView>
@@ -368,6 +605,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.35)',
         justifyContent: 'center',
         alignItems: 'center',
+        paddingHorizontal: 20,
     },
     modalBox: {
         backgroundColor: '#fff',
@@ -405,5 +643,166 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: '600',
         fontSize: 14,
+    },
+    feedbackModalBox: {
+        width: '100%',
+        maxWidth: 420,
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        padding: 18,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.18,
+        shadowRadius: 24,
+        elevation: 14,
+    },
+    feedbackHeader: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        marginBottom: 16,
+    },
+    feedbackHeaderLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        flex: 1,
+    },
+    feedbackIconWrap: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: '#fef2f2',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    feedbackTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#1f2937',
+    },
+    feedbackSubtitle: {
+        fontSize: 13,
+        color: '#6b7280',
+        marginTop: 2,
+    },
+    feedbackCloseBtn: {
+        width: 34,
+        height: 34,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f9fafb',
+    },
+    feedbackLabel: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#374151',
+        marginBottom: 8,
+    },
+    feedbackTypeRow: {
+        flexDirection: 'row',
+        gap: 8,
+        marginBottom: 16,
+        flexWrap: 'wrap',
+    },
+    feedbackTypeChip: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 999,
+        backgroundColor: '#f3f4f6',
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+    },
+    feedbackTypeChipActive: {
+        backgroundColor: '#a52019',
+        borderColor: '#a52019',
+    },
+    feedbackTypeText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#6b7280',
+    },
+    feedbackTypeTextActive: {
+        color: '#fff',
+    },
+    feedbackInput: {
+        minHeight: 120,
+        maxHeight: 180,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        borderRadius: 14,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        backgroundColor: '#f9fafb',
+        fontSize: 14,
+        color: '#111827',
+        marginBottom: 18,
+    },
+    feedbackSendBtn: {
+        height: 48,
+        borderRadius: 14,
+        backgroundColor: '#a52019',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+    },
+    feedbackSendBtnDisabled: {
+        opacity: 0.7,
+    },
+    feedbackSendBtnText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    successModalBox: {
+        width: 280,
+        backgroundColor: '#fff',
+        borderRadius: 22,
+        paddingVertical: 28,
+        paddingHorizontal: 24,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.18,
+        shadowRadius: 24,
+        elevation: 14,
+    },
+    successIconWrap: {
+        width: 58,
+        height: 58,
+        borderRadius: 29,
+        backgroundColor: '#a52019',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    successTitle: {
+        marginTop: 16,
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#1f2937',
+    },
+    successMsg: {
+        marginTop: 8,
+        fontSize: 14,
+        lineHeight: 20,
+        color: '#6b7280',
+        textAlign: 'center',
+    },
+    successBtn: {
+        marginTop: 20,
+        minWidth: 110,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: '#a52019',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 20,
+    },
+    successBtnText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '700',
     },
 });
