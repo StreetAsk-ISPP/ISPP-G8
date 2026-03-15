@@ -14,4 +14,7 @@ public class PushMessage {
     private String type;
     private UUID referenceId;
     private String referenceType;
+    private Double questionLatitude;
+    private Double questionLongitude;
+    private Double radiusKm;
 }

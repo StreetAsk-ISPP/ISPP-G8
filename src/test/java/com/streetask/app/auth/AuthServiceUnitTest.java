@@ -141,6 +141,7 @@ class AuthServiceUnitTest {
         assertThat(savedRegularUser.getCoinBalance()).isEqualTo(0);
         assertThat(savedRegularUser.getRating()).isEqualTo(0.0f);
         assertThat(savedRegularUser.getVerified()).isFalse();
+        assertThat(savedRegularUser.getVisibilityRadiusKm()).isEqualTo(10.0f);
         assertThat(savedRegularUser.getAuthority()).isEqualTo(userAuthority);
 
         verify(userService).findUser("regular@streetask.com");

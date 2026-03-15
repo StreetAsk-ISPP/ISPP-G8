@@ -113,11 +113,7 @@ public class AnswerService {
 		// 2. Actualizamos los campos (por ejemplo, el contenido y la ubicación)
 		existingAnswer.setContent(updatedAnswer.getContent());
 		existingAnswer.setUserLocation(updatedAnswer.getUserLocation());
-
-		// Nota: Como en tus tests vi que validas si la ubicación está dentro del radio,
-		// aquí deberías llamar a tu método de validación de ubicación si tienes uno.
-		// Ejemplo: checkLocationIsWithinRadius(existingAnswer.getUserLocation(),
-		// question);
+		validateAnswerLocation(existingAnswer, question);
 
 		// 3. Guardamos y retornamos la respuesta actualizada
 		return answerRepository.save(existingAnswer);
