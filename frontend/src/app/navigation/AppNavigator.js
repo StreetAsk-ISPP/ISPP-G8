@@ -14,6 +14,7 @@ import ProfileStats from '../../features/profile/ProfileStats';
 import AdminFeedbackScreen from '../../features/admin/ui/AdminFeedbackScreen';
 import AdminScreen from '../../features/admin/ui/AdminScreen';
 import AdminUsersScreen from '../../features/admin/ui/AdminUsersScreen';
+import EditProfileScreen from '../../features/profile/EditProfileScreen';
 import { useAuth } from '../providers/AuthProvider';
 import { theme } from '../../shared/ui/theme/theme';
 
@@ -41,32 +42,36 @@ export default function AppNavigator() {
                 </>
             ) : (
                 <>
-                    {user?.roles?.includes('ADMIN') ? (
-                        <>
-                            <Stack.Screen name="AdminDashboard" component={AdminScreen} />
-                            <Stack.Screen name="AdminUsers" component={AdminUsersScreen} />
-                            <Stack.Screen name="AdminFeedback" component={AdminFeedbackScreen} />
-                            {/* Incluimos las rutas de la app aquí para que formen parte del stack
+                    {
+                        user?.roles?.includes('ADMIN') ? (
+                            <>
+                                <Stack.Screen name="AdminDashboard" component={AdminScreen} />
+                                <Stack.Screen name="AdminUsers" component={AdminUsersScreen} />
+                                <Stack.Screen name="AdminFeedback" component={AdminFeedbackScreen} />
+                                {/* Incluimos las rutas de la app aquí para que formen parte del stack
                                 pero la inicial será AdminDashboard según el orden.
                                 El botón volver atrás o ir al dashboard debe estar en un panel o cabecera
                             */}
-                            <Stack.Screen name="Home" component={HomeScreen} />
-                            <Stack.Screen name="CreateQuestion" component={CreateQuestionScreen} />
-                            <Stack.Screen name="QuestionThread" component={QuestionThreadScreen} />
-                            <Stack.Screen name="Profile" component={ProfileScreen} />
-                            <Stack.Screen name="ProfileStats" component={ProfileStats} options={{ headerShown: false }} />
-                        </>
-                    ) : (
-                        <>
-                            <Stack.Screen name="Home" component={HomeScreen} />
-                            <Stack.Screen name="CreateQuestion" component={CreateQuestionScreen} />
-                            <Stack.Screen name="QuestionThread" component={QuestionThreadScreen} />
-                            <Stack.Screen name="Profile" component={ProfileScreen} />
-                            <Stack.Screen name="ProfileStats" component={ProfileStats} options={{ headerShown: false }} />
-                        </>
-                    )}
+                                <Stack.Screen name="Home" component={HomeScreen} />
+                                <Stack.Screen name="CreateQuestion" component={CreateQuestionScreen} />
+                                <Stack.Screen name="QuestionThread" component={QuestionThreadScreen} />
+                                <Stack.Screen name="Profile" component={ProfileScreen} />
+                                <Stack.Screen name="ProfileStats" component={ProfileStats} options={{ headerShown: false }} />
+                            </>
+                        ) : (
+                            <>
+                                <Stack.Screen name="Home" component={HomeScreen} />
+                                <Stack.Screen name="CreateQuestion" component={CreateQuestionScreen} />
+                                <Stack.Screen name="QuestionThread" component={QuestionThreadScreen} />
+                                <Stack.Screen name="Profile" component={ProfileScreen} />
+                                <Stack.Screen name="ProfileStats" component={ProfileStats} options={{ headerShown: false }} />
+                                <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+                            </>
+                        )
+                    }
                 </>
-            )}
-        </Stack.Navigator>
+            )
+            }
+        </Stack.Navigator >
     );
 }
