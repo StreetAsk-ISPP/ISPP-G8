@@ -41,12 +41,12 @@ export default function AdminUsersScreen() {
     };
 
     // Sólo permitimos edición, no creación desde el panel admin
-    const openCreateModal = () => {
-        Alert.alert(
-            'Acción no disponible',
-            'La creación de usuarios no está permitida desde el panel de administración.',
-        );
-    };
+    // const openCreateModal = () => {
+    //     Alert.alert(
+    //         'Acción no disponible',
+    //         'La creación de usuarios no está permitida desde el panel de administración.',
+    //     );
+    // };
 
     const openEditModal = (user) => {
         setEditingUser(user);
