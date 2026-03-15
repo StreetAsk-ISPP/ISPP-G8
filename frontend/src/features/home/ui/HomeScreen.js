@@ -16,7 +16,7 @@ import { updateWebPushZone } from '../../../shared/services/notifications/webPus
 import { resolveZoneKey } from '../../../shared/services/notifications/zoneService';
 
 export default function HomeScreen({ navigation }) {
-    const { logout, token } = useAuth();
+    const { logout, token, user } = useAuth();
     const { ephemeralNotification, observeNotifications } = useNotifications();
     const { width } = useWindowDimensions();
     const isNarrow = width < 500;
@@ -26,6 +26,7 @@ export default function HomeScreen({ navigation }) {
     const [comingSoon, setComingSoon] = useState(false);
     const [modalType, setModalType] = useState('notifications');
     const [currentLocation, setCurrentLocation] = useState(null);
+    const [isPremium, setIsPremium] = useState(false);
 
     const pushBootstrappedRef = useRef(false);
     const pushSubscriptionRef = useRef(null);
@@ -50,7 +51,22 @@ export default function HomeScreen({ navigation }) {
         }
     }, []);
 
-    useFocusEffect(useCallback(() => { loadQuestions(); }, [loadQuestions]));
+    useFocusEffect(useCallback(() => {
+        loadQuestions();
+
+        let isMounted = true;
+        const checkPremium = async () => {
+            if (!user?.id) return;
+            try {
+                const res = await apiClient.get(`/api/v1/users/${user.id}`);
+                if (isMounted) setIsPremium(res?.data?.premiumActive === true);
+            } catch (_) {
+                // silently ignore — stays false
+            }
+        };
+        checkPremium();
+        return () => { isMounted = false; };
+    }, [loadQuestions, user?.id]));
 
     useEffect(() => {
         const unsub = observeNotifications((n) => {
@@ -172,13 +188,23 @@ export default function HomeScreen({ navigation }) {
                     </View>
 
                     <View style={styles.topBarRight}>
-                        <TouchableOpacity
-                            style={styles.goProBtn}
-                            activeOpacity={0.85}
-                            onPress={() => navigation.navigate('SubscriptionPlans')}
-                        >
-                            <Text style={styles.goProText}>GO PRO</Text>
-                        </TouchableOpacity>
+                        {isPremium ? (
+                            <TouchableOpacity
+                                style={styles.proBadge}
+                                activeOpacity={0.85}
+                                onPress={() => navigation.navigate('SubscriptionPlans')}
+                            >
+                                <Text style={styles.proBadgeText}>⭐ PRO</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity
+                                style={styles.goProBtn}
+                                activeOpacity={0.85}
+                                onPress={() => navigation.navigate('SubscriptionPlans')}
+                            >
+                                <Text style={styles.goProText}>👑 GO PRO</Text>
+                            </TouchableOpacity>
+                        )}
                         <TouchableOpacity
                             style={styles.iconBtn}
                             activeOpacity={0.7}
@@ -339,6 +365,22 @@ const styles = StyleSheet.create({
     },
     goProText: {
         color: '#fff',
+        fontSize: 12,
+        fontWeight: '800',
+        letterSpacing: 0.4,
+    },
+    proBadge: {
+        paddingHorizontal: 12,
+        height: 38,
+        borderRadius: 12,
+        backgroundColor: '#fbbf24',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#f59e0b',
+    },
+    proBadgeText: {
+        color: '#1f2937',
         fontSize: 12,
         fontWeight: '800',
         letterSpacing: 0.4,
