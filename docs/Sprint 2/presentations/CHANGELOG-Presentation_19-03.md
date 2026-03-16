@@ -9,7 +9,9 @@
 ### 16/03/2026
 **Author**: Sergio Terrazas Lobato ([Sergiootl](https://github.com/Sergiootl))
 - Borrado de diapositivas del sprint 1 (39 y 40) en la anterior presentacion
-- 
+- Diapositiva para el team building (24)
+- Actualización de sprint 2 (40)
+- Creación de diapositivas para responder al feedback
 
 
 
