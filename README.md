@@ -222,3 +222,4 @@ Después de ejecutar el script, abre VS Code de nuevo.
 3. Revisa los logs: `docker-compose logs db`
 
 
+
