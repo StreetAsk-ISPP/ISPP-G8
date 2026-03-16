@@ -9,7 +9,7 @@ import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import apiClient from '../../../shared/services/http/apiClient';
 import { useAuth } from '../../../app/providers/AuthProvider';
-import { crossAlert } from '../../../shared/utils/crossAlert';
+import Toast from 'react-native-toast-message';
 import MapPickerWeb from '../../home/ui/components/MapPickerWeb';
 import { calculateDistanceInKm } from '../../../shared/utils/helpers'; // Haversine formula para calcular distancia entre 2 puntos
 
@@ -216,7 +216,12 @@ export default function QuestionThreadScreen({ route, navigation }) {
                 if (!loc) {
                     setAnswers((p) => p.filter((a) => a.id !== optimistic.id));
                     setDraft(content);
-                    crossAlert('Location required', 'Debes activar tu ubicación para responder esta pregunta.');
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Ubicación requerida',
+                        text2: 'Debes activar tu ubicación para responder esta pregunta.',
+                        position: 'top'
+                    });
                     return;
                 }
                 const distKm = calculateDistanceInKm(
@@ -226,7 +231,12 @@ export default function QuestionThreadScreen({ route, navigation }) {
                 if (distKm > questionRadiusKm) {
                     setAnswers((p) => p.filter((a) => a.id !== optimistic.id));
                     setDraft(content);
-                    crossAlert('Fuera de radio', 'No puedes responder esta pregunta porque estás fuera del radio.');
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Fuera de radio',
+                        text2: 'No puedes responder esta pregunta porque estás fuera del radio.',
+                        position: 'top'
+                    });
                     return;
                 }
             }
@@ -250,7 +260,13 @@ export default function QuestionThreadScreen({ route, navigation }) {
                 else if (s === 403) msg = "Forbidden: You don't have permission";
                 else msg = `Error (${s}): ${d?.message || e.message}`;
             } else msg = `Network error: ${e.message}`;
-            crossAlert('Error', msg);
+
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: msg,
+                position: 'top'
+            });
             setDraft(content);
         } finally {
             setSendingAnswer(false);
@@ -309,7 +325,12 @@ export default function QuestionThreadScreen({ route, navigation }) {
     const cancelMapPick = () => { setPickMode(false); setTempLat(null); setTempLng(null); };
     const confirmMapPick = () => {
         if (typeof tempLat !== 'number' || typeof tempLng !== 'number') {
-            crossAlert('Pick a point', 'Tap on the map to choose your location.');
+            Toast.show({
+                type: 'info',
+                text1: 'Selecciona un punto',
+                text2: 'Toca en el mapa para elegir tu ubicación.',
+                position: 'top'
+            });
             return;
         }
         setUserLocation({ latitude: tempLat, longitude: tempLng });
