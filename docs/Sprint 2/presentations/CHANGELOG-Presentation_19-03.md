@@ -2,12 +2,13 @@
 
 ## 📎 Links
 
-- [Presentación de Google]([https://docs.google.com/presentation/d/1EpzW66Ouydv_DNfVU_4eYrlIUMuI5eDEvlF472-QUqQ/edit?usp=sharing](https://docs.google.com/presentation/d/1u3UjyG74K58TqP-c_jtQ77Jvu-DKaX-F/edit?usp=sharing&ouid=108818831958689886541&rtpof=true&sd=true))
+- [Presentación de Google](https://docs.google.com/presentation/d/1FbX_97jPSibJbMhIPlbBM_MIEn8MxdhA/edit?pli=1&slide=id.g3cb512cad2b_0_29#slide=id.g3cb512cad2b_0_29)
 
 ## 📝 Change Log
 
 ### 16/03/2026
 **Author**: Sergio Terrazas Lobato ([Sergiootl](https://github.com/Sergiootl))
+- Borrado de diapositivas del sprint 1 (39 y 40) en la anterior presentacion
 - 
 
 
