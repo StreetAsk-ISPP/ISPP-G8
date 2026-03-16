@@ -16,7 +16,7 @@ import { updateWebPushZone } from '../../../shared/services/notifications/webPus
 import { resolveZoneKey } from '../../../shared/services/notifications/zoneService';
 
 export default function HomeScreen({ navigation }) {
-    const { logout, token } = useAuth();
+    const { logout, token, user } = useAuth();
     const { ephemeralNotification, observeNotifications } = useNotifications();
     const { width } = useWindowDimensions();
     const isNarrow = width < 500;
@@ -179,6 +179,17 @@ export default function HomeScreen({ navigation }) {
                         >
                             <Ionicons name="person-outline" size={20} color="#374151" />
                         </TouchableOpacity>
+
+                        {user?.roles?.includes('ADMIN') && (
+                            <TouchableOpacity
+                                style={styles.iconBtn}
+                                activeOpacity={0.7}
+                                onPress={() => navigation.navigate('AdminDashboard')}
+                            >
+                                <Ionicons name="shield-checkmark-outline" size={20} color="#374151" />
+                            </TouchableOpacity>
+                        )}
+
                         <TouchableOpacity
                             style={styles.iconBtn}
                             activeOpacity={0.7}
