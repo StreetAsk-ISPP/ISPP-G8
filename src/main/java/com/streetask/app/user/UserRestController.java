@@ -16,6 +16,8 @@
 package com.streetask.app.user;
 
 import java.util.UUID;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -74,6 +76,26 @@ class UserRestController {
 		return new ResponseEntity<>(userService.findUser(id), HttpStatus.OK);
 	}
 
+	@GetMapping(value = "{id}/reputation")
+	public ResponseEntity<Integer> findReputationById(@PathVariable("id") UUID id) {
+		User currentUser = userService.findCurrentUser();
+		boolean isAdmin = currentUser.hasAuthority("ADMIN");
+		boolean isOwner = currentUser.getId().equals(id);
+
+		if (!isAdmin && !isOwner) {
+			throw new AccessDeniedException("You can only view your own reputation.");
+		}
+
+		User user = isOwner ? currentUser : userService.findUser(id);
+		return new ResponseEntity<>(user.getReputation(), HttpStatus.OK);
+	}
+
+	@GetMapping(value = "me/reputation")
+	public ResponseEntity<Integer> findCurrentUserReputation() {
+		User user = userService.findCurrentUser();
+		return new ResponseEntity<>(user.getReputation(), HttpStatus.OK);
+	}
+
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public ResponseEntity<User> create(@RequestBody @Valid User user) {
@@ -99,7 +121,24 @@ class UserRestController {
 			throw new AccessDeniedException("You can't delete yourself!");
 	}
 
+	@GetMapping(value = "/{id}/stats")
+	public ResponseEntity<Map<String, Object>> getUserStats(@PathVariable("id") UUID id) {
+		RestPreconditions.checkNotNull(userService.findUser(id), "User", "ID", id);
+
+		Map<String, Object> stats = userService.getUserStats(id);
+		return new ResponseEntity<>(stats, HttpStatus.OK);
+	}
+
+	@GetMapping(value = "/{id}/questions")
+	public ResponseEntity<Iterable<com.streetask.app.model.Question>> getUserQuestions(@PathVariable("id") UUID id) {
+		RestPreconditions.checkNotNull(userService.findUser(id), "User", "ID", id);
+		return new ResponseEntity<>(userService.findQuestionsByUserId(id), HttpStatus.OK);
+	}
+
+	@GetMapping(value = "/{id}/answers")
+	public ResponseEntity<Iterable<com.streetask.app.model.Answer>> getUserAnswers(@PathVariable("id") UUID id) {
+		RestPreconditions.checkNotNull(userService.findUser(id), "User", "ID", id);
+		return new ResponseEntity<>(userService.findAnswersByUserId(id), HttpStatus.OK);
+	}
+
 }
-
-
-

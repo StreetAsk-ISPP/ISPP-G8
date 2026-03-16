@@ -7,6 +7,7 @@ import { useAuth } from './AuthProvider';
 import { useWebSocket } from './WebSocketProvider';
 import { notificationCenter } from '../../shared/services/notifications/notificationCenter';
 import { buildZoneTopic, resolveZoneKey } from '../../shared/services/notifications/zoneService';
+import { calculateDistanceInKm } from '../../shared/utils/helpers';
 
 const MAX_NOTIFICATIONS = 50;
 const EPHEMERAL_NOTIFICATION_MS = 6000;
@@ -43,6 +44,7 @@ export function NotificationProvider({ children }) {
   const zoneSubscriptionRef = useRef(null);
   const zoneTopicRef = useRef(null);
   const ephemeralTimeoutRef = useRef(null);
+  const currentPositionRef = useRef(null);
 
   const unsubscribeUser = useCallback(() => {
     if (userSubscriptionRef.current) {
@@ -62,7 +64,7 @@ export function NotificationProvider({ children }) {
   const pushNotification = useCallback((notification) => {
     const normalized = {
       ...notification,
-      clientId: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      clientId: `${Date.now()}-${window.crypto.getRandomValues(new Uint32Array(1))[0].toString(16)}`,
     };
 
     setNotifications((previous) => [normalized, ...previous].slice(0, MAX_NOTIFICATIONS));
@@ -76,6 +78,41 @@ export function NotificationProvider({ children }) {
     }, EPHEMERAL_NOTIFICATION_MS);
 
     notificationCenter.publish(normalized);
+  }, []);
+
+  const shouldDeliverNearbyQuestion = useCallback((notification) => {
+    if (notification?.type !== 'NEARBY_QUESTION') {
+      return true;
+    }
+
+    const radiusKm = Number(notification?.radiusKm);
+    const questionLatitude = Number(notification?.questionLatitude);
+    const questionLongitude = Number(notification?.questionLongitude);
+
+    if (!Number.isFinite(radiusKm) || radiusKm <= 0) {
+      return true;
+    }
+
+    if (!Number.isFinite(questionLatitude) || !Number.isFinite(questionLongitude)) {
+      return true;
+    }
+
+    if (!currentPositionRef.current) {
+      return false;
+    }
+
+    const distanceKm = calculateDistanceInKm(
+      {
+        latitude: currentPositionRef.current.latitude,
+        longitude: currentPositionRef.current.longitude,
+      },
+      {
+        latitude: questionLatitude,
+        longitude: questionLongitude,
+      }
+    );
+
+    return distanceKm <= radiusKm;
   }, []);
 
   useEffect(() => {
@@ -92,6 +129,7 @@ export function NotificationProvider({ children }) {
 
     const onPosition = (latitude, longitude) => {
       const zoneKey = resolveZoneKey(latitude, longitude);
+      currentPositionRef.current = { latitude, longitude };
       if (!cancelled) {
         setCurrentZoneKey(zoneKey);
       }
@@ -101,7 +139,7 @@ export function NotificationProvider({ children }) {
       if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.geolocation) {
         webWatcherId = navigator.geolocation.watchPosition(
           (position) => onPosition(position.coords.latitude, position.coords.longitude),
-          () => {},
+          () => { },
           { enableHighAccuracy: true, maximumAge: 15000, timeout: 10000 }
         );
         console.log('[notifications] zone tracking started (web)');
@@ -159,7 +197,10 @@ export function NotificationProvider({ children }) {
         APP_CONFIG.websocket.topics.userNotifications,
         (frame) => {
           console.log('[notifications] message received from user topic');
-          pushNotification(parseMessage(frame, 'user'));
+          const parsed = parseMessage(frame, 'user');
+          if (shouldDeliverNearbyQuestion(parsed)) {
+            pushNotification(parsed);
+          }
         }
       );
     }
@@ -171,7 +212,10 @@ export function NotificationProvider({ children }) {
         console.log('[notifications] subscribing zone topic', zoneTopic);
         zoneSubscriptionRef.current = client.subscribe(zoneTopic, (frame) => {
           console.log('[notifications] message received from zone topic', zoneTopic);
-          pushNotification(parseMessage(frame, 'zone'));
+          const parsed = parseMessage(frame, 'zone');
+          if (shouldDeliverNearbyQuestion(parsed)) {
+            pushNotification(parsed);
+          }
         });
         zoneTopicRef.current = zoneTopic;
       }
@@ -181,6 +225,7 @@ export function NotificationProvider({ children }) {
     isAuthenticated,
     isConnected,
     pushNotification,
+    shouldDeliverNearbyQuestion,
     stompClient,
     unsubscribeUser,
     unsubscribeZone,

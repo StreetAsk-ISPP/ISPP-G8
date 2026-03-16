@@ -4,25 +4,43 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.streetask.app.exceptions.ResourceNotFoundException;
+import com.streetask.app.functionalities.notifications.events.AnswerCreatedEvent;
 import com.streetask.app.model.Answer;
+import com.streetask.app.model.AnswerVote;
 import com.streetask.app.model.GeoPoint;
 import com.streetask.app.model.Question;
+import com.streetask.app.model.enums.VoteType;
 import com.streetask.app.user.RegularUser;
+import com.streetask.app.user.RegularUserRepository;
 
 class AnswerServiceTest {
 
     @Mock
     private AnswerRepository answerRepository;
+
+    @Mock
+    private AnswerVoteRepository answerVoteRepository;
+
+    @Mock
+    private RegularUserRepository regularUserRepository;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
@@ -32,6 +50,8 @@ class AnswerServiceTest {
 
     private Answer answer;
     private Question question;
+    private RegularUser authenticatedUser;
+    private RegularUser regularUser;
     private UUID answerId;
     private UUID questionId;
     private UUID userId;
@@ -43,6 +63,22 @@ class AnswerServiceTest {
         answerId = UUID.randomUUID();
         questionId = UUID.randomUUID();
         userId = UUID.randomUUID();
+
+        authenticatedUser = new RegularUser();
+        authenticatedUser.setId(userId);
+        authenticatedUser.setEmail("testuser@example.com");
+        authenticatedUser.setUserName("testuser");
+
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(authentication.getName()).thenReturn(authenticatedUser.getEmail());
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        when(regularUserRepository.findByEmail(authenticatedUser.getEmail()))
+                .thenReturn(Optional.of(authenticatedUser));
+        when(regularUserRepository.findByUserNameIgnoreCase(authenticatedUser.getEmail()))
+                .thenReturn(Optional.empty());
 
         // Create test question with location and radius
         question = new Question();
@@ -61,9 +97,20 @@ class AnswerServiceTest {
         answer.setId(answerId);
         answer.setQuestion(question);
         answer.setContent("Test Answer");
+        answer.setUser(authenticatedUser);
         answer.setUserLocation(new GeoPoint());
         answer.getUserLocation().setLatitude(37.7749); // Same location as question
         answer.getUserLocation().setLongitude(-122.4194);
+        answer.setUpvotes(0);
+        answer.setDownvotes(0);
+
+        regularUser = new RegularUser();
+        regularUser.setId(userId);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -81,6 +128,10 @@ class AnswerServiceTest {
         assertEquals(0, savedAnswer.getDownvotes());
 
         verify(answerRepository, times(1)).save(answer);
+
+        ArgumentCaptor<AnswerCreatedEvent> eventCaptor = ArgumentCaptor.forClass(AnswerCreatedEvent.class);
+        verify(eventPublisher, times(1)).publishEvent(eventCaptor.capture());
+        assertEquals(answerId, eventCaptor.getValue().answerId());
     }
 
     @Test
@@ -89,13 +140,12 @@ class AnswerServiceTest {
         answer.getUserLocation().setLatitude(37.8044); // About 3.2 km away
         answer.getUserLocation().setLongitude(-122.2712);
 
-        when(answerRepository.save(answer)).thenReturn(answer);
-
         assertThrows(IllegalArgumentException.class, () -> {
             answerService.saveAnswer(answer, question);
         });
 
         verify(answerRepository, never()).save(answer);
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -107,6 +157,63 @@ class AnswerServiceTest {
         });
 
         verify(answerRepository, never()).save(answer);
+        verifyNoInteractions(eventPublisher);
+    }
+
+    @Test
+    void testSaveAnswerWhenQuestionHasNoLocation() {
+        answer.setUserLocation(null);
+        question.setLocation(null);
+
+        when(answerRepository.save(answer)).thenReturn(answer);
+
+        Answer savedAnswer = answerService.saveAnswer(answer, question);
+
+        assertNotNull(savedAnswer);
+        verify(answerRepository, times(1)).save(answer);
+        verify(eventPublisher, times(1)).publishEvent(any(AnswerCreatedEvent.class));
+    }
+
+    @Test
+    void testSaveAnswerWhenQuestionHasNullRadius() {
+        answer.setUserLocation(null);
+        question.setRadiusKm(null);
+
+        when(answerRepository.save(answer)).thenReturn(answer);
+
+        Answer savedAnswer = answerService.saveAnswer(answer, question);
+
+        assertNotNull(savedAnswer);
+        verify(answerRepository, times(1)).save(answer);
+        verify(eventPublisher, times(1)).publishEvent(any(AnswerCreatedEvent.class));
+    }
+
+    @Test
+    void testSaveAnswerWhenQuestionHasZeroRadius() {
+        answer.setUserLocation(null);
+        question.setRadiusKm(0f);
+
+        when(answerRepository.save(answer)).thenReturn(answer);
+
+        Answer savedAnswer = answerService.saveAnswer(answer, question);
+
+        assertNotNull(savedAnswer);
+        verify(answerRepository, times(1)).save(answer);
+        verify(eventPublisher, times(1)).publishEvent(any(AnswerCreatedEvent.class));
+    }
+
+    @Test
+    void testSaveAnswerWhenQuestionHasNegativeRadius() {
+        answer.setUserLocation(null);
+        question.setRadiusKm(-2f);
+
+        when(answerRepository.save(answer)).thenReturn(answer);
+
+        Answer savedAnswer = answerService.saveAnswer(answer, question);
+
+        assertNotNull(savedAnswer);
+        verify(answerRepository, times(1)).save(answer);
+        verify(eventPublisher, times(1)).publishEvent(any(AnswerCreatedEvent.class));
     }
 
     @Test
@@ -124,11 +231,100 @@ class AnswerServiceTest {
     void testFindAnswerByIdNotFound() {
         when(answerRepository.findById(answerId)).thenReturn(Optional.empty());
 
-        assertThrows(Exception.class, () -> {
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             answerService.findAnswer(answerId);
         });
 
+        assertTrue(exception.getMessage().contains("Answer not found with id"));
         verify(answerRepository, times(1)).findById(answerId);
+    }
+
+    @Test
+    void testFindAllDelegatesToRepository() {
+        List<Answer> answers = List.of(answer);
+        when(answerRepository.findAll()).thenReturn(answers);
+
+        Iterable<Answer> result = answerService.findAll();
+
+        assertSame(answers, result);
+        verify(answerRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testFindByQuestionDelegatesToRepository() {
+        List<Answer> answers = List.of(answer);
+        when(answerRepository.findByQuestionId(questionId)).thenReturn(answers);
+
+        Iterable<Answer> result = answerService.findByQuestion(questionId);
+
+        assertSame(answers, result);
+        verify(answerRepository, times(1)).findByQuestionId(questionId);
+    }
+
+    @Test
+    void testFindByUserDelegatesToRepository() {
+        List<Answer> answers = List.of(answer);
+        when(answerRepository.findByUserId(userId)).thenReturn(answers);
+
+        Iterable<Answer> result = answerService.findByUser(userId);
+
+        assertSame(answers, result);
+        verify(answerRepository, times(1)).findByUserId(userId);
+    }
+
+    @Test
+    void testFindByIsVerifiedDelegatesToRepository() {
+        List<Answer> answers = List.of(answer);
+        when(answerRepository.findByIsVerified(true)).thenReturn(answers);
+
+        Iterable<Answer> result = answerService.findByIsVerified(true);
+
+        assertSame(answers, result);
+        verify(answerRepository, times(1)).findByIsVerified(true);
+    }
+
+    @Test
+    void testFindByUserAndIsVerifiedDelegatesToRepository() {
+        List<Answer> answers = List.of(answer);
+        when(answerRepository.findByUserIdAndIsVerified(userId, true)).thenReturn(answers);
+
+        Iterable<Answer> result = answerService.findByUserAndIsVerified(userId, true);
+
+        assertSame(answers, result);
+        verify(answerRepository, times(1)).findByUserIdAndIsVerified(userId, true);
+    }
+
+    @Test
+    void testFindByQuestionAndIsVerifiedDelegatesToRepository() {
+        List<Answer> answers = List.of(answer);
+        when(answerRepository.findByQuestionIdAndIsVerified(questionId, true)).thenReturn(answers);
+
+        Iterable<Answer> result = answerService.findByQuestionAndIsVerified(questionId, true);
+
+        assertSame(answers, result);
+        verify(answerRepository, times(1)).findByQuestionIdAndIsVerified(questionId, true);
+    }
+
+    @Test
+    void testFindByQuestionAndUserDelegatesToRepository() {
+        List<Answer> answers = List.of(answer);
+        when(answerRepository.findByQuestionIdAndUserId(questionId, userId)).thenReturn(answers);
+
+        Iterable<Answer> result = answerService.findByQuestionAndUser(questionId, userId);
+
+        assertSame(answers, result);
+        verify(answerRepository, times(1)).findByQuestionIdAndUserId(questionId, userId);
+    }
+
+    @Test
+    void testFindByQuestionAndUserAndIsVerifiedDelegatesToRepository() {
+        List<Answer> answers = List.of(answer);
+        when(answerRepository.findByQuestionIdAndUserIdAndIsVerified(questionId, userId, true)).thenReturn(answers);
+
+        Iterable<Answer> result = answerService.findByQuestionAndUserAndIsVerified(questionId, userId, true);
+
+        assertSame(answers, result);
+        verify(answerRepository, times(1)).findByQuestionIdAndUserIdAndIsVerified(questionId, userId, true);
     }
 
     @Test
@@ -155,7 +351,184 @@ class AnswerServiceTest {
         Answer result = answerService.updateAnswer(updatedAnswer, answerId, question);
 
         assertNotNull(result);
+        assertSame(answer, result);
         assertEquals("Updated Answer", result.getContent());
+        assertEquals(37.7749, result.getUserLocation().getLatitude());
+        assertEquals(-122.4194, result.getUserLocation().getLongitude());
+        verify(answerRepository, times(1)).findById(answerId);
         verify(answerRepository, times(1)).save(answer);
+    }
+
+    @Test
+    void testUpdateVotesNewLikeVote() {
+        answer.setUpvotes(2);
+        answer.setDownvotes(3);
+
+        when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer));
+        when(answerVoteRepository.findByUserIdAndAnswerId(userId, answerId)).thenReturn(Optional.empty());
+        when(regularUserRepository.findById(userId)).thenReturn(Optional.of(regularUser));
+        when(answerRepository.save(answer)).thenReturn(answer);
+
+        Answer result = answerService.updateVotes(answerId, userId, VoteType.LIKE);
+
+        assertEquals(3, result.getUpvotes());
+        assertEquals(3, result.getDownvotes());
+        verify(answerVoteRepository, times(1)).save(any(AnswerVote.class));
+        verify(answerRepository, times(1)).save(answer);
+    }
+
+    @Test
+    void testUpdateVotesNewDislikeVote() {
+        answer.setUpvotes(2);
+        answer.setDownvotes(3);
+
+        when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer));
+        when(answerVoteRepository.findByUserIdAndAnswerId(userId, answerId)).thenReturn(Optional.empty());
+        when(regularUserRepository.findById(userId)).thenReturn(Optional.of(regularUser));
+        when(answerRepository.save(answer)).thenReturn(answer);
+
+        Answer result = answerService.updateVotes(answerId, userId, VoteType.DISLIKE);
+
+        assertEquals(2, result.getUpvotes());
+        assertEquals(4, result.getDownvotes());
+        verify(answerVoteRepository, times(1)).save(any(AnswerVote.class));
+        verify(answerRepository, times(1)).save(answer);
+    }
+
+    @Test
+    void testUpdateVotesSameVoteIsNoOp() {
+        AnswerVote existing = new AnswerVote();
+        existing.setVoteType(VoteType.LIKE);
+
+        when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer));
+        when(answerVoteRepository.findByUserIdAndAnswerId(userId, answerId)).thenReturn(Optional.of(existing));
+
+        answerService.updateVotes(answerId, userId, VoteType.LIKE);
+
+        verify(answerRepository, never()).save(any(Answer.class));
+        verify(answerVoteRepository, never()).save(any(AnswerVote.class));
+    }
+
+    @Test
+    void testUpdateVotesChangeLikeToDislike() {
+        answer.setUpvotes(2);
+        answer.setDownvotes(1);
+
+        AnswerVote existing = new AnswerVote();
+        existing.setVoteType(VoteType.LIKE);
+
+        when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer));
+        when(answerVoteRepository.findByUserIdAndAnswerId(userId, answerId)).thenReturn(Optional.of(existing));
+        when(answerRepository.save(answer)).thenReturn(answer);
+
+        Answer result = answerService.updateVotes(answerId, userId, VoteType.DISLIKE);
+
+        assertEquals(1, result.getUpvotes());
+        assertEquals(2, result.getDownvotes());
+        assertEquals(VoteType.DISLIKE, existing.getVoteType());
+        verify(answerVoteRepository, times(1)).save(existing);
+        verify(answerRepository, times(1)).save(answer);
+    }
+
+    @Test
+    void testUpdateVotesChangeDislikeToLike() {
+        answer.setUpvotes(1);
+        answer.setDownvotes(2);
+
+        AnswerVote existing = new AnswerVote();
+        existing.setVoteType(VoteType.DISLIKE);
+
+        when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer));
+        when(answerVoteRepository.findByUserIdAndAnswerId(userId, answerId)).thenReturn(Optional.of(existing));
+        when(answerRepository.save(answer)).thenReturn(answer);
+
+        Answer result = answerService.updateVotes(answerId, userId, VoteType.LIKE);
+
+        assertEquals(2, result.getUpvotes());
+        assertEquals(1, result.getDownvotes());
+        assertEquals(VoteType.LIKE, existing.getVoteType());
+        verify(answerVoteRepository, times(1)).save(existing);
+        verify(answerRepository, times(1)).save(answer);
+    }
+
+    @Test
+    void testUpdateVotesNotFound() {
+        when(answerRepository.findById(answerId)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> answerService.updateVotes(answerId, userId, VoteType.LIKE));
+
+        verify(answerRepository, times(1)).findById(answerId);
+        verify(answerRepository, never()).save(any(Answer.class));
+    }
+
+    @Test
+    void testRemoveVoteLike() {
+        answer.setUpvotes(3);
+        answer.setDownvotes(1);
+
+        AnswerVote existing = new AnswerVote();
+        existing.setAnswer(answer);
+        existing.setVoteType(VoteType.LIKE);
+
+        when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer));
+        when(answerVoteRepository.findByUserIdAndAnswerId(userId, answerId)).thenReturn(Optional.of(existing));
+        when(answerRepository.save(answer)).thenReturn(answer);
+
+        Answer result = answerService.removeVote(answerId, userId);
+
+        assertEquals(2, result.getUpvotes());
+        assertEquals(1, result.getDownvotes());
+        verify(answerVoteRepository, times(1)).delete(existing);
+        verify(answerRepository, times(1)).save(answer);
+    }
+
+    @Test
+    void testRemoveVoteDislike() {
+        answer.setUpvotes(1);
+        answer.setDownvotes(3);
+
+        AnswerVote existing = new AnswerVote();
+        existing.setAnswer(answer);
+        existing.setVoteType(VoteType.DISLIKE);
+
+        when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer));
+        when(answerVoteRepository.findByUserIdAndAnswerId(userId, answerId)).thenReturn(Optional.of(existing));
+        when(answerRepository.save(answer)).thenReturn(answer);
+
+        Answer result = answerService.removeVote(answerId, userId);
+
+        assertEquals(1, result.getUpvotes());
+        assertEquals(2, result.getDownvotes());
+        verify(answerVoteRepository, times(1)).delete(existing);
+        verify(answerRepository, times(1)).save(answer);
+    }
+
+    @Test
+    void testRemoveVoteNotFound() {
+        when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer));
+        when(answerVoteRepository.findByUserIdAndAnswerId(userId, answerId)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> answerService.removeVote(answerId, userId));
+
+        verify(answerVoteRepository, never()).delete(any(AnswerVote.class));
+        verify(answerRepository, never()).save(any(Answer.class));
+    }
+
+    @Test
+    void testGetUserVotesForQuestion() {
+        AnswerVote likeVote = new AnswerVote();
+        likeVote.setAnswer(answer);
+        likeVote.setVoteType(VoteType.LIKE);
+
+        when(answerVoteRepository.findByUserIdAndAnswerQuestionId(userId, questionId))
+                .thenReturn(List.of(likeVote));
+
+        Map<UUID, String> result = answerService.getUserVotesForQuestion(userId, questionId);
+
+        assertEquals(1, result.size());
+        assertEquals("LIKE", result.get(answerId));
+        verify(answerVoteRepository, times(1)).findByUserIdAndAnswerQuestionId(userId, questionId);
     }
 }

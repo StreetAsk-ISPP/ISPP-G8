@@ -1,7 +1,10 @@
 package com.streetask.app.answer;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 import com.streetask.app.model.Answer;
@@ -21,5 +24,12 @@ public interface AnswerRepository extends CrudRepository<Answer, UUID> {
 	Iterable<Answer> findByQuestionIdAndUserId(UUID questionId, UUID userId);
 
 	Iterable<Answer> findByQuestionIdAndUserIdAndIsVerified(UUID questionId, UUID userId, Boolean isVerified);
+	
+	// Custom query to aggregate upvotes and downvotes by user IDs
+	@Query("SELECT a.user.id, COALESCE(SUM(a.upvotes), 0), COALESCE(SUM(a.downvotes), 0) "
+			+ "FROM Answer a WHERE a.user.id IN :userIds GROUP BY a.user.id")
+	List<Object[]> aggregateVotesByUserIds(Collection<UUID> userIds);
+
+	long countByUserId(UUID userId);
 
 }

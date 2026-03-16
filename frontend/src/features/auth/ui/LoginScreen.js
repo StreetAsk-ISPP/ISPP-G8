@@ -31,11 +31,21 @@ export default function LoginScreen({ navigation }) {
                 email: identifier,
                 password,
             });
-            await login(response.data.token, {
+            const user = {
                 id: response.data.id,
                 username: response.data.username,
                 roles: response.data.roles,
-            });
+            };
+
+            await login(response.data.token, user);
+
+            // Navigate based on role
+            /*
+            if (user.roles && user.roles.includes('ADMIN')) {
+                // The AppNavigator will handle the initial route based on the updated auth state
+                // But we can force a check if needed or just let the state update trigger the re-render of navigator
+            }
+            */
         } catch {
             setError('Login failed. Please check your credentials.');
         } finally {
@@ -53,13 +63,11 @@ export default function LoginScreen({ navigation }) {
                 <View style={[styles.card, isNarrow && { marginHorizontal: 16, borderRadius: 24 }]}>
                     {/* Logo */}
                     <View style={styles.logoContainer}>
-                        <View style={styles.logoCircle}>
-                            <Image
-                                source={require('../../../../assets/logo.png')}
-                                style={styles.logoImage}
-                                resizeMode="contain"
-                            />
-                        </View>
+                        <Image
+                            source={require('../../../../assets/logo.png')}
+                            style={styles.logoImage}
+                            resizeMode="contain"
+                        />
                     </View>
 
                     <Text style={styles.title}>Welcome back</Text>
@@ -167,23 +175,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 24,
     },
-    logoCircle: {
-        width: 72,
-        height: 72,
-        borderRadius: 36,
-        backgroundColor: '#f87171',
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#f87171',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.25,
-        shadowRadius: 16,
-        elevation: 8,
-    },
     logoImage: {
-        width: 40,
-        height: 40,
-        tintColor: '#fff',
+        width: 88,
+        height: 88,
     },
     title: {
         fontSize: 26,
@@ -216,7 +210,7 @@ const styles = StyleSheet.create({
         height: 50,
     },
     inputFocused: {
-        borderColor: '#667eea',
+        borderColor: '#dc2626',
         backgroundColor: '#fff',
     },
     inputIcon: {
@@ -236,12 +230,12 @@ const styles = StyleSheet.create({
         marginTop: 14,
     },
     primaryBtn: {
-        backgroundColor: '#667eea',
+        backgroundColor: '#dc2626',
         borderRadius: 14,
         paddingVertical: 16,
         alignItems: 'center',
         marginTop: 28,
-        shadowColor: '#667eea',
+        shadowColor: '#b91c1c',
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.25,
         shadowRadius: 16,
@@ -258,7 +252,7 @@ const styles = StyleSheet.create({
     },
     forgotText: {
         fontSize: 13,
-        color: '#667eea',
+        color: '#b91c1c',
         fontWeight: '500',
     },
     divider: {

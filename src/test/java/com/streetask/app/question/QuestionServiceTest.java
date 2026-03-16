@@ -3,7 +3,9 @@ package com.streetask.app.question;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,15 +19,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.streetask.app.exceptions.ResourceNotFoundException;
+import com.streetask.app.functionalities.notifications.events.QuestionCreatedEvent;
 import com.streetask.app.model.Question;
 import com.streetask.app.user.RegularUser;
 import com.streetask.app.user.RegularUserRepository;
@@ -60,6 +65,7 @@ class QuestionServiceTest {
 		testCreator = new RegularUser();
 		testCreator.setId(UUID.randomUUID());
 		testCreator.setEmail(TEST_EMAIL);
+		testCreator.setVisibilityRadiusKm(10.0f);
 
 		testQuestion = new Question();
 		testQuestion.setId(testId);
@@ -88,7 +94,10 @@ class QuestionServiceTest {
 		Question newQuestion = new Question();
 		newQuestion.setTitle("New Question");
 		newQuestion.setContent("New Content");
-		newQuestion.setCreator(testCreator);
+		RegularUser otherUser = new RegularUser();
+		otherUser.setId(UUID.randomUUID());
+		otherUser.setEmail("other@test.com");
+		newQuestion.setCreator(otherUser);
 
 		when(questionRepository.save(any(Question.class))).thenReturn(newQuestion);
 
@@ -96,12 +105,14 @@ class QuestionServiceTest {
 		Question saved = questionService.saveQuestion(newQuestion);
 
 		// Assert
+		assertThat(saved.getCreator()).isEqualTo(testCreator);
 		assertThat(saved.getCreatedAt()).isNotNull();
 		assertThat(saved.getActive()).isTrue();
 		assertThat(saved.getAnswerCount()).isZero();
 		assertThat(saved.getExpiresAt()).isNotNull();
 		assertThat(saved.getExpiresAt()).isAfter(saved.getCreatedAt());
 		verify(questionRepository, times(1)).save(newQuestion);
+		verify(eventPublisher, times(1)).publishEvent(any(QuestionCreatedEvent.class));
 	}
 
 	@Test
@@ -110,7 +121,6 @@ class QuestionServiceTest {
 		Question newQuestion = new Question();
 		newQuestion.setTitle("New Question");
 		newQuestion.setContent("New Content");
-		newQuestion.setCreator(testCreator);
 
 		when(questionRepository.save(any(Question.class))).thenReturn(newQuestion);
 
@@ -126,11 +136,10 @@ class QuestionServiceTest {
 		// Arrange
 		LocalDateTime specificCreatedAt = LocalDateTime.now().minusDays(1);
 		LocalDateTime specificExpiresAt = LocalDateTime.now().plusDays(1);
-		
+
 		Question newQuestion = new Question();
 		newQuestion.setTitle("New Question");
 		newQuestion.setContent("New Content");
-		newQuestion.setCreator(testCreator);
 		newQuestion.setCreatedAt(specificCreatedAt);
 		newQuestion.setActive(false);
 		newQuestion.setAnswerCount(5);
@@ -146,6 +155,90 @@ class QuestionServiceTest {
 		assertThat(saved.getActive()).isFalse();
 		assertThat(saved.getAnswerCount()).isEqualTo(5);
 		assertThat(saved.getExpiresAt()).isEqualTo(specificExpiresAt);
+		assertThat(saved.getCreator()).isEqualTo(testCreator);
+	}
+
+	@Test
+	void saveQuestion_shouldPublishQuestionCreatedEventWithQuestionId() {
+		// Arrange
+		Question newQuestion = new Question();
+		newQuestion.setId(testId);
+		newQuestion.setTitle("New Question");
+		newQuestion.setContent("New Content");
+
+		when(questionRepository.save(any(Question.class))).thenReturn(newQuestion);
+
+		// Act
+		questionService.saveQuestion(newQuestion);
+
+		// Assert
+		ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
+		verify(eventPublisher, times(1)).publishEvent(eventCaptor.capture());
+		Object publishedEvent = eventCaptor.getValue();
+		assertThat(publishedEvent).isInstanceOf(QuestionCreatedEvent.class);
+		QuestionCreatedEvent questionCreatedEvent = (QuestionCreatedEvent) publishedEvent;
+		assertThat(questionCreatedEvent.questionId()).isEqualTo(testId);
+	}
+
+	@Test
+	void saveQuestion_shouldThrowAccessDeniedWhenAuthenticatedUserNotFound() {
+		// Arrange
+		Question newQuestion = new Question();
+		newQuestion.setTitle("New Question");
+		newQuestion.setContent("New Content");
+		when(regularUserRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.empty());
+
+		// Act & Assert
+		assertThatThrownBy(() -> questionService.saveQuestion(newQuestion))
+				.isInstanceOf(AccessDeniedException.class)
+				.hasMessageContaining("Only regular users can create questions");
+		verify(questionRepository, never()).save(any(Question.class));
+		verify(eventPublisher, never()).publishEvent(any());
+	}
+
+	@Test
+	void saveQuestion_shouldUseRequestedRadiusWhenProvided() {
+		Question newQuestion = new Question();
+		newQuestion.setTitle("Radius test");
+		newQuestion.setContent("Should use requested radius");
+		newQuestion.setRadiusKm(2.0f);
+
+		testCreator.setVisibilityRadiusKm(7.5f);
+		when(questionRepository.save(any(Question.class))).thenReturn(newQuestion);
+
+		Question saved = questionService.saveQuestion(newQuestion);
+
+		assertThat(saved.getRadiusKm()).isEqualTo(2.0f);
+	}
+
+	@Test
+	void saveQuestion_shouldUseCreatorVisibilityRadiusWhenRequestedRadiusIsMissing() {
+		Question newQuestion = new Question();
+		newQuestion.setTitle("Radius fallback");
+		newQuestion.setContent("Should use creator visibility radius");
+		newQuestion.setRadiusKm(null);
+
+		testCreator.setVisibilityRadiusKm(3.0f);
+		when(questionRepository.save(any(Question.class))).thenReturn(newQuestion);
+
+		Question saved = questionService.saveQuestion(newQuestion);
+
+		assertThat(saved.getRadiusKm()).isEqualTo(3.0f);
+	}
+
+	@Test
+	void saveQuestion_shouldSetDefaultRadiusWhenNoRadiusProvided() {
+		Question newQuestion = new Question();
+		newQuestion.setTitle("Default radius");
+		newQuestion.setContent("Should fallback to 1km");
+		newQuestion.setRadiusKm(null);
+
+		testCreator.setVisibilityRadiusKm(null);
+		when(questionRepository.save(any(Question.class))).thenReturn(newQuestion);
+
+		Question saved = questionService.saveQuestion(newQuestion);
+
+		assertThat(saved.getRadiusKm()).isEqualTo(1.0f);
 	}
 
 	// =============== FIND QUESTION TESTS ===============
@@ -411,43 +504,52 @@ class QuestionServiceTest {
 
 	// =============== EXPIRATION CRON TESTS ===============
 
-    @Test
-    void executeExpirationCron_shouldDeactivateExpiredQuestions() {
-        // Arrange
-        Question expired1 = new Question();
-        expired1.setId(UUID.randomUUID());
-        expired1.setActive(true);
-        expired1.setTitle("Expired 1");
+	@Test
+	void executeExpirationCron_shouldDeactivateExpiredQuestions() {
+		// Arrange
+		Question expired1 = new Question();
+		expired1.setId(UUID.randomUUID());
+		expired1.setActive(true);
+		expired1.setTitle("Expired 1");
 
-        Question expired2 = new Question();
-        expired2.setId(UUID.randomUUID());
-        expired2.setActive(true);
-        expired2.setTitle("Expired 2");
-        when(questionRepository.findAllByActiveTrueAndExpiresAtBefore(any(LocalDateTime.class)))
-                .thenReturn(Arrays.asList(expired1, expired2));
+		Question expired2 = new Question();
+		expired2.setId(UUID.randomUUID());
+		expired2.setActive(true);
+		expired2.setTitle("Expired 2");
+		when(questionRepository.findAllByActiveTrueAndExpiresAtBefore(any(LocalDateTime.class)))
+				.thenReturn(Arrays.asList(expired1, expired2));
 
-        // Act
-        questionService.executeExpirationCron();
+		// Act
+		questionService.executeExpirationCron();
 
-        // Assert
-        assertThat(expired1.getActive()).isFalse();
-        assertThat(expired2.getActive()).isFalse();
-        verify(questionRepository, times(1)).findAllByActiveTrueAndExpiresAtBefore(any(LocalDateTime.now().getClass()));
-        verify(questionRepository, times(1)).saveAll(any());
-    }
+		// Assert
+		assertThat(expired1.getActive()).isFalse();
+		assertThat(expired2.getActive()).isFalse();
+		verify(questionRepository, times(1)).findAllByActiveTrueAndExpiresAtBefore(any(LocalDateTime.class));
+		verify(questionRepository, times(1)).saveAll(argThat(questions -> {
+			if (!(questions instanceof Iterable<?>)) {
+				return false;
+			}
+			int count = 0;
+			for (Object ignored : (Iterable<?>) questions) {
+				count++;
+			}
+			return count == 2;
+		}));
+	}
 
-    @Test
-    void executeExpirationCron_shouldDoNothingWhenNoQuestionsExpired() {
-        // Arrange
-        when(questionRepository.findAllByActiveTrueAndExpiresAtBefore(any(LocalDateTime.class)))
-                .thenReturn(Arrays.asList());
+	@Test
+	void executeExpirationCron_shouldDoNothingWhenNoQuestionsExpired() {
+		// Arrange
+		when(questionRepository.findAllByActiveTrueAndExpiresAtBefore(any(LocalDateTime.class)))
+				.thenReturn(Arrays.asList());
 
-        // Act
-        questionService.executeExpirationCron();
+		// Act
+		questionService.executeExpirationCron();
 
-        // Assert
-        verify(questionRepository, times(1)).findAllByActiveTrueAndExpiresAtBefore(any(LocalDateTime.class));
-        verify(questionRepository, times(0)).saveAll(any());
-    }
+		// Assert
+		verify(questionRepository, times(1)).findAllByActiveTrueAndExpiresAtBefore(any(LocalDateTime.class));
+		verify(questionRepository, never()).saveAll(any());
+	}
 
 }

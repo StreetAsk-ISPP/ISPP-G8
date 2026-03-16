@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
     View,
     Text,
@@ -7,11 +7,12 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     Alert,
-    Platform
+    Platform,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { locationService } from '../../../../shared/services/location/locationService';
 import { CountdownText } from './CountdownText';
+import { calculateDistanceInKm } from '../../../../shared/utils/helpers';
 
 // Para web: importar Leaflet y CSS
 let MapContainer, TileLayer, Marker, Popup;
@@ -38,7 +39,7 @@ const createCustomIcon = (color) => {
         <path fill="${color}" d="M16 0C9.383 0 4 5.383 4 12c0 8 12 28 12 28s12-20 12-28c0-6.617-5.383-12-12-12z"/>
         <circle fill="white" cx="16" cy="12" r="4"/>
     </svg>`;
-    
+
     return L.icon({
         iconUrl: `data:image/svg+xml;base64,${btoa(svgIcon)}`,
         iconSize: [32, 40],
@@ -48,22 +49,18 @@ const createCustomIcon = (color) => {
 };
 
 const toNum = (v) => {
-  if (typeof v === 'number') return v;
-  if (typeof v === 'string') {
-    const n = parseFloat(v);
-    return Number.isFinite(n) ? n : undefined;
-  }
-  return undefined;
+    if (typeof v === 'number') return v;
+    if (typeof v === 'string') {
+        const n = parseFloat(v);
+        return Number.isFinite(n) ? n : undefined;
+    }
+    return undefined;
 };
 
 const getQuestionCoords = (q) => {
     const loc = q?.location ?? {};
     const lat =
-        toNum(loc.latitude) ??
-        toNum(loc.lat) ??
-        toNum(loc.y) ??
-        toNum(q?.latitude) ??
-        toNum(q?.lat);
+        toNum(loc.latitude) ?? toNum(loc.lat) ?? toNum(loc.y) ?? toNum(q?.latitude) ?? toNum(q?.lat);
 
     const lng =
         toNum(loc.longitude) ??
@@ -77,7 +74,7 @@ const getQuestionCoords = (q) => {
     return { lat, lng };
 };
 
-export default function MapComponent({ questions = [], onQuestionPress }) {
+export default function MapComponent({ questions = [], onQuestionPress, onLocationChange }) {
     const [location, setLocation] = useState(null);
     const [publicLocations, setPublicLocations] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -85,6 +82,23 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
     const [publishing, setPublishing] = useState(false);
     const mapRef = useRef(null);
     const [visibleQuestions, setVisibleQuestions] = useState([]);
+    const userLocationIcon = useMemo(() => {
+        if (!L) return undefined;
+        return L.divIcon({
+            className: '',
+            html: `<div style="
+                width: 16px;
+                height: 16px;
+                border-radius: 999px;
+                background: #a52019;
+                border: 3px solid #ffffff;
+                box-shadow: 0 0 0 3px rgba(165,32,25,0.35);
+            "></div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+            popupAnchor: [0, -10],
+        });
+    }, []);
 
     useEffect(() => {
         let locationSubscription;
@@ -92,7 +106,7 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
         const requestLocationPermission = async () => {
             try {
                 const { status } = await Location.requestForegroundPermissionsAsync();
-                
+
                 if (status !== 'granted') {
                     setError('Permiso de ubicación denegado');
                     setLoading(false);
@@ -102,8 +116,11 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                 const initialLocation = await Location.getCurrentPositionAsync({
                     accuracy: Location.Accuracy.High,
                 });
-                
+
                 setLocation(initialLocation.coords);
+                if (typeof onLocationChange === 'function') {
+                    onLocationChange(initialLocation.coords);
+                }
                 setLoading(false);
 
                 await loadPublicLocations();
@@ -118,6 +135,9 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                         },
                         (newLocation) => {
                             setLocation(newLocation.coords);
+                            if (typeof onLocationChange === 'function') {
+                                onLocationChange(newLocation.coords);
+                            }
                         }
                     );
                 }
@@ -134,14 +154,17 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                 locationSubscription.remove();
             }
         };
-    }, []);
+    }, [onLocationChange]);
 
     const loadPublicLocations = async () => {
         try {
             const response = await locationService.getPublicLocationsSince(30);
             // Asegurar que siempre es un array
-            const locations = Array.isArray(response) ? response :
-                            Array.isArray(response?.data) ? response.data : [];
+            const locations = Array.isArray(response)
+                ? response
+                : Array.isArray(response?.data)
+                    ? response.data
+                    : [];
             setPublicLocations(locations);
         } catch (err) {
             console.warn('Error loading public locations:', err);
@@ -151,9 +174,9 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
 
     useEffect(() => {
         const ahora = new Date().getTime();
-        
+
         // Filtramos las preguntas que ya vencieron antes de guardarlas en el estado
-        const preguntasActivas = questions.filter(q => {
+        const preguntasActivas = questions.filter((q) => {
             const fechaExpiracion = new Date(q.expiresAt).getTime();
             return fechaExpiracion > ahora; // Solo dejamos las que expiran en el futuro
         });
@@ -162,7 +185,7 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
     }, [questions]);
 
     const handleQuestionExpire = (questionId) => {
-        setVisibleQuestions(prev => prev.filter(q => q.id !== questionId));
+        setVisibleQuestions((prev) => prev.filter((q) => q.id !== questionId));
     };
 
     const handlePublishLocation = async () => {
@@ -183,7 +206,10 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
             await loadPublicLocations();
         } catch (err) {
             console.error('Error publishing location:', err);
-            Alert.alert('Error', 'Error al publicar ubicación: ' + (err.response?.data?.message || err.message));
+            Alert.alert(
+                'Error',
+                'Error al publicar ubicación: ' + (err.response?.data?.message || err.message)
+            );
         } finally {
             setPublishing(false);
         }
@@ -239,91 +265,99 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
+
                     {/* Marcador de tu ubicación */}
-                    <Marker
-                        position={[location.latitude, location.longitude]}
-                        icon={createCustomIcon('#007AFF')}
-                    >
+                    <Marker position={[location.latitude, location.longitude]} icon={userLocationIcon}>
                         <Popup>
                             <div style={{ fontSize: '12px' }}>
-                                <strong>Mi ubicación</strong><br />
-                                {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}<br />
+                                <strong>Your location</strong>
+                                <br />
+                                {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                                <br />
                                 Precisión: {location.accuracy?.toFixed(2) || 'N/A'} m
                             </div>
                         </Popup>
                     </Marker>
-                    
+
                     {/* Question Markers */}
                     {(Array.isArray(visibleQuestions) ? visibleQuestions : []).map((q) => {
                         const coords = getQuestionCoords(q);
+                        if (!coords) return null;
+                        const radiusKm = toNum(q?.radiusKm);
                         const { lat, lng } = coords;
+                        const distanceKm = calculateDistanceInKm(
+                            { latitude: location.latitude, longitude: location.longitude },
+                            { latitude: lat, longitude: lng }
+                        );
+                        const canAnswer = !Number.isFinite(radiusKm) || radiusKm <= 0 || distanceKm <= radiusKm;
+                        const questionColor = canAnswer ? '#f59e0b' : '#9ca3af';
 
                         return (
                             <Marker
-                            key={q.id}
-                            position={[lat, lng]}
-                            icon={createCustomIcon('#FF9500')}
-                            eventHandlers={{
-                                click: () => onQuestionPress?.(q.id),
-                            }}
+                                key={q.id}
+                                position={[lat, lng]}
+                                icon={createCustomIcon(questionColor)}
+                                eventHandlers={{
+                                    click: () => onQuestionPress?.(q.id),
+                                }}
                             >
-                            <Popup>
-                                <div style={{ fontSize: '12px' }}>
-                                <strong>{q.title || 'Question'}</strong><br />
-                                <div style={{ marginBottom: '8px' }}>
-                                    <CountdownText
-                                        expiresAt={q.expiresAt}
-                                        onExpire={() => handleQuestionExpire(q.id)}
-                                    />
-                                </div>
-                                <span style={{ opacity: 0.8 }}>
-                                    {lat.toFixed(5)}, {lng.toFixed(5)}
-                                </span><br />
-                                <span style={{ color: '#007AFF', fontWeight: 600 }}>
-                                    Click to open
-                                </span>
-                                </div>
-                            </Popup>
+                                <Popup>
+                                    <div style={{ fontSize: '12px' }}>
+                                        <strong>{q.title || 'Question'}</strong>
+                                        <br />
+                                        <div style={{ marginBottom: '8px' }}>
+                                            <CountdownText
+                                                expiresAt={q.expiresAt}
+                                                onExpire={() => handleQuestionExpire(q.id)}
+                                            />
+                                        </div>
+                                        <span style={{ color: canAnswer ? '#ea580c' : '#6b7280', fontWeight: 700 }}>
+                                            {canAnswer ? 'Puedes responder' : 'Fuera de tu radio'}
+                                        </span>
+                                        <br />
+                                        {Number.isFinite(radiusKm) && radiusKm > 0 && (
+                                            <>
+                                                <span style={{ opacity: 0.85 }}>
+                                                    Radio respuesta: {radiusKm.toFixed(2)} km
+                                                </span>
+                                                <br />
+                                                <span style={{ opacity: 0.85 }}>
+                                                    Tu distancia: {distanceKm.toFixed(2)} km
+                                                </span>
+                                                <br />
+                                            </>
+                                        )}
+                                        <span style={{ opacity: 0.8 }}>
+                                            {lat.toFixed(5)}, {lng.toFixed(5)}
+                                        </span>
+                                        <br />
+                                        <span style={{ color: '#007AFF', fontWeight: 600 }}>Click to open</span>
+                                    </div>
+                                </Popup>
                             </Marker>
                         );
                     })}
 
                     {/* Marcadores de ubicaciones públicas */}
-                    {publicLocations && publicLocations.map((pubLocation) => (
-                        <Marker
-                            key={pubLocation.id}
-                            position={[pubLocation.latitude, pubLocation.longitude]}
-                            icon={createCustomIcon('#FF3B30')}
-                        >
-                            <Popup>
-                                <div style={{ fontSize: '12px' }}>
-                                    <strong>Usuario {pubLocation.user?.id || 'Desconocido'}</strong><br />
-                                    {pubLocation.latitude.toFixed(6)}, {pubLocation.longitude.toFixed(6)}<br />
-                                    {getTimeAgo(pubLocation.timestamp)}
-                                </div>
-                            </Popup>
-                        </Marker>
-                    ))}
+                    {publicLocations &&
+                        publicLocations.map((pubLocation) => (
+                            <Marker
+                                key={pubLocation.id}
+                                position={[pubLocation.latitude, pubLocation.longitude]}
+                                icon={createCustomIcon('#FF3B30')}
+                            >
+                                <Popup>
+                                    <div style={{ fontSize: '12px' }}>
+                                        <strong>Usuario {pubLocation.user?.id || 'Desconocido'}</strong>
+                                        <br />
+                                        {pubLocation.latitude.toFixed(6)}, {pubLocation.longitude.toFixed(6)}
+                                        <br />
+                                        {getTimeAgo(pubLocation.timestamp)}
+                                    </div>
+                                </Popup>
+                            </Marker>
+                        ))}
                 </MapContainer>
-
-                {/* Botón flotante para publicar */}
-                <button
-                    style={{
-                        ...webStyles.publishButton,
-                        ...(publishing ? webStyles.publishButtonDisabled : {})
-                    }}
-                    onClick={handlePublishLocation}
-                    disabled={publishing}
-                >
-                    {publishing ? 'Publicando...' : 'Publicar ubicación'}
-                </button>
-
-                {/* Información */}
-                <div style={webStyles.infoBox}>
-                    <span style={webStyles.infoText}>
-                        Ubicaciones públicas: {publicLocations?.length || 0}
-                    </span>
-                </div>
             </div>
         );
     }
@@ -334,12 +368,8 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
             <View style={styles.webContent}>
                 <Text style={styles.webTitle}>📍 Tu ubicación</Text>
                 <View style={styles.locationCard}>
-                    <Text style={styles.locationText}>
-                        Latitud: {location.latitude.toFixed(6)}
-                    </Text>
-                    <Text style={styles.locationText}>
-                        Longitud: {location.longitude.toFixed(6)}
-                    </Text>
+                    <Text style={styles.locationText}>Latitud: {location.latitude.toFixed(6)}</Text>
+                    <Text style={styles.locationText}>Longitud: {location.longitude.toFixed(6)}</Text>
                     <Text style={styles.locationText}>
                         Precisión: {location.accuracy?.toFixed(2) || 'N/A'} m
                     </Text>
@@ -369,9 +399,7 @@ export default function MapComponent({ questions = [], onQuestionPress }) {
                             <Text style={styles.locationText}>
                                 Lat: {pubLocation.latitude.toFixed(6)}, Lon: {pubLocation.longitude.toFixed(6)}
                             </Text>
-                            <Text style={styles.timeText}>
-                                {getTimeAgo(pubLocation.timestamp)}
-                            </Text>
+                            <Text style={styles.timeText}>{getTimeAgo(pubLocation.timestamp)}</Text>
                         </View>
                     ))
                 )}
@@ -384,7 +412,7 @@ function getTimeAgo(timestamp) {
     const now = new Date();
     const then = new Date(timestamp);
     const seconds = Math.floor((now - then) / 1000);
-    
+
     if (seconds < 60) return 'hace poco';
     if (seconds < 3600) return `hace ${Math.floor(seconds / 60)}m`;
     if (seconds < 86400) return `hace ${Math.floor(seconds / 3600)}h`;

@@ -1,58 +1,69 @@
-/*
- * Copyright 2002-2013 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.streetask.app.user;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 import jakarta.validation.Valid;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import com.streetask.app.answer.AnswerRepository;
 import com.streetask.app.exceptions.ResourceNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.streetask.app.question.QuestionRepository;
+import com.streetask.app.model.Question;
 
 @Service
 public class UserService {
 
 	private UserRepository userRepository;
+	private AnswerRepository answerRepository;
+	private QuestionRepository questionRepository;
+	private PasswordEncoder passwordEncoder;
+
+	private static final int LIKE_WEIGHT = 2;
+	private static final int DISLIKE_WEIGHT = 1;
 
 	@Autowired
-	public UserService(UserRepository userRepository) {
+	public UserService(UserRepository userRepository, AnswerRepository answerRepository,
+			QuestionRepository questionRepository, PasswordEncoder passwordEncoder) {
 		this.userRepository = userRepository;
+		this.answerRepository = answerRepository;
+		this.questionRepository = questionRepository;
+		this.passwordEncoder = passwordEncoder;
+	}
+
+	private PasswordEncoder getPasswordEncoder() {
+		return passwordEncoder != null ? passwordEncoder : new BCryptPasswordEncoder();
 	}
 
 	@Transactional
 	public User saveUser(User user) throws DataAccessException {
 		userRepository.save(user);
-		return user;
+		return enrichReputation(user);
 	}
 
 	@Transactional(readOnly = true)
 	public User findUser(String email) {
-		return userRepository.findByEmail(email)
+		User user = userRepository.findByEmail(email)
 				.orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+		return enrichReputation(user);
 	}
 
 	@Transactional(readOnly = true)
 	public User findUser(UUID id) {
-		return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+		User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+		return enrichReputation(user);
 	}
 
 	@Transactional(readOnly = true)
@@ -60,9 +71,11 @@ public class UserService {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		if (auth == null)
 			throw new ResourceNotFoundException("Nobody authenticated!");
-		else
-			return userRepository.findByEmail(auth.getName())
+		else {
+			User user = userRepository.findByEmail(auth.getName())
 					.orElseThrow(() -> new ResourceNotFoundException("User", "Email", auth.getName()));
+			return enrichReputation(user);
+		}
 	}
 
 	public Boolean existsUser(String email) {
@@ -75,20 +88,29 @@ public class UserService {
 
 	@Transactional(readOnly = true)
 	public Iterable<User> findAll() {
-		return userRepository.findAll();
+		return enrichReputation(userRepository.findAll());
 	}
 
 	public Iterable<User> findAllByAuthority(String auth) {
-		return userRepository.findAllByAuthority(auth);
+		return enrichReputation(userRepository.findAllByAuthority(auth));
 	}
 
 	@Transactional
 	public User updateUser(@Valid User user, UUID idToUpdate) {
 		User toUpdate = findUser(idToUpdate);
-		BeanUtils.copyProperties(user, toUpdate, "id");
-		userRepository.save(toUpdate);
 
-		return toUpdate;
+		String previousPassword = toUpdate.getPassword();
+
+		BeanUtils.copyProperties(user, toUpdate, "id");
+
+		if (user.getPassword() == null || user.getPassword().isBlank()) {
+			toUpdate.setPassword(previousPassword);
+		} else {
+			toUpdate.setPassword(getPasswordEncoder().encode(user.getPassword()));
+		}
+
+		userRepository.save(toUpdate);
+		return enrichReputation(toUpdate);
 	}
 
 	@Transactional
@@ -97,4 +119,99 @@ public class UserService {
 		this.userRepository.delete(toDelete);
 	}
 
+	private User enrichReputation(User user) {
+		Map<UUID, Integer> reputationByUserId = calculateReputationByUserIds(List.of(user.getId()));
+		user.setReputation(reputationByUserId.getOrDefault(user.getId(), 0));
+		return user;
+	}
+
+	private Iterable<User> enrichReputation(Iterable<User> users) {
+		List<User> userList = StreamSupport.stream(users.spliterator(), false).toList();
+		if (userList.isEmpty()) {
+			return userList;
+		}
+
+		List<UUID> userIds = new ArrayList<>(userList.size());
+		for (User user : userList) {
+			userIds.add(user.getId());
+		}
+
+		Map<UUID, Integer> reputationByUserId = calculateReputationByUserIds(userIds);
+
+		for (User user : userList) {
+			user.setReputation(reputationByUserId.getOrDefault(user.getId(), 0));
+		}
+
+		return userList;
+	}
+
+	private Map<UUID, Integer> calculateReputationByUserIds(List<UUID> userIds) {
+		Map<UUID, Integer> reputationByUserId = new HashMap<>();
+		List<Object[]> aggregates = answerRepository.aggregateVotesByUserIds(userIds);
+		for (Object[] row : aggregates) {
+			UUID userId = (UUID) row[0];
+			int likes = ((Number) row[1]).intValue();
+			int dislikes = ((Number) row[2]).intValue();
+			int reputation = (likes * LIKE_WEIGHT) - (dislikes * DISLIKE_WEIGHT);
+			reputationByUserId.put(userId, reputation);
+		}
+		return reputationByUserId;
+	}
+
+	@Transactional(readOnly = true)
+	public Map<String, Object> getUserStats(UUID userId) {
+		User user = findUser(userId);
+
+		long questionsCount = questionRepository.countByCreatorId(userId);
+		long answersCount = answerRepository.countByUserId(userId);
+
+
+		// Aggregate likes (upvotes) and dislikes (downvotes) for all answers by this
+		// user
+		List<Object[]> aggregates = answerRepository.aggregateVotesByUserIds(List.of(userId));
+		int likesCount = 0;
+		int dislikesCount = 0;
+		if (!aggregates.isEmpty()) {
+			Object[] row = aggregates.get(0);
+			likesCount = ((Number) row[1]).intValue();
+			dislikesCount = ((Number) row[2]).intValue();
+		}
+
+		Map<String, Object> stats = new HashMap<>();
+		stats.put("questionsCount", questionsCount);
+		stats.put("answersCount", answersCount);
+		stats.put("username", user.getUserName());
+		stats.put("role", user.getAuthority().getAuthority());
+		stats.put("likesCount", likesCount);
+		stats.put("dislikesCount", dislikesCount);
+		stats.put("reputation", user.getReputation());
+
+		// Calculate rating based on interactions on the user's answers:
+		// ratio = likes / (likes + dislikes) scaled to 0-5.
+		int totalInteractions = likesCount + dislikesCount;
+		double rating = 0.0;
+		if (totalInteractions > 0) {
+			rating = ((double) likesCount / (double) totalInteractions) * 5.0;
+			if (rating < 0.0) {
+				rating = 0.0;
+			} else if (rating > 5.0) {
+				rating = 5.0;
+			}
+			rating = Math.round(rating * 10.0) / 10.0;
+		}
+
+		stats.put("rating", rating);
+
+		return stats;
+	}
+
+	@Transactional(readOnly = true)
+	public Iterable<Question> findQuestionsByUserId(UUID userId) {
+		return questionRepository.findByCreatorId(userId);
+	}
+
+	@Transactional(readOnly = true)
+	public Iterable<com.streetask.app.model.Answer> findAnswersByUserId(UUID userId) {
+		return answerRepository.findByUserId(userId);
+	}
 }

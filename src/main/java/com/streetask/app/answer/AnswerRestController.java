@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.streetask.app.auth.payload.response.MessageResponse;
 import com.streetask.app.model.Answer;
 import com.streetask.app.model.Question;
+import com.streetask.app.model.enums.VoteType;
+import com.streetask.app.question.QuestionService;
 import com.streetask.app.util.RestPreconditions;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,10 +36,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class AnswerRestController {
 
 	private final AnswerService answerService;
+	private final QuestionService questionService;
 
 	@Autowired
-	public AnswerRestController(AnswerService answerService) {
+	public AnswerRestController(AnswerService answerService, QuestionService questionService) {
 		this.answerService = answerService;
+		this.questionService = questionService;
 	}
 
 	@GetMapping
@@ -76,8 +80,10 @@ public class AnswerRestController {
 	public ResponseEntity<?> create(@RequestBody @Valid Answer answer) {
 		// Validate that the question exists and get it
 		RestPreconditions.checkNotNull(answer.getQuestion(), "Answer", "question", answer.getQuestion());
-		Question question = answer.getQuestion();
-		RestPreconditions.checkNotNull(question.getId(), "Question", "id", question.getId());
+		UUID questionId = answer.getQuestion().getId();
+		RestPreconditions.checkNotNull(questionId, "Question", "id", questionId);
+		Question question = questionService.findQuestion(questionId);
+		answer.setQuestion(question);
 
 		// Save the answer with location validation
 		try {
@@ -118,4 +124,46 @@ public class AnswerRestController {
 		return new ResponseEntity<>(new MessageResponse("Answer deleted!"), HttpStatus.OK);
 	}
 
+	@GetMapping("/votes")
+	@Operation(summary = "Get the authenticated user's votes for all answers of a question")
+	public ResponseEntity<?> getUserVotes(
+			@RequestParam UUID userId,
+			@RequestParam UUID questionId) {
+		return new ResponseEntity<>(answerService.getUserVotesForQuestion(userId, questionId), HttpStatus.OK);
+	}
+
+	@PutMapping(value = "{answerId}/votes")
+	@ResponseStatus(HttpStatus.OK)
+	@Operation(summary = "Vote on an answer (once per user)")
+	public ResponseEntity<?> updateVotes(
+			@PathVariable("answerId") UUID answerId,
+			@RequestParam UUID userId,
+			@RequestParam VoteType voteType) {
+
+		RestPreconditions.checkNotNull(answerService.findAnswer(answerId), "Answer", "id", answerId);
+
+		try {
+			Answer updatedAnswer = answerService.updateVotes(answerId, userId, voteType);
+			return new ResponseEntity<>(updatedAnswer, HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@DeleteMapping(value = "{answerId}/votes")
+	@ResponseStatus(HttpStatus.OK)
+	@Operation(summary = "Remove a user's vote from an answer")
+	public ResponseEntity<?> removeVote(
+			@PathVariable("answerId") UUID answerId,
+			@RequestParam UUID userId) {
+
+		RestPreconditions.checkNotNull(answerService.findAnswer(answerId), "Answer", "id", answerId);
+
+		try {
+			Answer updatedAnswer = answerService.removeVote(answerId, userId);
+			return new ResponseEntity<>(updatedAnswer, HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
 }

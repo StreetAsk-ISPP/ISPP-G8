@@ -25,10 +25,12 @@ jobs:
 
       - run: npm ci
 
-      - uses: expo/expo-github-action@v8
+      - uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
       - run: |
           npx eas update --channel trunk --non-interactive --message "trunk: ${{ github.sha }}"
+        env:
+        EXPO_PUBLIC_API_BASE_URL: ${{ vars.EXPO_PUBLIC_API_BASE_URL_PREPROD }}

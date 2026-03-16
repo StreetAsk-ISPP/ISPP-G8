@@ -9,12 +9,16 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
 
   useEffect(() => {
     const bootstrapAuth = async () => {
-      const token = await AsyncStorage.getItem(TOKEN_STORAGE_KEY);
+      const storedToken = await AsyncStorage.getItem(TOKEN_STORAGE_KEY);
       const userData = await AsyncStorage.getItem(USER_STORAGE_KEY);
-      setIsAuthenticated(Boolean(token));
+
+      setToken(storedToken);
+      setIsAuthenticated(Boolean(storedToken));
+
       if (userData) {
         try {
           setUser(JSON.parse(userData));
@@ -22,24 +26,29 @@ export function AuthProvider({ children }) {
           console.error('Error parsing user data:', e);
         }
       }
+
       setIsLoadingAuth(false);
     };
 
     bootstrapAuth();
   }, []);
 
-  const login = async (token, userData) => {
-    await AsyncStorage.setItem(TOKEN_STORAGE_KEY, token);
+  const login = async (newToken, userData) => {
+    await AsyncStorage.setItem(TOKEN_STORAGE_KEY, newToken);
+    setToken(newToken);
+
     if (userData) {
       await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
       setUser(userData);
     }
+
     setIsAuthenticated(true);
   };
 
   const logout = async () => {
     await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
     await AsyncStorage.removeItem(USER_STORAGE_KEY);
+    setToken(null);
     setUser(null);
     setIsAuthenticated(false);
   };
@@ -49,10 +58,11 @@ export function AuthProvider({ children }) {
       isAuthenticated,
       isLoadingAuth,
       user,
+      token,
       login,
       logout,
     }),
-    [isAuthenticated, isLoadingAuth, user]
+    [isAuthenticated, isLoadingAuth, user, token]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

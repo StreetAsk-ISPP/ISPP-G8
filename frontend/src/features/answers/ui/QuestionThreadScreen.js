@@ -4,12 +4,14 @@ import {
     KeyboardAvoidingView, Platform, Pressable, ActivityIndicator,
     TouchableOpacity, useWindowDimensions,
 } from 'react-native';
+import { theme } from '../../../shared/ui/theme/theme';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import apiClient from '../../../shared/services/http/apiClient';
 import { useAuth } from '../../../app/providers/AuthProvider';
-import { crossAlert } from '../../../shared/utils/crossAlert';
+import Toast from 'react-native-toast-message';
 import MapPickerWeb from '../../home/ui/components/MapPickerWeb';
+import { calculateDistanceInKm } from '../../../shared/utils/helpers'; // Haversine formula para calcular distancia entre 2 puntos
 
 const pad2 = (n) => String(n).padStart(2, '0');
 const formatHms = (t) => {
@@ -17,6 +19,10 @@ const formatHms = (t) => {
     return `${Math.floor(s / 3600)}:${pad2(Math.floor((s % 3600) / 60))}:${pad2(s % 60)}`;
 };
 const avatarColors = ['#dbeafe', '#fce7f3', '#fef3c7', '#d1fae5', '#ede9fe', '#e0e7ff'];
+const parsePositiveNumber = (value) => {
+    const num = Number(value);
+    return Number.isFinite(num) && num > 0 ? num : null;
+};
 
 export default function QuestionThreadScreen({ route, navigation }) {
     const { questionId } = route?.params || {};
@@ -48,26 +54,59 @@ export default function QuestionThreadScreen({ route, navigation }) {
         return avatarColors[Math.abs(hash) % avatarColors.length];
     }, []);
 
-    const canSend = useMemo(() => draft.trim().length > 0 && !sendingAnswer, [draft, sendingAnswer]);
+    const canSend = useMemo(() => draft.trim().length > 0, [draft]);
+    const questionRadiusKm = useMemo(() => parsePositiveNumber(question?.radiusKm), [question?.radiusKm]);
+    const questionCoords = useMemo(() => {
+        const qLat = Number(question?.location?.latitude);
+        const qLng = Number(question?.location?.longitude);
+        if (!Number.isFinite(qLat) || !Number.isFinite(qLng)) return null;
+        return { latitude: qLat, longitude: qLng };
+    }, [question?.location?.latitude, question?.location?.longitude]);
+    const hasGeoRestriction = useMemo(
+        () => questionCoords !== null && questionRadiusKm != null,
+        [questionCoords, questionRadiusKm]
+    );
+
+    const isWithinRadius = useMemo(() => {
+        if (!hasGeoRestriction) {
+            return true;
+        }
+        if (!userLocation) return null;
+
+        const distKm = calculateDistanceInKm(
+            { latitude: userLocation.latitude, longitude: userLocation.longitude },
+            questionCoords
+        );
+
+        return distKm <= questionRadiusKm;
+    }, [hasGeoRestriction, questionCoords, questionRadiusKm, userLocation]);
 
     useEffect(() => {
         if (Platform.OS === 'web' && navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-                () => { },
-                { enableHighAccuracy: true, timeout: 8000 }
+                (error) => {
+                    console.warn('[Geolocation] Failed:', error.code, error.message);
+
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+                        (retryErr) => console.warn('[Geolocation] Retry failed:', retryErr.code, retryErr.message),
+                        { enableHighAccuracy: true, timeout: 20000 }
+                    );
+                },
+                { enableHighAccuracy: false, timeout: 8000, maximumAge: 180000 }
             );
-            return;
+        } else {
+            (async () => {
+                try {
+                    const { status } = await Location.requestForegroundPermissionsAsync();
+                    if (status === 'granted') {
+                        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+                        setUserLocation(loc.coords);
+                    }
+                } catch (_) { /* location unavailable */ }
+            })();
         }
-        (async () => {
-            try {
-                const { status } = await Location.requestForegroundPermissionsAsync();
-                if (status === 'granted') {
-                    const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-                    setUserLocation(loc.coords);
-                }
-            } catch (_) { /* location unavailable */ }
-        })();
     }, []);
 
     useEffect(() => {
@@ -91,6 +130,16 @@ export default function QuestionThreadScreen({ route, navigation }) {
                     userId: a.user?.id,
                     isVerified: a.isVerified,
                 })));
+                // Cargar los votos previos del usuario para esta pregunta
+                if (user?.id) {
+                    try {
+                        const vRes = await apiClient.get(`/api/v1/answers/votes?userId=${user.id}&questionId=${questionId}`);
+                        // vRes.data es un mapa { answerId: 'LIKE'|'DISLIKE' }
+                        if (vRes.data && typeof vRes.data === 'object') {
+                            setMyVotes(vRes.data);
+                        }
+                    } catch (_) { /* ignorar si falla la carga de votos */ }
+                }
             } catch (e) {
                 setError(e.message || 'Error loading data');
             } finally {
@@ -102,7 +151,16 @@ export default function QuestionThreadScreen({ route, navigation }) {
     const [timeLeft, setTimeLeft] = useState(0);
     useEffect(() => {
         if (!question?.expiresAt) return;
-        const exp = new Date(question.expiresAt).getTime();
+        let dateStr = question.expiresAt;
+
+        // 2. Si no tiene la 'Z', se la concatenamos (y reemplazamos el espacio por 'T' para que sea ISO)
+        if (!dateStr.includes('Z')) {
+            dateStr = dateStr.replace(' ', 'T') + 'Z';
+        }
+
+        const exp = new Date(dateStr).getTime();
+
+
         const tick = () => setTimeLeft(Math.max(0, Math.ceil((exp - Date.now()) / 1000)));
         tick();
         const id = setInterval(tick, 1000);
@@ -113,7 +171,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
         const content = draft.trim();
         if (!content || !question) return;
 
-        const optimistic = { id: `tmp-${Date.now()}`, author: '@me', minutesAgo: 0, text: content, likes: 0, dislikes: 0, color: '#dbeafe', optimistic: true };
+        const optimistic = { id: `tmp-${Date.now()}`, author: '@me', minutesAgo: 0, text: content, likes: 0, dislikes: 0, color: '#47d22b', optimistic: true };
         setAnswers((p) => [...p, optimistic]);
         setDraft('');
         inputRef.current?.blur();
@@ -154,11 +212,40 @@ export default function QuestionThreadScreen({ route, navigation }) {
                 payload.userLocation = { latitude: loc.latitude, longitude: loc.longitude };
             }
 
+            if (hasGeoRestriction) {
+                if (!loc) {
+                    setAnswers((p) => p.filter((a) => a.id !== optimistic.id));
+                    setDraft(content);
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Ubicación requerida',
+                        text2: 'Debes activar tu ubicación para responder esta pregunta.',
+                        position: 'top'
+                    });
+                    return;
+                }
+                const distKm = calculateDistanceInKm(
+                    { latitude: loc.latitude, longitude: loc.longitude },
+                    questionCoords
+                );
+                if (distKm > questionRadiusKm) {
+                    setAnswers((p) => p.filter((a) => a.id !== optimistic.id));
+                    setDraft(content);
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Fuera de radio',
+                        text2: 'No puedes responder esta pregunta porque estás fuera del radio.',
+                        position: 'top'
+                    });
+                    return;
+                }
+            }
+
             const res = await apiClient.post('/api/v1/answers', payload);
 
             const saved = res.data;
             setAnswers((p) => p.map((a) => a.id === optimistic.id ? {
-                id: saved.id, author: saved.user?.userName || saved.user?.username || 'Anonymous', color: '#dbeafe',
+                id: saved.id, author: saved.user?.userName || saved.user?.username || 'Anonymous', color: theme.colors.primary,
                 text: saved.content, likes: saved.upvotes || 0, dislikes: saved.downvotes || 0,
                 minutesAgo: 0, userId: saved.user?.id, isVerified: saved.isVerified,
             } : a));
@@ -173,27 +260,61 @@ export default function QuestionThreadScreen({ route, navigation }) {
                 else if (s === 403) msg = "Forbidden: You don't have permission";
                 else msg = `Error (${s}): ${d?.message || e.message}`;
             } else msg = `Network error: ${e.message}`;
-            crossAlert('Error', msg);
+
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: msg,
+                position: 'top'
+            });
             setDraft(content);
         } finally {
             setSendingAnswer(false);
         }
     };
 
-    const vote = (answerId, type) => {
-        setMyVotes((prev) => {
-            const cur = prev[answerId];
+    const vote = async (answerId, type) => {
+        const cur = myVotes[answerId];
+
+        if (cur === type) {
+            // Deseleccionar: quitar el voto
             setAnswers((pa) => pa.map((a) => {
                 if (a.id !== answerId) return a;
-                let l = a.likes || 0, d = a.dislikes || 0;
-                if (cur === type) { type === 'LIKE' ? l-- : d--; return { ...a, likes: Math.max(0, l), dislikes: Math.max(0, d) }; }
-                if (cur === 'LIKE') l--; if (cur === 'DISLIKE') d--;
-                type === 'LIKE' ? l++ : d++;
-                return { ...a, likes: Math.max(0, l), dislikes: Math.max(0, d) };
+                return {
+                    ...a,
+                    likes: type === 'LIKE' ? Math.max(0, (a.likes || 0) - 1) : (a.likes || 0),
+                    dislikes: type === 'DISLIKE' ? Math.max(0, (a.dislikes || 0) - 1) : (a.dislikes || 0),
+                };
             }));
-            if (cur === type) { const c = { ...prev }; delete c[answerId]; return c; }
-            return { ...prev, [answerId]: type };
-        });
+            setMyVotes((prev) => { const n = { ...prev }; delete n[answerId]; return n; });
+            try {
+                await apiClient.delete(`/api/v1/answers/${answerId}/votes?userId=${user.id}`);
+            } catch (error) {
+                console.error('Error al quitar voto:', error);
+            }
+            return;
+        }
+
+        // Actualización optimista (voto nuevo o cambio)
+        setAnswers((pa) => pa.map((a) => {
+            if (a.id !== answerId) return a;
+            const newLikes = type === 'LIKE'
+                ? (a.likes || 0) + 1
+                : cur === 'LIKE' ? Math.max(0, (a.likes || 0) - 1) : (a.likes || 0);
+            const newDislikes = type === 'DISLIKE'
+                ? (a.dislikes || 0) + 1
+                : cur === 'DISLIKE' ? Math.max(0, (a.dislikes || 0) - 1) : (a.dislikes || 0);
+            return { ...a, likes: newLikes, dislikes: newDislikes };
+        }));
+        setMyVotes((prev) => ({ ...prev, [answerId]: type }));
+
+        try {
+            await apiClient.put(
+                `/api/v1/answers/${answerId}/votes?userId=${user.id}&voteType=${type}`
+            );
+        } catch (error) {
+            console.error('Error al votar:', error);
+        }
     };
 
     const openMapPick = () => {
@@ -204,7 +325,12 @@ export default function QuestionThreadScreen({ route, navigation }) {
     const cancelMapPick = () => { setPickMode(false); setTempLat(null); setTempLng(null); };
     const confirmMapPick = () => {
         if (typeof tempLat !== 'number' || typeof tempLng !== 'number') {
-            crossAlert('Pick a point', 'Tap on the map to choose your location.');
+            Toast.show({
+                type: 'info',
+                text1: 'Selecciona un punto',
+                text2: 'Toca en el mapa para elegir tu ubicación.',
+                position: 'top'
+            });
             return;
         }
         setUserLocation({ latitude: tempLat, longitude: tempLng });
@@ -232,11 +358,11 @@ export default function QuestionThreadScreen({ route, navigation }) {
                     <Text style={styles.threadBody}>{item.text}</Text>
                     <View style={styles.threadActions}>
                         <Pressable onPress={() => vote(item.id, 'LIKE')} style={[styles.threadVoteBtn, v === 'DISLIKE' && { opacity: 0.3 }]}>
-                            <Ionicons name={v === 'LIKE' ? 'arrow-up-circle' : 'arrow-up-circle-outline'} size={18} color={v === 'LIKE' ? '#667eea' : '#9ca3af'} />
-                            <Text style={[styles.threadVoteCount, v === 'LIKE' && { color: '#667eea' }]}>{item.likes || 0}</Text>
+                            <Ionicons name={v === 'LIKE' ? 'thumbs-up' : 'thumbs-up-outline'} size={18} color={v === 'LIKE' ? '#22c55e' : '#9ca3af'} />
+                            <Text style={[styles.threadVoteCount, v === 'LIKE' && { color: '#22c55e' }]}>{item.likes || 0}</Text>
                         </Pressable>
                         <Pressable onPress={() => vote(item.id, 'DISLIKE')} style={[styles.threadVoteBtn, v === 'LIKE' && { opacity: 0.3 }]}>
-                            <Ionicons name={v === 'DISLIKE' ? 'arrow-down-circle' : 'arrow-down-circle-outline'} size={18} color={v === 'DISLIKE' ? '#ef4444' : '#9ca3af'} />
+                            <Ionicons name={v === 'DISLIKE' ? 'thumbs-down' : 'thumbs-down-outline'} size={18} color={v === 'DISLIKE' ? '#ef4444' : '#9ca3af'} />
                             <Text style={[styles.threadVoteCount, v === 'DISLIKE' && { color: '#ef4444' }]}>{item.dislikes || 0}</Text>
                         </Pressable>
                     </View>
@@ -253,7 +379,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
                         <MapPickerWeb
                             latitude={tempLat} longitude={tempLng}
                             userLat={userLocation?.latitude} userLng={userLocation?.longitude}
-                            radiusKm={1} pickEnabled tempLat={tempLat} tempLng={tempLng}
+                            radiusKm={questionRadiusKm} pickEnabled tempLat={tempLat} tempLng={tempLng}
                             onPick={(lat, lng) => { setTempLat(lat); setTempLng(lng); }}
                         />
                     </View>
@@ -287,7 +413,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
             >
                 {loading && (
                     <View style={styles.center}>
-                        <ActivityIndicator size="large" color="#667eea" />
+                        <ActivityIndicator size="large" color={theme.colors.accent} />
                     </View>
                 )}
 
@@ -308,7 +434,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
                                     onPress={() => navigation.goBack()}
                                     activeOpacity={0.7}
                                 >
-                                    <Ionicons name="chevron-back" size={22} color="#667eea" />
+                                    <Ionicons name="chevron-back" size={22} color="#b91c1c" />
                                 </TouchableOpacity>
                             )}
 
@@ -325,11 +451,11 @@ export default function QuestionThreadScreen({ route, navigation }) {
 
                             <View style={styles.chips}>
                                 <View style={styles.chip}>
-                                    <Ionicons name="chatbubbles-outline" size={14} color="#667eea" />
+                                    <Ionicons name="chatbubbles-outline" size={14} color="#f59e0b" />
                                     <Text style={styles.chipVal}>{answers.length}</Text>
                                 </View>
                                 <View style={styles.chip}>
-                                    <Ionicons name="time-outline" size={14} color="#f59e0b" />
+                                    <Ionicons name="time-outline" size={14} color="#1f2937" />
                                     <Text style={styles.chipVal}>{formatHms(timeLeft)}</Text>
                                 </View>
                             </View>
@@ -350,27 +476,38 @@ export default function QuestionThreadScreen({ route, navigation }) {
 
                 {/* ── Composer ── */}
                 {!loading && !error && (
-                    <View style={[styles.composer, isNarrow && { paddingHorizontal: 12 }]}>
-                        <TextInput
-                            ref={inputRef}
-                            value={draft}
-                            onChangeText={setDraft}
-                            placeholder="Write your answer..."
-                            placeholderTextColor="#9ca3af"
-                            style={styles.composerInput}
-                            editable={!sendingAnswer}
-                        />
-                        <Pressable
-                            onPress={sendAnswerHandler}
-                            disabled={!canSend}
-                            style={[styles.sendBtn, !canSend && { opacity: 0.4 }]}
-                        >
-                            {sendingAnswer
-                                ? <ActivityIndicator size="small" color="#fff" />
-                                : <Ionicons name="send" size={18} color="#fff" />
-                            }
-                        </Pressable>
-                    </View>
+                    hasGeoRestriction && isWithinRadius !== true ? (
+                        <View style={styles.outOfRange}>
+                            <Ionicons name="location-outline" size={18} color="#ef4444" />
+                            <Text style={styles.outOfRangeText}>
+                                {isWithinRadius === false
+                                    ? 'No estás en la zona de la pregunta, acércate para poder responder.'
+                                    : 'No se pudo validar tu ubicación para responder esta pregunta.'}
+                            </Text>
+                        </View>
+                    ) : (
+                        <View style={[styles.composer, isNarrow && { paddingHorizontal: 12 }]}>
+                            <TextInput
+                                ref={inputRef}
+                                value={draft}
+                                onChangeText={setDraft}
+                                placeholder="Write your answer..."
+                                placeholderTextColor="#9ca3af"
+                                style={styles.composerInput}
+                                editable={isWithinRadius !== false && !sendingAnswer}
+                            />
+                            <Pressable
+                                onPress={sendAnswerHandler}
+                                disabled={!canSend}
+                                style={[styles.sendBtn, !canSend && { opacity: 0.4 }]}
+                            >
+                                {sendingAnswer
+                                    ? <ActivityIndicator size="small" color="#fff" />
+                                    : <Ionicons name="send" size={18} color="#fff" />
+                                }
+                            </Pressable>
+                        </View>
+                    )
                 )}
             </KeyboardAvoidingView>
         </SafeAreaView>
@@ -418,7 +555,7 @@ const styles = StyleSheet.create({
         width: 42,
         height: 42,
         borderRadius: 14,
-        backgroundColor: '#667eea',
+        backgroundColor: '#b91c1c',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -511,7 +648,7 @@ const styles = StyleSheet.create({
     threadAuthor: {
         fontSize: 13,
         fontWeight: '700',
-        color: '#667eea',
+        color: '#b91c1c',
     },
     threadTime: {
         fontSize: 11,
@@ -579,8 +716,8 @@ const styles = StyleSheet.create({
         borderRadius: 14,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#667eea',
-        shadowColor: '#667eea',
+        backgroundColor: '#dc2626',
+        shadowColor: '#b91c1c',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.25,
         shadowRadius: 10,
@@ -603,6 +740,15 @@ const styles = StyleSheet.create({
     mapBtnRow: { flexDirection: 'row', gap: 12 },
     mapCancelBtn: { flex: 1, backgroundColor: '#fff', borderRadius: 14, paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6, elevation: 3 },
     mapCancelText: { fontWeight: '700', fontSize: 15, color: '#6b7280' },
-    mapOkBtn: { flex: 1, backgroundColor: '#667eea', borderRadius: 14, paddingVertical: 14, alignItems: 'center', shadowColor: '#667eea', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 5 },
+    mapOkBtn: { flex: 1, backgroundColor: '#dc2626', borderRadius: 14, paddingVertical: 14, alignItems: 'center', shadowColor: '#b91c1c', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 5 },
     mapOkText: { fontWeight: '700', fontSize: 15, color: '#fff' },
+    // Geolocation: estilo del banner de "fuera del radio"
+    outOfRange: {
+        // Banner rojo con icono de ubicación, se muestra cuando usuario está fuera del radio permitido.
+        flexDirection: 'row', alignItems: 'center', gap: 10,
+        margin: 12, padding: 14,
+        backgroundColor: '#fef2f2', borderRadius: 14, // Fondo rojo claro
+        borderWidth: 1, borderColor: '#fecaca', // Borde rojo
+    },
+    outOfRangeText: { flex: 1, fontSize: 13, fontWeight: '600', color: '#ef4444', lineHeight: 18 }, // Texto rojo explicativo
 });

@@ -15,7 +15,8 @@ Aplicación para conocer en tiempo real información relevante sobre eventos en 
 | Modo | Base de datos | Cuándo usar |
 |------|--------------|-------------|
 | **Sin Docker** | H2 (memoria) | Desarrollo rápido, no requiere setup |
-| **Con Docker** | MySQL | Probar queries reales antes de producción |
+| **Con Docker** | H2 (memoria) | Desarrollo con hot-reload y contenedores |
+| **Con Docker + MySQL** | MySQL | Probar queries reales antes de producción |
 | **Producción** | MySQL (Azure) | Despliegue real |
 
 > ⚠️ **IMPORTANTE**: No puedes ejecutar ambas opciones a la vez. Usan los mismos puertos (8080, 8081). Para cambiar de modo, para primero el que esté corriendo.
@@ -61,17 +62,41 @@ Escanea el QR con Expo Go o pulsa `w` para abrir en el navegador.
 
 ---
 
-## Opción 2: Con Docker (Entorno Completo)
+## Opción 2: Con Docker (Recomendado para Desarrollo)
 
 **Requisitos**: Docker Desktop
 
-Esta opción levanta **todo** (frontend, backend, MySQL) con un solo comando. Usa MySQL como en producción.
+Esta opción levanta **todo** (frontend, backend) con un solo comando. Usa **H2 en memoria** por defecto para máxima velocidad.
 
-### Arrancar
+> ### 📌 Comandos principales
 
-```bash
-docker-compose up -d
+#### Preparar el entorno
+
+``` bash
+cp frontend/.env.dev frontend/.env
 ```
+
+> 
+> **Primera vez o cambios en dependencias:**
+> ```bash
+> docker-compose up -d --build
+> ```
+> 
+> **Día a día (desarrollo normal):**
+> ```bash
+> docker-compose up -d
+> ```
+> 
+> **Parar todo:**
+> ```bash
+> docker-compose down
+> ```
+> 
+> **¿Algo roto? Reinicio completo:**
+> ```bash
+> docker-compose down -v && docker-compose up -d --build
+> ```
+
 
 ### URLs
 
@@ -79,22 +104,53 @@ docker-compose up -d
 |-----|----------|
 | http://localhost:8081 | Frontend (Web) |
 | http://localhost:8080/swagger-ui/index.html | API Docs |
+| http://localhost:8080/h2-console | Consola H2 |
 | http://localhost:8080/api/v1/* | Backend API |
 
-### Comandos útiles
+**Acceso a H2 Console:**
+- JDBC URL: `jdbc:h2:mem:streetask`
+- Usuario: `sa`
+- Password: _(dejar vacío)_
+
+### Desarrollo diario
+
+Durante el desarrollo, los cambios se reflejan **automáticamente**:
+
+✅ **Backend** (Java): Spring DevTools recarga al detectar cambios  
+✅ **Frontend** (React): Hot reload habilitado con `CHOKIDAR_USEPOLLING`
+
+
+> **⚠️ Cuándo usar `--build`:**
+> - Primera vez que ejecutas el proyecto
+> - Cambias `pom.xml` (nuevas dependencias Maven)
+> - Cambias `package.json` (nuevas dependencias npm)
+> - Cambias `Dockerfile.dev` o `docker-compose.yml`
+>
+> **Para desarrollo diario NO es necesario** — los cambios en código se reflejan automáticamente.
+
+---
+
+### 🆘 ¿Algo no funciona? Comando mágico
+
+Si tienes problemas (contenedores no arrancan, errores raros, etc.), ejecuta esto:
 
 ```bash
-# Ver logs del backend
-docker-compose logs -f backend
-
-# Parar todo
-docker-compose down
-
-# Parar y borrar datos de MySQL
-docker-compose down -v
+docker-compose down -v && docker-compose up -d --build
 ```
 
-> **Nota**: Los datos de MySQL persisten entre reinicios (volumen `mysql_data`).
+Esto **para todo, limpia volúmenes y reconstruye desde cero**. Soluciona el 90% de problemas.
+
+### Usar MySQL en lugar de H2 (opcional)
+
+Si necesitas probar con MySQL (ej: queries específicas de producción):
+
+1. Abre `docker-compose.yml`
+2. Descomenta el servicio `db` (MySQL)
+3. Descomenta las variables de entorno de MySQL en `backend`
+4. Comenta `SPRING_PROFILES_ACTIVE: default` y descomenta `SPRING_PROFILES_ACTIVE: mysql`
+5. Ejecuta: `docker-compose down -v && docker-compose up -d --build`
+
+> **Nota**: Con H2, los datos se resetean al reiniciar. Esto es ideal para desarrollo limpio.
 
 ---
 

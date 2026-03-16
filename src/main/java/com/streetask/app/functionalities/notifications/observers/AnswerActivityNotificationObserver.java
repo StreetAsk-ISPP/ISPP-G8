@@ -10,20 +10,27 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.streetask.app.answer.AnswerRepository;
 import com.streetask.app.functionalities.notifications.events.AnswerCreatedEvent;
+import com.streetask.app.functionalities.notifications.push.dto.PushMessage;
+import com.streetask.app.functionalities.notifications.push.service.PushNotificationService;
 import com.streetask.app.functionalities.notifications.realtime.FrontendNotificationGateway;
 import com.streetask.app.functionalities.notifications.realtime.FrontendNotificationMessage;
 import com.streetask.app.model.Answer;
 import com.streetask.app.model.Question;
+import com.streetask.app.question.QuestionRepository;
 import com.streetask.app.user.RegularUser;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class AnswerActivityNotificationObserver {
 
     private final AnswerRepository answerRepository;
+    private final QuestionRepository questionRepository;
     private final FrontendNotificationGateway frontendNotificationGateway;
+    private final PushNotificationService pushNotificationService;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onAnswerCreated(AnswerCreatedEvent event) {
@@ -32,7 +39,8 @@ public class AnswerActivityNotificationObserver {
             return;
         }
 
-        Question question = answer.getQuestion();
+        Question answerQuestion = answer.getQuestion();
+        Question question = questionRepository.findById(answerQuestion.getId()).orElse(answerQuestion);
         RegularUser actor = answer.getUser();
         String actorEmail = actor != null ? actor.getEmail() : null;
         String actorName = actor != null && actor.getUserName() != null ? actor.getUserName() : "Someone";
@@ -54,20 +62,34 @@ public class AnswerActivityNotificationObserver {
         }
 
         if (recipientEmails.isEmpty()) {
+            log.info("Skipping ANSWER_TO_QUESTION notification: no recipients. questionId={} actorEmail={}",
+                    question.getId(), actorEmail);
             return;
         }
 
         FrontendNotificationMessage payload = FrontendNotificationMessage.builder()
                 .type("ANSWER_TO_QUESTION")
                 .title("New activity on a followed question")
-                .message(actorName + " answered: " + question.getTitle())
+                .message(actorName + " answered: " + answer.getContent())
                 .referenceId(question.getId())
                 .referenceType("QUESTION")
                 .timestamp(LocalDateTime.now())
                 .build();
 
+        PushMessage pushMessage = PushMessage.builder()
+                .title("New activity on a followed question")
+                .body(actorName + " answered: " + answer.getContent())
+                .type("ANSWER_TO_QUESTION")
+                .referenceId(question.getId())
+                .referenceType("QUESTION")
+                .build();
+
         for (String recipientEmail : recipientEmails) {
             frontendNotificationGateway.sendToUser(recipientEmail, payload);
+            pushNotificationService.sendToUser(recipientEmail, pushMessage);
         }
+
+        log.info("Published ANSWER_TO_QUESTION notification. questionId={} actorEmail={} recipients={}",
+                question.getId(), actorEmail, recipientEmails);
     }
 }

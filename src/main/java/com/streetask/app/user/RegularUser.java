@@ -38,6 +38,7 @@ public class RegularUser extends User {
     @OneToMany(mappedBy = "creator")
     private List<Question> questions;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private List<Answer> answers;
 
@@ -52,4 +53,8 @@ public class RegularUser extends User {
 
     @OneToMany(mappedBy = "reporter")
     private List<Report> reports;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = jakarta.persistence.CascadeType.REMOVE)
+    private java.util.List<com.streetask.app.functionalities.notifications.push.model.PushDevice> pushDevices;
 }

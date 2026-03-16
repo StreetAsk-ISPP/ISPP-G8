@@ -46,81 +46,71 @@ public class SecurityConfiguration {
 	@Value("${streetask.websocket.endpoint:/ws}")
 	private String websocketEndpoint;
 
+	@Value("${streetask.http.allowed-origin-patterns:http://localhost:8080,http://localhost:8081,http://localhost:19006,https://streetask.expo.app,https://sprint2-streetask.expo.app,https://streetask-preprod-frontend.onrender.com}")
+	private String[] allowedHttpOriginPatterns;
+
 	private static final String ADMIN = "ADMIN";
-	private static final String CLINIC_OWNER = "CLINIC_OWNER";
 
 	@Bean
 	protected SecurityFilterChain configure(HttpSecurity http) throws Exception {
 		http
-			.cors(withDefaults())
-			.csrf(AbstractHttpConfigurer::disable)
-			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-			.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
-			.exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedHandler))
+				.cors(withDefaults())
+				.csrf(AbstractHttpConfigurer::disable)
+				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
+				.exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedHandler))
 
-			.authorizeHttpRequests(auth -> auth
-				// Public common static resources (css, js, images, webjars...)
-				.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+				.authorizeHttpRequests(auth -> auth
+						.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+						.requestMatchers("/", "/oups").permitAll()
+						.requestMatchers(
+								"/v3/api-docs/**",
+								"/swagger-ui.html",
+								"/swagger-ui/**",
+								"/swagger-resources/**")
+						.permitAll()
+						.requestMatchers("/h2-console/**").permitAll()
+						.requestMatchers(webSocketHandshakePattern()).permitAll()
 
-				// Accessible H2 Console
-				.requestMatchers(PathRequest.toH2Console()).permitAll()
-				.requestMatchers("/h2-console/**").permitAll()
+						.requestMatchers("/api/v1/auth/**").permitAll()
+						.requestMatchers("/api/v1/developers").permitAll()
+						.requestMatchers("/api/v1/plan").permitAll()
 
-				// Root / public pages
-				.requestMatchers("/", "/oups").permitAll()
+						.requestMatchers("/api/v1/locations/public/**").permitAll()
+						.requestMatchers(HttpMethod.GET, "/api/v1/locations/user/**").permitAll()
 
-				// Accessible Swagger / OpenAPI
-				.requestMatchers(
-					"/v3/api-docs/**",
-					"/swagger-ui.html",
-					"/swagger-ui/**",
-					"/swagger-resources/**"
-				).permitAll()
+						.requestMatchers("/api/v1/plan").hasAuthority("OWNER")
 
-				// WebSocket handshake (SockJS uses /{endpoint}/** paths like /ws/info)
-				.requestMatchers(webSocketHandshakePattern()).permitAll()
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/me/reputation").authenticated()
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/reputation").authenticated()
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/stats").authenticated()
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/questions").authenticated()
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*/answers").authenticated()
+						.requestMatchers(HttpMethod.PUT, "/api/v1/users/*").authenticated()
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*").authenticated()
 
-				// Public API
-				.requestMatchers("/api/v1/auth/**").permitAll()
-				.requestMatchers("/api/v1/developers").permitAll()
-				.requestMatchers("/api/v1/plan").permitAll()
-				.requestMatchers("/api/v1/clinics").permitAll()
+						.requestMatchers(HttpMethod.GET, "/api/v1/users").hasAuthority(ADMIN)
+						.requestMatchers(HttpMethod.POST, "/api/v1/users").hasAuthority(ADMIN)
+						.requestMatchers(HttpMethod.GET, "/api/v1/users/*").hasAuthority(ADMIN)
+						.requestMatchers(HttpMethod.DELETE, "/api/v1/users/*").hasAuthority(ADMIN)
 
-				// Locations public endpoints
-				.requestMatchers("/api/v1/locations/public/**").permitAll()
-				// Public only GET of user locations
-				.requestMatchers(HttpMethod.GET, "/api/v1/locations/user/**").permitAll()
+						// Restricted API for administrators
+						.requestMatchers("/api/v1/users/**").hasAuthority(ADMIN)
+						.requestMatchers("/api/v1/users").hasAuthority(ADMIN)
 
-				// Restricted API for owners
-				.requestMatchers("/api/v1/plan").hasAuthority("OWNER")
+						// Questions & Answers require auth
+						.requestMatchers("/api/v1/questions/**").authenticated()
+						.requestMatchers("/api/v1/answers", "/api/v1/answers/**").authenticated()
 
-				// Restricted API for administrators
-				.requestMatchers("/api/v1/users/**").hasAuthority(ADMIN)
-				.requestMatchers("/api/v1/clinicOwners/all").hasAuthority(ADMIN)
-				.requestMatchers(HttpMethod.DELETE, "/api/v1/consultations/**").hasAuthority(ADMIN)
-				.requestMatchers("/api/v1/owners/**").hasAuthority(ADMIN)
-				.requestMatchers("/api/v1/pets/stats").hasAuthority(ADMIN)
-				.requestMatchers("/api/v1/vets/stats").hasAuthority(ADMIN)
+						// Feedback requires auth
+						.requestMatchers("/api/v1/feedback", "/api/v1/feedback/**").authenticated()
 
-				// Other access-control rules
-				.requestMatchers("/api/v1/clinicOwners/**").hasAnyAuthority(ADMIN, CLINIC_OWNER)
-				.requestMatchers("/api/v1/visits/**").authenticated()
-				.requestMatchers("/api/v1/pets").authenticated()
-				.requestMatchers("/api/v1/pets/**").authenticated()
-				.requestMatchers("/api/v1/consultations/**").authenticated()
-				.requestMatchers("/api/v1/clinics/**").hasAnyAuthority(CLINIC_OWNER, ADMIN)
-				.requestMatchers(HttpMethod.GET, "/api/v1/vets/**").authenticated()
-				.requestMatchers("/api/v1/vets/**").hasAnyAuthority(ADMIN, "VET", CLINIC_OWNER)
+						// Push devices require auth
+						.requestMatchers("/api/push-devices/**").authenticated()
 
-				// Questions & Answers require auth
-				.requestMatchers("/api/v1/questions/**").authenticated()
-				.requestMatchers("/api/v1/answers", "/api/v1/answers/**").authenticated()
+						.anyRequest().denyAll())
 
-				// Deny everything else
-				.anyRequest().denyAll()
-			)
-
-			.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+				.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}
@@ -143,12 +133,7 @@ public class SecurityConfiguration {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(List.of(
-			"http://localhost:8080",
-			"http://localhost:8081",
-			"http://localhost:19006",
-				"https://streetask.expo.app"
-		));
+		configuration.setAllowedOriginPatterns(List.of(allowedHttpOriginPatterns));
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("*"));
 		configuration.setAllowCredentials(true);

@@ -18,5 +18,8 @@ public class FrontendNotificationMessage {
     private String referenceType;
 
     private String zoneKey;
+    private Double questionLatitude;
+    private Double questionLongitude;
+    private Double radiusKm;
     private LocalDateTime timestamp;
 }

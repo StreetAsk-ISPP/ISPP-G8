@@ -70,6 +70,7 @@ class QuestionRestControllerTest {
 		testCreator.setUserName("testcreator");
 		testCreator.setFirstName("Test");
 		testCreator.setLastName("Creator");
+		testCreator.setVisibilityRadiusKm(10.0f);
 		testCreator.setAuthority(userAuthority);
 		testCreator = userRepository.save(testCreator);
 
@@ -131,6 +132,58 @@ class QuestionRestControllerTest {
 				.andExpect(jsonPath("$", hasSize(1)));
 	}
 
+	@Test
+	@WithMockUser
+	void findAll_withEventIdParam_shouldReturnFilteredQuestions() throws Exception {
+		UUID eventId = UUID.randomUUID();
+
+		mockMvc.perform(get("/api/v1/questions")
+				.param("eventId", eventId.toString())
+				.contentType(APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$", hasSize(0)));
+	}
+
+	@Test
+	@WithMockUser
+	void findAll_withEventIdAndActiveParams_shouldReturnFilteredQuestions() throws Exception {
+		UUID eventId = UUID.randomUUID();
+
+		mockMvc.perform(get("/api/v1/questions")
+				.param("eventId", eventId.toString())
+				.param("active", "true")
+				.contentType(APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$", hasSize(0)));
+	}
+
+	@Test
+	@WithMockUser
+	void findAll_withCreatorIdAndEventIdParams_shouldReturnFilteredQuestions() throws Exception {
+		UUID eventId = UUID.randomUUID();
+
+		mockMvc.perform(get("/api/v1/questions")
+				.param("creatorId", testCreator.getId().toString())
+				.param("eventId", eventId.toString())
+				.contentType(APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$", hasSize(0)));
+	}
+
+	@Test
+	@WithMockUser
+	void findAll_withCreatorIdEventIdAndActiveParams_shouldReturnFilteredQuestions() throws Exception {
+		UUID eventId = UUID.randomUUID();
+
+		mockMvc.perform(get("/api/v1/questions")
+				.param("creatorId", testCreator.getId().toString())
+				.param("eventId", eventId.toString())
+				.param("active", "true")
+				.contentType(APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$", hasSize(0)));
+	}
+
 	// =============== GET QUESTION BY ID TESTS ===============
 
 	@Test
@@ -149,7 +202,7 @@ class QuestionRestControllerTest {
 	@WithMockUser
 	void findById_shouldReturnNotFoundWhenQuestionDoesNotExist() throws Exception {
 		UUID nonExistentId = UUID.randomUUID();
-		
+
 		mockMvc.perform(get("/api/v1/questions/{id}", nonExistentId)
 				.contentType(APPLICATION_JSON))
 				.andExpect(status().isNotFound());
@@ -193,6 +246,19 @@ class QuestionRestControllerTest {
 				.andExpect(jsonPath("$.answerCount").value(0))
 				.andExpect(jsonPath("$.createdAt").exists())
 				.andExpect(jsonPath("$.expiresAt").exists());
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldUsePayloadRadiusWhenProvided() throws Exception {
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("radiusKm", 2.0);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.radiusKm").value(2.0));
 	}
 
 	@Test
@@ -332,6 +398,158 @@ class QuestionRestControllerTest {
 		payload.put("content", "New Content");
 		payload.put("creator", Map.of("id", testCreator.getId().toString()));
 		return payload;
+	}
+
+	// =============== LOCATION VALIDATION TESTS ===============
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldAcceptValidCoordinates() throws Exception {
+		Map<String, Object> validLocation = new HashMap<>();
+		validLocation.put("latitude", 40.416775);
+		validLocation.put("longitude", -3.703790);
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", validLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.location.latitude").value(40.416775))
+				.andExpect(jsonPath("$.location.longitude").value(-3.703790));
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldRejectInvalidLatitudeTooHigh() throws Exception {
+		Map<String, Object> invalidLocation = new HashMap<>();
+		invalidLocation.put("latitude", 91.0); // Invalid: exceeds max
+		invalidLocation.put("longitude", 0.0);
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", invalidLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldRejectInvalidLatitudeTooLow() throws Exception {
+		Map<String, Object> invalidLocation = new HashMap<>();
+		invalidLocation.put("latitude", -91.0); // Invalid: below min
+		invalidLocation.put("longitude", 0.0);
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", invalidLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldRejectInvalidLongitudeTooHigh() throws Exception {
+		Map<String, Object> invalidLocation = new HashMap<>();
+		invalidLocation.put("latitude", 0.0);
+		invalidLocation.put("longitude", 181.0); // Invalid: exceeds max
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", invalidLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldRejectInvalidLongitudeTooLow() throws Exception {
+		Map<String, Object> invalidLocation = new HashMap<>();
+		invalidLocation.put("latitude", 0.0);
+		invalidLocation.put("longitude", -181.0); // Invalid: below min
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", invalidLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldRejectLocationWithNullLatitude() throws Exception {
+		Map<String, Object> invalidLocation = new HashMap<>();
+		invalidLocation.put("latitude", null);
+		invalidLocation.put("longitude", 0.0);
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", invalidLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldRejectLocationWithNullLongitude() throws Exception {
+		Map<String, Object> invalidLocation = new HashMap<>();
+		invalidLocation.put("latitude", 0.0);
+		invalidLocation.put("longitude", null);
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", invalidLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldAcceptBoundaryValues() throws Exception {
+		Map<String, Object> boundaryLocation = new HashMap<>();
+		boundaryLocation.put("latitude", 90.0); // Max valid
+		boundaryLocation.put("longitude", 180.0); // Max valid
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", boundaryLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.location.latitude").value(90.0))
+				.andExpect(jsonPath("$.location.longitude").value(180.0));
+	}
+
+	@Test
+	@WithMockUser(username = "testcreator@streetask.com")
+	void create_shouldAcceptNegativeBoundaryValues() throws Exception {
+		Map<String, Object> boundaryLocation = new HashMap<>();
+		boundaryLocation.put("latitude", -90.0); // Min valid
+		boundaryLocation.put("longitude", -180.0); // Min valid
+
+		Map<String, Object> questionPayload = createValidQuestionPayload();
+		questionPayload.put("location", boundaryLocation);
+
+		mockMvc.perform(post("/api/v1/questions")
+				.contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(questionPayload)))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.location.latitude").value(-90.0))
+				.andExpect(jsonPath("$.location.longitude").value(-180.0));
 	}
 
 }
