@@ -290,91 +290,52 @@ export default function HomeScreen({ navigation }) {
                                 <Ionicons name="log-out-outline" size={20} color="#ef4444" />
                             </TouchableOpacity>
                         </View>
-                        <TouchableOpacity
-                            style={styles.iconBtn}
-                            activeOpacity={0.7}
-                            onPress={() => setFeedbackVisible(true)}
-                        >
-                            <Ionicons name="chatbox-ellipses-outline" size={20} color="#a52019" />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.iconBtn}
-                            activeOpacity={0.7}
-                            onPress={() => {
-                                setModalType('search');
-                                setComingSoon(true);
-                            }}
-                        >
-                            <Ionicons name="search-outline" size={20} color="#a52019" />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.iconBtn}
-                            activeOpacity={0.7}
-                            onPress={() => {
-                                setModalType('notifications');
-                                setComingSoon(true);
-                            }}
-                        >
-                            <Ionicons name="notifications-outline" size={20} color="#a52019" />
-                            {ephemeralNotification ? <View style={styles.badge} /> : null}
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={[styles.iconBtn, styles.logoutBtn]}
-                            onPress={logout}
-                            activeOpacity={0.7}
-                        >
-                            <Ionicons name="log-out-outline" size={20} color="#ef4444" />
-                        </TouchableOpacity>
                     </View>
-                </View>
 
-                {ephemeralNotification ? (
-                    <View style={styles.notifBanner}>
-                        <Ionicons name="information-circle" size={18} color="#92400e" />
-                        <View style={{ flex: 1, marginLeft: 8 }}>
-                            <Text style={styles.notifTitle}>
-                                {ephemeralNotification.title || 'Notification'}
-                            </Text>
-                            <Text style={styles.notifMsg}>
-                                {ephemeralNotification.message || ''}
-                            </Text>
+                    {ephemeralNotification ? (
+                        <View style={styles.notifBanner}>
+                            <Ionicons name="information-circle" size={18} color="#92400e" />
+                            <View style={{ flex: 1, marginLeft: 8 }}>
+                                <Text style={styles.notifTitle}>
+                                    {ephemeralNotification.title || 'Notification'}
+                                </Text>
+                                <Text style={styles.notifMsg}>
+                                    {ephemeralNotification.message || ''}
+                                </Text>
+                            </View>
                         </View>
+                    ) : null}
+
+                    <View style={styles.mapWrapper}>
+                        <MapComponent
+                            questions={showQuestions ? questions : []}
+                            onQuestionPress={(qId) =>
+                                navigation.navigate('QuestionThread', { questionId: qId })
+                            }
+                            onLocationChange={setCurrentLocation}
+                        />
                     </View>
-                ) : null}
 
-                <View style={styles.mapWrapper}>
-                    <MapComponent
-                        questions={showQuestions ? questions : []}
-                        onQuestionPress={(qId) =>
-                            navigation.navigate('QuestionThread', { questionId: qId })
-                        }
-                        onLocationChange={setCurrentLocation}
-                    />
+                    <View style={[styles.footer, isNarrow && { paddingHorizontal: 14 }]}>
+                        <Text style={styles.toggleLabel}>Show Questions</Text>
+                        <Switch
+                            value={showQuestions}
+                            onValueChange={setShowQuestions}
+                            trackColor={{ false: '#d1d5db', true: '#a52019' }}
+                            thumbColor="#fff"
+                        />
+                    </View>
+
+                    <TouchableOpacity
+                        style={[styles.fab, isNarrow && { width: 220 }]}
+                        onPress={() => navigation.navigate('CreateQuestion')}
+                        activeOpacity={0.85}
+                    >
+                        <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
+                        <Text style={styles.fabText}>Ask a question</Text>
+                    </TouchableOpacity>
                 </View>
-
-                <View style={[styles.footer, isNarrow && { paddingHorizontal: 14 }]}>
-                    <Text style={styles.toggleLabel}>Show Questions</Text>
-                    <Switch
-                        value={showQuestions}
-                        onValueChange={setShowQuestions}
-                        trackColor={{ false: '#d1d5db', true: '#a52019' }}
-                        thumbColor="#fff"
-                    />
-                </View>
-
-                <TouchableOpacity
-                    style={[styles.fab, isNarrow && { width: 220 }]}
-                    onPress={() => navigation.navigate('CreateQuestion')}
-                    activeOpacity={0.85}
-                >
-                    <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
-                    <Text style={styles.fabText}>Ask a question</Text>
-                </TouchableOpacity>
-            </View>
-        </SafeAreaView >
+            </SafeAreaView>
 
             <Modal
                 visible={comingSoon}
