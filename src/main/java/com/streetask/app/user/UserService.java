@@ -186,8 +186,8 @@ public class UserService {
 		stats.put("dislikesCount", dislikesCount);
 		stats.put("reputation", user.getReputation());
 
-		// Calculate rating based on interactions on the user's answers:
-		// ratio = likes / (likes + dislikes) scaled to 0-5.
+		// Calculate rating on a 0-5 scale from vote ratio.
+		// Formula: likes / (likes + dislikes) * 5
 		int totalInteractions = likesCount + dislikesCount;
 		double rating = 0.0;
 		if (totalInteractions > 0) {
