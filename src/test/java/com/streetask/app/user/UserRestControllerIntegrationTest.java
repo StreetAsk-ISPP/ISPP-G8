@@ -257,13 +257,17 @@ class UserRestControllerIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    /**
+     * Helper method to create a User with all mandatory fields populated.
+     * Fixed: Added firstName and lastName to comply with @NotBlank constraints.
+     */
     private User createUser(UUID id, String email, String userName, String authorityName) {
         User user = new User();
         user.setId(id);
         user.setEmail(email);
         user.setUserName(userName);
-        user.setFirstName("Test");
-        user.setLastName("User");
+        user.setFirstName("TestFirstName"); // Arreglado: Campo obligatorio
+        user.setLastName("TestLastName");   // Arreglado: Campo obligatorio
         user.setPassword("password123");
         user.setActive(true);
         user.setCreatedAt(LocalDateTime.now());
