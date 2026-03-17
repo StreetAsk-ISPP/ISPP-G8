@@ -74,6 +74,7 @@ public class SecurityConfiguration {
 
 						.requestMatchers("/api/v1/auth/**").permitAll()
 						.requestMatchers("/api/v1/developers").permitAll()
+						.requestMatchers("/api/v1/plan").permitAll()
 
 						.requestMatchers("/api/v1/locations/public/**").permitAll()
 						.requestMatchers(HttpMethod.GET, "/api/v1/locations/user/**").permitAll()
@@ -93,6 +94,11 @@ public class SecurityConfiguration {
 						.requestMatchers(HttpMethod.GET, "/api/v1/users/*").hasAuthority(ADMIN)
 						.requestMatchers(HttpMethod.DELETE, "/api/v1/users/*").hasAuthority(ADMIN)
 
+						// Restricted API for administrators
+						.requestMatchers("/api/v1/users/**").hasAuthority(ADMIN)
+						.requestMatchers("/api/v1/users").hasAuthority(ADMIN)
+
+						// Questions & Answers require auth
 						.requestMatchers("/api/v1/questions/**").authenticated()
 						.requestMatchers("/api/v1/answers", "/api/v1/answers/**").authenticated()
 

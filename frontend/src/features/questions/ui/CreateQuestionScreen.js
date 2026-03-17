@@ -13,9 +13,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import apiClient from '../../../shared/services/http/apiClient';
-import { crossAlert } from '../../../shared/utils/crossAlert';
+import Toast from 'react-native-toast-message';
 import MapPickerWeb from '../../home/ui/components/MapPickerWeb';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { crossAlert } from '../../../shared/utils/crossAlert';
 
 const FREE_FIXED_RADIUS_KM = 0.5;
 const FREE_FIXED_RADIUS_M = 500;
@@ -192,7 +193,12 @@ export default function CreateQuestionScreen({ navigation }) {
   const searchAddress = async () => {
     const q = place.trim();
     if (!q) {
-      crossAlert('Address is missing', 'Enter a street or place name to search.');
+      Toast.show({
+        type: 'info',
+        text1: 'Falta la dirección',
+        text2: 'Ingresa una calle o lugar para buscar.',
+        position: 'top'
+      });
       return;
     }
 
@@ -211,7 +217,13 @@ export default function CreateQuestionScreen({ navigation }) {
       }));
       setSearchResults(items);
       if (items.length === 0) {
-        crossAlert('No results', 'No addresses found. Try being more specific.');
+        Toast.show({
+          type: 'info',
+          text1: 'Sin resultados',
+          text2: 'No se encontraron direcciones. Intenta ser más específico.',
+          position: 'top'
+        });
+
       }
       if (items.length === 1) {
         setLatitude(items[0].lat);
@@ -221,7 +233,12 @@ export default function CreateQuestionScreen({ navigation }) {
       }
     } catch (e) {
       console.error('Nominatim search error:', e);
-      crossAlert('Error', 'The address could not be found. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error en la búsqueda',
+        text2: 'No se pudo encontrar la dirección. Por favor, inténtalo de nuevo.',
+        position: 'top'
+      });
     } finally {
       setSearching(false);
     }
@@ -245,7 +262,12 @@ export default function CreateQuestionScreen({ navigation }) {
 
   const confirmMapPick = () => {
     if (typeof tempLat !== 'number' || typeof tempLng !== 'number') {
-      crossAlert('Pick a point', 'Click on the map to choose a location.');
+      Toast.show({
+        type: 'info',
+        text1: 'Selecciona un punto',
+        text2: 'Toca en el mapa para elegir una ubicación.',
+        position: 'top'
+      });
       return;
     }
     setLatitude(tempLat);

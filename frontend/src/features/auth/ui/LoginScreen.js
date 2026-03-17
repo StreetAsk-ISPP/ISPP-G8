@@ -31,11 +31,21 @@ export default function LoginScreen({ navigation }) {
                 email: identifier,
                 password,
             });
-            await login(response.data.token, {
+            const user = {
                 id: response.data.id,
                 username: response.data.username,
                 roles: response.data.roles,
-            });
+            };
+
+            await login(response.data.token, user);
+
+            // Navigate based on role
+            /*
+            if (user.roles && user.roles.includes('ADMIN')) {
+                // The AppNavigator will handle the initial route based on the updated auth state
+                // But we can force a check if needed or just let the state update trigger the re-render of navigator
+            }
+            */
         } catch {
             setError('Login failed. Please check your credentials.');
         } finally {

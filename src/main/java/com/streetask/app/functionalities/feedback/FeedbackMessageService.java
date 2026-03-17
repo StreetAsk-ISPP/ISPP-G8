@@ -30,6 +30,7 @@ public class FeedbackMessageService {
     public FeedbackMessage createFeedback(FeedbackMessageRequest request) {
         FeedbackMessage feedbackMessage = new FeedbackMessage();
         feedbackMessage.setMessage(request.getMessage().trim());
+        feedbackMessage.setType(request.getType());
 
         attachAuthenticatedUser(feedbackMessage);
 
