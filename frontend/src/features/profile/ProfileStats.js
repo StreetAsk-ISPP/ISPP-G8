@@ -185,11 +185,11 @@ export default function ProfileStats() {
                     {activeTab === 'questions' ? (
                         userQuestions.length > 0
                             ? userQuestions.map(q => renderHistoryItem(q, 'questions'))
-                            : <Text style={styles.emptyText}>You haven't asked any questions yet.</Text>
+                            : <Text style={styles.emptyText}>{"You haven't asked any questions yet."}</Text>
                     ) : (
                         userAnswers.length > 0
                             ? userAnswers.map(a => renderHistoryItem(a, 'answers'))
-                            : <Text style={styles.emptyText}>You haven't answered any questions yet.</Text>
+                            : <Text style={styles.emptyText}>{"You haven't answered any questions yet."}</Text>
                     )}
                 </View>
                 <View style={{ height: 40 }} />
