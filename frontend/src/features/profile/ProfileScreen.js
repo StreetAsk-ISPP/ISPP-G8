@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../app/providers/AuthProvider';
 import apiClient from '../../shared/services/http/apiClient';
@@ -7,7 +7,14 @@ import apiClient from '../../shared/services/http/apiClient';
 export default function ProfileScreen({ navigation }) {
     const { user, logout } = useAuth();
 
-    const [stats, setStats] = useState({ questions: 0, answers: 0, rating: 0 });
+    // Estado ampliado con bio y profilePictureUrl
+    const [stats, setStats] = useState({ 
+        questions: 0, 
+        answers: 0, 
+        rating: 0, 
+        bio: '', 
+        profilePictureUrl: null 
+    });
 
     useEffect(() => {
         if (!user?.id) return;
@@ -18,11 +25,15 @@ export default function ProfileScreen({ navigation }) {
                         questions: res.data.questionsCount || 0,
                         answers: res.data.answersCount || 0,
                         rating: res.data.rating != null ? res.data.rating : 0,
+                        // Datos de la Issue #365
+                        bio: res.data.bio || '',
+                        profilePictureUrl: res.data.profilePictureUrl || null
                     });
                 }
             })
             .catch(() => { });
     }, [user]);
+
     return (
         <SafeAreaView style={styles.screen}>
             <View style={styles.headerRed}>
@@ -32,14 +43,28 @@ export default function ProfileScreen({ navigation }) {
 
                 <View style={styles.userInfoRow}>
                     <View style={styles.avatarCircle}>
-                        <Ionicons name="person" size={60} color="#666" />
+                        {/* Renderizado condicional de la imagen de perfil */}
+                        {stats.profilePictureUrl ? (
+                            <Image 
+                                source={{ uri: stats.profilePictureUrl }} 
+                                style={styles.avatarImage} 
+                            />
+                        ) : (
+                            <Ionicons name="person" size={60} color="#666" />
+                        )}
                     </View>
                     <View style={styles.userTextInfo}>
                         <Text style={styles.userName}>{user?.username?.toUpperCase() || 'USER NAME'}</Text>
-                        <Text style={styles.userSub}>{user?.role || 'Registered User'}</Text>
-                        <Text style={styles.userSub}>Basic plan</Text>
-                        <Text style={styles.userSub}>Seville, Spain</Text>
-                        <Text style={styles.userSub}>{user?.email}</Text>
+                        <Text style={styles.userSubRole}>{user?.role || 'Registered User'}</Text>
+                        
+                        {/* Bloque de Biografía */}
+                        {stats.bio ? (
+                            <Text style={styles.bioText} numberOfLines={3}>{stats.bio}</Text>
+                        ) : (
+                            <Text style={styles.noBioText}>No bio available</Text>
+                        )}
+                        
+                        <Text style={styles.userEmail}>{user?.email}</Text>
                     </View>
                 </View>
             </View>
@@ -121,21 +146,30 @@ const styles = StyleSheet.create({
         backgroundColor: '#d90429',
         padding: 20,
         paddingTop: 40,
-        paddingBottom: 35,
+        paddingBottom: 45, // Un poco más de espacio para la bio
     },
     backBtn: { marginBottom: 10 },
-    userInfoRow: { flexDirection: 'row', alignItems: 'center' },
+    userInfoRow: { flexDirection: 'row', alignItems: 'flex-start' },
     avatarCircle: {
         width: 90,
         height: 90,
         borderRadius: 45,
         backgroundColor: '#fff',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        overflow: 'hidden' // Importante para que la imagen sea circular
     },
-    userTextInfo: { marginLeft: 20 },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover'
+    },
+    userTextInfo: { marginLeft: 20, flex: 1 },
     userName: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-    userSub: { color: '#fff', fontSize: 14, marginTop: 2 },
+    userSubRole: { color: '#fff', fontSize: 14, fontWeight: '600', marginTop: 2 },
+    bioText: { color: '#fff', fontSize: 13, marginTop: 6, opacity: 0.95, lineHeight: 18 },
+    noBioText: { color: '#fff', fontSize: 12, marginTop: 6, opacity: 0.6, fontStyle: 'italic' },
+    userEmail: { color: '#fff', fontSize: 12, marginTop: 8, opacity: 0.8 },
     menuContainer: { padding: 20, paddingTop: 8 },
     editBtn: {
         backgroundColor: '#d90429',

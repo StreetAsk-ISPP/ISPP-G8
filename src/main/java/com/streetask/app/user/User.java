@@ -1,11 +1,11 @@
 package com.streetask.app.user;
 
 import com.streetask.app.model.BaseEntity;
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size; // Importado para la bio
 import lombok.*;
 import java.time.LocalDateTime;
 
@@ -16,60 +16,65 @@ import java.time.LocalDateTime;
 @Table(name = "appusers")
 public class User extends BaseEntity {
 
-	// Email for authentication
-	@NotBlank
-	@Email
-	@Column(unique = true)
-	private String email;
+    // Email for authentication
+    @NotBlank
+    @Email
+    @Column(unique = true)
+    private String email;
 
-	@NotBlank
-	@Column(unique = true)
-	private String userName;
+    @NotBlank
+    @Column(unique = true)
+    private String userName;
 
-	private String password;
+    private String password;
 
-	@NotBlank
-	private String firstName;
+    @NotBlank
+    private String firstName;
 
-	@NotBlank
-	private String lastName;
+    @NotBlank
+    private String lastName;
 
-	@Enumerated(EnumType.STRING)
-	private AccountType accountType;
+    @Size(max = 255)
+    private String bio;
 
-	private Boolean active;
+    @Column(name = "profile_picture_url")
+    private String profilePictureUrl;
 
-	private LocalDateTime createdAt;
+    @Enumerated(EnumType.STRING)
+    private AccountType accountType;
 
-	private LocalDateTime lastLogin;
+    private Boolean active;
 
-	@NotNull
-	@ManyToOne(optional = false)
-	@JoinColumn(name = "authority")
-	Authorities authority;
+    private LocalDateTime createdAt;
 
-	@Transient
-	private Integer reputation;
+    private LocalDateTime lastLogin;
 
-	@com.fasterxml.jackson.annotation.JsonIgnore
-	@OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
-	private java.util.List<com.streetask.app.functionalities.feedback.FeedbackMessage> feedbackMessages;
+    @NotNull
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "authority")
+    Authorities authority;
 
-	@com.fasterxml.jackson.annotation.JsonIgnore
-	@OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
-	private java.util.List<com.streetask.app.model.UserLocation> locations;
+    @Transient
+    private Integer reputation;
 
-	public Boolean hasAuthority(String auth) {
-		return authority.getAuthority().equals(auth);
-	}
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    private java.util.List<com.streetask.app.functionalities.feedback.FeedbackMessage> feedbackMessages;
 
-	public Boolean hasAnyAuthority(String... authorities) {
-		Boolean cond = false;
-		for (String auth : authorities) {
-			if (auth.equals(authority.getAuthority()))
-				cond = true;
-		}
-		return cond;
-	}
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    private java.util.List<com.streetask.app.model.UserLocation> locations;
 
+    public Boolean hasAuthority(String auth) {
+        return authority.getAuthority().equals(auth);
+    }
+
+    public Boolean hasAnyAuthority(String... authorities) {
+        Boolean cond = false;
+        for (String auth : authorities) {
+            if (auth.equals(authority.getAuthority()))
+                cond = true;
+        }
+        return cond;
+    }
 }

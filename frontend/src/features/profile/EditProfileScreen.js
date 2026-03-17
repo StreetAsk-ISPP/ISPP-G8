@@ -9,6 +9,7 @@ import {
     TextInput,
     ActivityIndicator,
     Modal,
+    Image, // Añadido para la vista previa
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../app/providers/AuthProvider';
@@ -26,6 +27,8 @@ export default function EditProfileScreen({ navigation }) {
         userName: '',
         firstName: '',
         lastName: '',
+        bio: '',               // Nuevo campo
+        profilePictureUrl: '', // Nuevo campo
     });
 
     const [passwords, setPasswords] = useState({
@@ -87,6 +90,8 @@ export default function EditProfileScreen({ navigation }) {
                     userName: currentUser?.userName || '',
                     firstName: currentUser?.firstName || '',
                     lastName: currentUser?.lastName || '',
+                    bio: currentUser?.bio || '',                             // Cargar bio
+                    profilePictureUrl: currentUser?.profilePictureUrl || '', // Cargar foto
                 });
             } catch (error) {
                 if (error?.response?.status === 401) {
@@ -130,13 +135,9 @@ export default function EditProfileScreen({ navigation }) {
             return false;
         }
 
-        if (!form.firstName.trim()) {
-            showFeedback('Validación', 'El nombre es obligatorio.', 'error');
-            return false;
-        }
-
-        if (!form.lastName.trim()) {
-            showFeedback('Validación', 'Los apellidos son obligatorios.', 'error');
+        // Validación de longitud de bio opcional
+        if (form.bio.length > 255) {
+            showFeedback('Validación', 'La biografía no puede superar los 255 caracteres.', 'error');
             return false;
         }
 
@@ -172,6 +173,8 @@ export default function EditProfileScreen({ navigation }) {
                 userName: form.userName.trim(),
                 firstName: form.firstName.trim(),
                 lastName: form.lastName.trim(),
+                bio: form.bio.trim(),                       // Nuevo
+                profilePictureUrl: form.profilePictureUrl.trim(), // Nuevo
             };
 
             if (passwords.newPassword.trim()) {
@@ -184,18 +187,7 @@ export default function EditProfileScreen({ navigation }) {
             const updatedUser = res.data;
 
             setOriginalUser(updatedUser);
-            setForm({
-                email: updatedUser?.email || '',
-                userName: updatedUser?.userName || '',
-                firstName: updatedUser?.firstName || '',
-                lastName: updatedUser?.lastName || '',
-            });
-
-            setPasswords({
-                newPassword: '',
-                confirmPassword: '',
-            });
-
+            
             if (setUser) {
                 setUser(prev => ({
                     ...prev,
@@ -205,6 +197,8 @@ export default function EditProfileScreen({ navigation }) {
                     userName: updatedUser?.userName || '',
                     firstName: updatedUser?.firstName || '',
                     lastName: updatedUser?.lastName || '',
+                    bio: updatedUser?.bio || '',                         // Actualizar en contexto
+                    profilePictureUrl: updatedUser?.profilePictureUrl || '', // Actualizar en contexto
                     authority: updatedUser?.authority || prev?.authority,
                     roles:
                         updatedUser?.authority?.authority
@@ -220,18 +214,8 @@ export default function EditProfileScreen({ navigation }) {
                 true
             );
         } catch (error) {
-            if (error?.response?.status === 401) {
-                showFeedback(
-                    'Sesión no válida',
-                    'No se pudo guardar porque la petición no está autorizada.',
-                    'error'
-                );
-            } else {
-                const message =
-                    error?.response?.data?.message ||
-                    'No se pudo actualizar el perfil.';
-                showFeedback('Error', message, 'error');
-            }
+            const message = error?.response?.data?.message || 'No se pudo actualizar el perfil.';
+            showFeedback('Error', message, 'error');
         } finally {
             setSaving(false);
         }
@@ -260,7 +244,7 @@ export default function EditProfileScreen({ navigation }) {
 
                 <Text style={styles.headerTitle}>EDIT PROFILE</Text>
                 <Text style={styles.headerSubtitle}>
-                    Revisa tus datos actuales y actualiza solo lo que necesites.
+                    Personaliza tu presencia en la plataforma.
                 </Text>
             </View>
 
@@ -269,6 +253,46 @@ export default function EditProfileScreen({ navigation }) {
                 contentContainerStyle={styles.contentContainer}
                 keyboardShouldPersistTaps="handled"
             >
+                {/* CARD 1: APARIENCIA */}
+                <View style={styles.card}>
+                    <Text style={styles.sectionTitle}>Apariencia</Text>
+                    
+                    <View style={styles.avatarPreviewContainer}>
+                        <View style={styles.avatarCircle}>
+                            {form.profilePictureUrl ? (
+                                <Image source={{ uri: form.profilePictureUrl }} style={styles.avatarImg} />
+                            ) : (
+                                <Ionicons name="person" size={50} color="#9ca3af" />
+                            )}
+                        </View>
+                        <View style={{ flex: 1, marginLeft: 15 }}>
+                            <Text style={styles.label}>URL de la imagen</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={form.profilePictureUrl}
+                                onChangeText={text => updateField('profilePictureUrl', text)}
+                                placeholder="https://ejemplo.com/foto.jpg"
+                                autoCapitalize="none"
+                                placeholderTextColor="#9ca3af"
+                            />
+                        </View>
+                    </View>
+
+                    <Text style={styles.label}>Biografía</Text>
+                    <TextInput
+                        style={[styles.input, styles.textArea]}
+                        value={form.bio}
+                        onChangeText={text => updateField('bio', text)}
+                        placeholder="Cuenta algo sobre ti..."
+                        placeholderTextColor="#9ca3af"
+                        multiline
+                        numberOfLines={4}
+                        maxLength={255}
+                    />
+                    <Text style={styles.charCount}>{form.bio.length}/255</Text>
+                </View>
+
+                {/* CARD 2: DATOS PERSONALES */}
                 <View style={styles.card}>
                     <Text style={styles.sectionTitle}>Datos personales</Text>
 
@@ -312,12 +336,9 @@ export default function EditProfileScreen({ navigation }) {
                     />
                 </View>
 
+                {/* CARD 3: SEGURIDAD */}
                 <View style={styles.card}>
                     <Text style={styles.sectionTitle}>Seguridad</Text>
-                    <Text style={styles.helperText}>
-                        Actualizar contraseña
-                    </Text>
-
                     <Text style={styles.label}>Nueva contraseña</Text>
                     <View style={styles.passwordWrapper}>
                         <TextInput
@@ -328,8 +349,6 @@ export default function EditProfileScreen({ navigation }) {
                             secureTextEntry={!showPassword}
                             autoCapitalize="none"
                             placeholderTextColor="#9ca3af"
-                            textContentType="newPassword"
-                            autoComplete="new-password"
                         />
                         <TouchableOpacity onPress={() => setShowPassword(prev => !prev)}>
                             <Ionicons
@@ -350,12 +369,8 @@ export default function EditProfileScreen({ navigation }) {
                             secureTextEntry={!showConfirmPassword}
                             autoCapitalize="none"
                             placeholderTextColor="#9ca3af"
-                            textContentType="newPassword"
-                            autoComplete="new-password"
                         />
-                        <TouchableOpacity
-                            onPress={() => setShowConfirmPassword(prev => !prev)}
-                        >
+                        <TouchableOpacity onPress={() => setShowConfirmPassword(prev => !prev)}>
                             <Ionicons
                                 name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
                                 size={22}
@@ -378,45 +393,16 @@ export default function EditProfileScreen({ navigation }) {
                 </TouchableOpacity>
             </ScrollView>
 
-            <Modal
-                transparent
-                visible={feedback.visible}
-                animationType="fade"
-                onRequestClose={closeFeedback}
-            >
+            {/* MODAL FEEDBACK (Igual al tuyo) */}
+            <Modal transparent visible={feedback.visible} animationType="fade" onRequestClose={closeFeedback}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalCard}>
-                        <View
-                            style={[
-                                styles.modalIconWrap,
-                                feedback.type === 'success'
-                                    ? styles.modalSuccess
-                                    : styles.modalError,
-                            ]}
-                        >
-                            <Ionicons
-                                name={
-                                    feedback.type === 'success'
-                                        ? 'checkmark-outline'
-                                        : 'close-outline'
-                                }
-                                size={28}
-                                color="#fff"
-                            />
+                        <View style={[styles.modalIconWrap, feedback.type === 'success' ? styles.modalSuccess : styles.modalError]}>
+                            <Ionicons name={feedback.type === 'success' ? 'checkmark-outline' : 'close-outline'} size={28} color="#fff" />
                         </View>
-
                         <Text style={styles.modalTitle}>{feedback.title}</Text>
                         <Text style={styles.modalMessage}>{feedback.message}</Text>
-
-                        <TouchableOpacity
-                            style={[
-                                styles.modalButton,
-                                feedback.type === 'success'
-                                    ? styles.modalButtonSuccess
-                                    : styles.modalButtonError,
-                            ]}
-                            onPress={closeFeedback}
-                        >
+                        <TouchableOpacity style={[styles.modalButton, feedback.type === 'success' ? styles.modalButtonSuccess : styles.modalButtonError]} onPress={closeFeedback}>
                             <Text style={styles.modalButtonText}>Aceptar</Text>
                         </TouchableOpacity>
                     </View>
@@ -427,185 +413,38 @@ export default function EditProfileScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    screen: {
-        flex: 1,
-        backgroundColor: '#f9fafb',
-    },
-    headerRed: {
-        backgroundColor: '#d90429',
-        paddingHorizontal: 20,
-        paddingTop: 40,
-        paddingBottom: 24,
-    },
-    backBtn: {
-        marginBottom: 14,
-    },
-    headerTitle: {
-        color: '#fff',
-        fontSize: 24,
-        fontWeight: 'bold',
-    },
-    headerSubtitle: {
-        color: '#ffe5e9',
-        fontSize: 14,
-        marginTop: 6,
-        lineHeight: 20,
-    },
-    container: {
-        flex: 1,
-    },
-    contentContainer: {
-        padding: 16,
-        paddingBottom: 28,
-    },
-    card: {
-        backgroundColor: '#fff',
-        borderRadius: 14,
-        padding: 16,
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 5,
-        elevation: 2,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#111827',
-        marginBottom: 14,
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#374151',
-        marginBottom: 8,
-        marginTop: 10,
-    },
-    input: {
-        backgroundColor: '#f3f4f6',
-        borderRadius: 10,
-        paddingHorizontal: 14,
-        paddingVertical: 13,
-        fontSize: 15,
-        color: '#111827',
-        borderWidth: 1,
-        borderColor: '#e5e7eb',
-    },
-    passwordWrapper: {
-        backgroundColor: '#f3f4f6',
-        borderRadius: 10,
-        paddingHorizontal: 14,
-        paddingVertical: 4,
-        borderWidth: 1,
-        borderColor: '#e5e7eb',
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    passwordInput: {
-        flex: 1,
-        paddingVertical: 10,
-        fontSize: 15,
-        color: '#111827',
-    },
-    helperText: {
-        fontSize: 13,
-        color: '#6b7280',
-        lineHeight: 18,
-        marginBottom: 6,
-    },
-    saveBtn: {
-        backgroundColor: '#d90429',
-        borderRadius: 12,
-        paddingVertical: 16,
-        alignItems: 'center',
-        marginTop: 4,
-    },
-    saveBtnDisabled: {
-        opacity: 0.7,
-    },
-    saveBtnText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-        letterSpacing: 0.5,
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    loadingText: {
-        marginTop: 12,
-        fontSize: 15,
-        color: '#4b5563',
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.45)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 24,
-    },
-    modalCard: {
-        width: '100%',
-        maxWidth: 380,
-        backgroundColor: '#fff',
-        borderRadius: 22,
-        paddingHorizontal: 24,
-        paddingTop: 24,
-        paddingBottom: 20,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.18,
-        shadowRadius: 16,
-        elevation: 12,
-    },
-    modalIconWrap: {
-        width: 62,
-        height: 62,
-        borderRadius: 31,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 16,
-    },
-    modalSuccess: {
-        backgroundColor: '#16a34a',
-    },
-    modalError: {
-        backgroundColor: '#dc2626',
-    },
-    modalTitle: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#111827',
-        textAlign: 'center',
-        marginBottom: 10,
-    },
-    modalMessage: {
-        fontSize: 15,
-        color: '#4b5563',
-        textAlign: 'center',
-        lineHeight: 22,
-        marginBottom: 22,
-    },
-    modalButton: {
-        minWidth: 140,
-        paddingVertical: 14,
-        paddingHorizontal: 22,
-        borderRadius: 14,
-        alignItems: 'center',
-    },
-    modalButtonSuccess: {
-        backgroundColor: '#16a34a',
-    },
-    modalButtonError: {
-        backgroundColor: '#dc2626',
-    },
-    modalButtonText: {
-        color: '#fff',
-        fontSize: 15,
-        fontWeight: '700',
-    },
+    screen: { flex: 1, backgroundColor: '#f9fafb' },
+    headerRed: { backgroundColor: '#d90429', paddingHorizontal: 20, paddingTop: 40, paddingBottom: 24 },
+    backBtn: { marginBottom: 14 },
+    headerTitle: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
+    headerSubtitle: { color: '#ffe5e9', fontSize: 14, marginTop: 6, lineHeight: 20 },
+    container: { flex: 1 },
+    contentContainer: { padding: 16, paddingBottom: 28 },
+    card: { backgroundColor: '#fff', borderRadius: 14, padding: 16, marginBottom: 16, elevation: 2, shadowColor: '#000', shadowOpacity: 0.06 },
+    sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#111827', marginBottom: 14 },
+    label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8, marginTop: 10 },
+    input: { backgroundColor: '#f3f4f6', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: '#111827', borderWidth: 1, borderColor: '#e5e7eb' },
+    textArea: { height: 100, textAlignVertical: 'top' },
+    charCount: { textAlign: 'right', fontSize: 12, color: '#9ca3af', marginTop: 4 },
+    avatarPreviewContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+    avatarCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', borderWidth: 1, borderColor: '#e5e7eb' },
+    avatarImg: { width: '100%', height: '100%' },
+    passwordWrapper: { backgroundColor: '#f3f4f6', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 4, borderWidth: 1, borderColor: '#e5e7eb', flexDirection: 'row', alignItems: 'center' },
+    passwordInput: { flex: 1, paddingVertical: 10, fontSize: 15, color: '#111827' },
+    saveBtn: { backgroundColor: '#d90429', borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 4 },
+    saveBtnDisabled: { opacity: 0.7 },
+    saveBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    loadingText: { marginTop: 12, fontSize: 15, color: '#4b5563' },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 },
+    modalCard: { width: '100%', maxWidth: 380, backgroundColor: '#fff', borderRadius: 22, padding: 24, alignItems: 'center' },
+    modalIconWrap: { width: 62, height: 62, borderRadius: 31, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+    modalSuccess: { backgroundColor: '#16a34a' },
+    modalError: { backgroundColor: '#dc2626' },
+    modalTitle: { fontSize: 22, fontWeight: 'bold', color: '#111827', marginBottom: 10 },
+    modalMessage: { fontSize: 15, color: '#4b5563', textAlign: 'center', marginBottom: 22 },
+    modalButton: { minWidth: 140, paddingVertical: 14, borderRadius: 14, alignItems: 'center' },
+    modalButtonSuccess: { backgroundColor: '#16a34a' },
+    modalButtonError: { backgroundColor: '#dc2626' },
+    modalButtonText: { color: '#fff', fontSize: 15, fontWeight: '700' },
 });
