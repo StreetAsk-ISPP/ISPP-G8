@@ -27,6 +27,21 @@ export default function SignUpScreen({ navigation }) {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [focusedField, setFocusedField] = useState(null);
 
+	const constantTimeStringEquals = (left, right) => {
+		const leftValue = typeof left === 'string' ? left : '';
+		const rightValue = typeof right === 'string' ? right : '';
+		const maxLength = Math.max(leftValue.length, rightValue.length);
+
+		let diff = leftValue.length ^ rightValue.length;
+		for (let index = 0; index < maxLength; index += 1) {
+			const leftCode = index < leftValue.length ? leftValue.charCodeAt(index) : 0;
+			const rightCode = index < rightValue.length ? rightValue.charCodeAt(index) : 0;
+			diff |= leftCode ^ rightCode;
+		}
+
+		return diff === 0;
+	};
+
 	const validateForm = () => {
 		if (!firstName.trim() || !lastName.trim() || !email.trim() || !userName.trim() || !password.trim() || !confirmPassword.trim()) {
 			setError('Please fill in all required fields.');
@@ -41,7 +56,7 @@ export default function SignUpScreen({ navigation }) {
 			setError('Password must be at least 6 characters long.');
 			return false;
 		}
-		if (password !== confirmPassword) {
+		if (!constantTimeStringEquals(password, confirmPassword)) {
 			setError('Passwords do not match.');
 			return false;
 		}
