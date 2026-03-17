@@ -126,11 +126,16 @@ class UserRestControllerIntegrationTest {
     @WithMockUser(authorities = { "ADMIN" })
     void update_shouldUpdateUserForAdmin() throws Exception {
         UUID userId = UUID.randomUUID();
+        UUID adminId = UUID.randomUUID();
+        
         User existingUser = createUser(userId, "before@example.com", "before", "USER");
         User payload = createUser(null, "after@example.com", "after", "USER");
         User updatedUser = createUser(userId, "after@example.com", "after", "USER");
+        
+        User currentAdmin = createUser(adminId, "admin@example.com", "admin", "ADMIN");
 
         when(userService.findUser(userId)).thenReturn(existingUser);
+        when(userService.findCurrentUser()).thenReturn(currentAdmin);
         when(userService.updateUser(any(User.class), eq(userId))).thenReturn(updatedUser);
 
         mockMvc.perform(put("/api/v1/users/{userId}", userId)
