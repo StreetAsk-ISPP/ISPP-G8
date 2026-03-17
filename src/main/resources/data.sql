@@ -102,9 +102,9 @@ INSERT INTO regular_users (id, coin_balance, rating, verified, visibility_radius
 VALUES (
     'cccccccc-cccc-cccc-cccc-cccccccccccc',
     0,
-    0,
+    0.0,
     FALSE,
-    10,
+    10.0,
     '987654321',
     NULL,
     TRUE
