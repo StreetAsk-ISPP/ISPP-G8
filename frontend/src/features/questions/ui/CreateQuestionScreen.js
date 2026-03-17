@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -9,24 +9,53 @@ import {
   Platform,
   ScrollView,
   useWindowDimensions,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import apiClient from '../../../shared/services/http/apiClient';
 import Toast from 'react-native-toast-message';
 import MapPickerWeb from '../../home/ui/components/MapPickerWeb';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { crossAlert } from '../../../shared/utils/crossAlert';
+
+const FREE_FIXED_RADIUS_KM = 0.5;
+const FREE_FIXED_RADIUS_M = 500;
+const PREMIUM_MIN_RADIUS_M = 50;
+const PREMIUM_MAX_RADIUS_M = 1000;
+const FREE_DURATION_HOURS = 2;
+const PREMIUM_MIN_DURATION_HOURS = 1;
+const PREMIUM_MAX_DURATION_HOURS = 24;
+const FAKE_AD_DURATION_SECONDS = 30;
 
 const addHoursISO = (hours) => {
   const nowMs = Date.now();
   return new Date(nowMs + hours * 3600000).toISOString();
 };
 
-const parseRadiusKm = (rawValue) => {
+const parseRadiusMeters = (rawValue) => {
   const normalized = String(rawValue ?? '')
     .replace(',', '.')
     .trim();
   const value = Number(normalized);
   return Number.isFinite(value) && value > 0 ? value : null;
+};
+
+const parseHours = (rawValue) => {
+  const normalized = String(rawValue ?? '').trim();
+  const value = Number(normalized);
+  return Number.isFinite(value) ? Math.floor(value) : null;
+};
+
+const isPremiumRadiusValid = (valueMeters) => {
+  return valueMeters !== null && valueMeters >= PREMIUM_MIN_RADIUS_M && valueMeters <= PREMIUM_MAX_RADIUS_M;
+};
+
+const isPremiumHoursValid = (value) => {
+  return (
+    value !== null &&
+    value >= PREMIUM_MIN_DURATION_HOURS &&
+    value <= PREMIUM_MAX_DURATION_HOURS
+  );
 };
 
 export default function CreateQuestionScreen({ navigation }) {
@@ -37,9 +66,10 @@ export default function CreateQuestionScreen({ navigation }) {
   const [place, setPlace] = useState('');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const hours = 2;
-  const [radiusKm, setRadiusKm] = useState(1);
-  const [radiusInput, setRadiusInput] = useState('1');
+  const [isPremium, setIsPremium] = useState(false);
+  const [hoursInput, setHoursInput] = useState(String(FREE_DURATION_HOURS));
+  const [radiusKm, setRadiusKm] = useState(FREE_FIXED_RADIUS_KM);
+  const [radiusInput, setRadiusInput] = useState(String(FREE_FIXED_RADIUS_M));
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [searching, setSearching] = useState(false);
@@ -52,25 +82,46 @@ export default function CreateQuestionScreen({ navigation }) {
   const [userLng, setUserLng] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  const [showFakeAd, setShowFakeAd] = useState(false);
+  const [adSecondsLeft, setAdSecondsLeft] = useState(FAKE_AD_DURATION_SECONDS);
+  const [queuedPayload, setQueuedPayload] = useState(null);
+
+  const submitQuestion = useCallback(async (payload) => {
+    setIsSubmitting(true);
+    try {
+      await apiClient.post('/api/v1/questions', payload);
+      crossAlert('Success', 'Question created!');
+      navigation.goBack();
+    } catch (e) {
+      crossAlert('Error', e.response?.data?.message || e.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [navigation]);
 
   useEffect(() => {
     let isMounted = true;
 
-    const loadUserAnswerRadius = async () => {
+    const loadUserPlanSettings = async () => {
       if (!user?.id) return;
       try {
         const response = await apiClient.get(`/api/v1/users/${user.id}`);
-        const value = Number(response?.data?.visibilityRadiusKm);
-        if (isMounted && Number.isFinite(value) && value > 0) {
-          setRadiusKm(value);
-          setRadiusInput(String(value));
+        if (!isMounted) return;
+
+        const premiumFlag = response?.data?.premiumActive === true;
+        setIsPremium(premiumFlag);
+
+        if (!premiumFlag) {
+          setRadiusKm(FREE_FIXED_RADIUS_KM);
+          setRadiusInput(String(FREE_FIXED_RADIUS_M));
+          setHoursInput(String(FREE_DURATION_HOURS));
         }
       } catch (e) {
-        console.warn('Unable to load user visibility radius:', e?.message || e);
+        console.warn('Unable to load user plan settings:', e?.message || e);
       }
     };
 
-    loadUserAnswerRadius();
+    loadUserPlanSettings();
     return () => {
       isMounted = false;
     };
@@ -95,9 +146,48 @@ export default function CreateQuestionScreen({ navigation }) {
     }
   }, []);
 
+  useEffect(() => {
+    if (!showFakeAd) {
+      return undefined;
+    }
+
+    if (adSecondsLeft <= 0) {
+      return undefined;
+    }
+
+    const timerId = setTimeout(() => {
+      setAdSecondsLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(timerId);
+  }, [showFakeAd, adSecondsLeft]);
+
+  useEffect(() => {
+    if (!showFakeAd || adSecondsLeft > 0 || !queuedPayload) {
+      return;
+    }
+
+    setShowFakeAd(false);
+    setAdSecondsLeft(FAKE_AD_DURATION_SECONDS);
+    const payloadToSubmit = queuedPayload;
+    setQueuedPayload(null);
+    submitQuestion(payloadToSubmit);
+  }, [showFakeAd, adSecondsLeft, queuedPayload, submitQuestion]);
+
+  const parsedRadiusMeters = parseRadiusMeters(radiusInput);
+  const parsedHours = parseHours(hoursInput);
+  const premiumRadiusValid = !isPremium || isPremiumRadiusValid(parsedRadiusMeters);
+  const premiumHoursValid = !isPremium || isPremiumHoursValid(parsedHours);
+  const showRadiusRangeError = isPremium && radiusInput.trim().length > 0 && !premiumRadiusValid;
+
   const canPost = useMemo(
-    () => title.trim() && content.trim() && parseRadiusKm(radiusInput) !== null && !isSubmitting,
-    [title, content, radiusInput, isSubmitting]
+    () =>
+      title.trim() &&
+      content.trim() &&
+      premiumRadiusValid &&
+      premiumHoursValid &&
+      !isSubmitting,
+    [title, content, premiumRadiusValid, premiumHoursValid, isSubmitting]
   );
 
   const searchAddress = async () => {
@@ -189,54 +279,62 @@ export default function CreateQuestionScreen({ navigation }) {
   };
 
   const onRadiusInputChange = (text) => {
-    setRadiusInput(text);
-    const parsed = parseRadiusKm(text);
-    if (parsed !== null) {
-      setRadiusKm(parsed);
+    if (!isPremium) {
+      return;
     }
+    setRadiusInput(text);
+    const parsedMeters = parseRadiusMeters(text);
+    if (parsedMeters !== null) {
+      setRadiusKm(parsedMeters / 1000);
+    }
+  };
+
+  const onHoursInputChange = (text) => {
+    if (!isPremium) {
+      return;
+    }
+    setHoursInput(text);
   };
 
   const onPost = async () => {
     if (!canPost) return;
-    const parsedRadiusKm = parseRadiusKm(radiusInput);
-    if (parsedRadiusKm === null) {
-      Toast.show({
-        type: 'error',
-        text1: 'Radio inválido',
-        text2: 'Por favor ingresa un radio mayor a 0 km.',
-        position: 'top'
-      });
+
+    let finalRadiusKm = FREE_FIXED_RADIUS_KM;
+    let finalHours = FREE_DURATION_HOURS;
+
+    if (isPremium) {
+      const premiumRadiusMeters = parseRadiusMeters(radiusInput);
+      if (!isPremiumRadiusValid(premiumRadiusMeters)) {
+        crossAlert('Invalid radius', 'Premium radius must be between 50 m and 1000 m.');
+        return;
+      }
+
+      const premiumHours = parseHours(hoursInput);
+      if (!isPremiumHoursValid(premiumHours)) {
+        crossAlert('Invalid duration', 'Premium duration must be between 1h and 24h.');
+        return;
+      }
+
+      finalRadiusKm = premiumRadiusMeters / 1000;
+      finalHours = premiumHours;
+    }
+
+    const payload = {
+      title: title.trim(),
+      content: content.trim(),
+      radiusKm: finalRadiusKm,
+      expiresAt: addHoursISO(finalHours),
+      location: { latitude, longitude },
+    };
+
+    if (!isPremium) {
+      setQueuedPayload(payload);
+      setAdSecondsLeft(FAKE_AD_DURATION_SECONDS);
+      setShowFakeAd(true);
       return;
     }
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        title: title.trim(),
-        content: content.trim(),
-        radiusKm: parsedRadiusKm,
-        expiresAt: addHoursISO(hours),
-        location: { latitude, longitude },
-      };
-      await apiClient.post('/api/v1/questions', payload);
 
-      Toast.show({
-        type: 'success',
-        text1: '¡Listo!',
-        text2: '¡La pregunta ha sido creada con éxito!',
-        position: 'top'
-      });
-      navigation.goBack();
-    } catch (e) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: e.response?.data?.message || 'Hubo un problema al crear la pregunta.',
-        position: 'top'
-      });
-
-    } finally {
-      setIsSubmitting(false);
-    }
+    submitQuestion(payload);
   };
 
   const selectedDisplay = pickedLabel
@@ -272,37 +370,48 @@ export default function CreateQuestionScreen({ navigation }) {
               <Text style={styles.mapHintCoords}>
                 {tempLat?.toFixed?.(5) ?? '--'}, {tempLng?.toFixed?.(5) ?? '--'}
               </Text>
-              <Text style={styles.mapRadiusLabel}>Response radius (km)</Text>
-              <View
-                style={[
-                  styles.mapRadiusInputWrapper,
-                  focusedField === 'radiusMap' && styles.inputFocused,
-                ]}
-              >
-                <Ionicons
-                  name="ellipse-outline"
-                  size={18}
-                  color="#9ca3af"
-                  style={{ marginRight: 8 }}
-                />
-                <TextInput
-                  value={radiusInput}
-                  onChangeText={onRadiusInputChange}
-                  keyboardType={Platform.OS === 'ios' ? 'decimal-pad' : 'numeric'}
-                  placeholder="1.0"
-                  placeholderTextColor="#9ca3af"
-                  style={styles.input}
-                  onFocus={() => setFocusedField('radiusMap')}
-                  onBlur={() => {
-                    setFocusedField(null);
-                    const parsed = parseRadiusKm(radiusInput);
-                    if (parsed !== null) {
-                      setRadiusInput(String(parsed));
-                      setRadiusKm(parsed);
-                    }
-                  }}
-                />
-              </View>
+              <Text style={styles.mapRadiusLabel}>Response radius (m)</Text>
+              {isPremium ? (
+                <View
+                  style={[
+                    styles.mapRadiusInputWrapper,
+                    focusedField === 'radiusMap' && styles.inputFocused,
+                    showRadiusRangeError && styles.inputError,
+                  ]}
+                >
+                  <Ionicons
+                    name="ellipse-outline"
+                    size={18}
+                    color="#9ca3af"
+                    style={{ marginRight: 8 }}
+                  />
+                  <TextInput
+                    value={radiusInput}
+                    onChangeText={onRadiusInputChange}
+                    keyboardType={Platform.OS === 'ios' ? 'decimal-pad' : 'numeric'}
+                    placeholder="500"
+                    placeholderTextColor="#9ca3af"
+                    style={styles.input}
+                    onFocus={() => setFocusedField('radiusMap')}
+                    onBlur={() => {
+                      setFocusedField(null);
+                      const parsedMeters = parseRadiusMeters(radiusInput);
+                      if (parsedMeters !== null) {
+                        setRadiusInput(String(parsedMeters));
+                        setRadiusKm(parsedMeters / 1000);
+                      }
+                    }}
+                  />
+                </View>
+              ) : (
+                <View style={styles.lockedBox}>
+                  <Ionicons name="lock-closed" size={14} color="#6b7280" />
+                  <Text style={styles.lockedText}>Fixed for free plan: 500 m</Text>
+                </View>
+              )}
+              {showRadiusRangeError ? (
+                <Text style={styles.radiusErrorText}>Premium radius must be between 50 m and 1000 m.</Text>
+              ) : null}
               <Text style={styles.mapZoneText}>
                 The red circle is the response area for this question.
               </Text>
@@ -446,7 +555,9 @@ export default function CreateQuestionScreen({ navigation }) {
               </Text>
             </View>
             <Text style={styles.helperText}>
-              Radius: {radiusKm} (fixed in free plan)km. You can edit it in Pick on map.
+              {isPremium
+                ? 'Premium radius: choose between 50 m and 1000 m in Pick on map.'
+                : 'Free plan radius is fixed to 500 m.'}
             </Text>
 
             {/* Topic */}
@@ -487,8 +598,34 @@ export default function CreateQuestionScreen({ navigation }) {
             {/* Time info */}
             <View style={styles.timeChip}>
               <Ionicons name="time-outline" size={16} color="#92400e" />
-              <Text style={styles.timeChipText}>Duration: {hours}h (fixed in free plan)</Text>
+              {isPremium ? (
+                <View style={styles.timePremiumRow}>
+                  <Text style={styles.timeChipText}>Duration (1h-24h)</Text>
+                  <TextInput
+                    value={hoursInput}
+                    onChangeText={onHoursInputChange}
+                    keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'numeric'}
+                    placeholder="2"
+                    placeholderTextColor="#a16207"
+                    style={styles.timeInput}
+                    onBlur={() => {
+                      const parsed = parseHours(hoursInput);
+                      if (parsed !== null) {
+                        setHoursInput(String(parsed));
+                      }
+                    }}
+                  />
+                  <Text style={styles.timeChipText}>h</Text>
+                </View>
+              ) : (
+                <Text style={styles.timeChipText}>Duration: 2h (fixed in free plan)</Text>
+              )}
             </View>
+            {!isPremium ? (
+              <Text style={styles.helperText}>
+                When you tap the final &quot;Post Question&quot; button, a short ad will be shown before publishing.
+              </Text>
+            ) : null}
 
             {/* Buttons */}
             <View style={styles.actionRow}>
@@ -513,12 +650,102 @@ export default function CreateQuestionScreen({ navigation }) {
           </View>
         </ScrollView>
       </View>
+
+      <Modal visible={showFakeAd} transparent animationType="fade" onRequestClose={() => { }}>
+        <View style={styles.adOverlay}>
+          <View style={styles.adCard}>
+            <Text style={styles.adBadge}>Sponsored</Text>
+            <Text style={styles.adTitle}>Universidad de Sevilla</Text>
+            <Text style={styles.adText}>Simulated ad shown to free users before their question is published.</Text>
+            <View style={styles.adVisual}>
+              <Text style={styles.adVisualTitle}>Study, research, connect</Text>
+              <Text style={styles.adVisualText}>Discover degrees, scholarships, campus life, and opportunities at the University of Seville.</Text>
+            </View>
+            <Text style={styles.adHelperText}>Your question will only be created when this countdown finishes.</Text>
+            <Text style={styles.adCountdown}>Your question will be published in {adSecondsLeft}s</Text>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#f3f4f6' },
+  adOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(17,24,39,0.72)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  adCard: {
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+  adBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: '#fee2e2',
+    color: '#b91c1c',
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  adTitle: {
+    marginTop: 16,
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  adText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#4b5563',
+    lineHeight: 20,
+  },
+  adVisual: {
+    marginTop: 18,
+    borderRadius: 18,
+    padding: 18,
+    backgroundColor: '#1d4ed8',
+  },
+  adVisualTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#fff',
+  },
+  adVisualText: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#dbeafe',
+  },
+  adHelperText: {
+    marginTop: 16,
+    textAlign: 'center',
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#4b5563',
+  },
+  adCountdown: {
+    marginTop: 18,
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#92400e',
+  },
 
   /* ── Map backgrounds ── */
   mapFull: { flex: 1, width: '100%', height: '100%' },
@@ -568,6 +795,23 @@ const styles = StyleSheet.create({
     color: '#a52019',
     textAlign: 'center',
     marginTop: 8,
+    fontWeight: '600',
+  },
+  lockedBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  lockedText: {
+    color: '#4b5563',
+    fontSize: 12,
     fontWeight: '600',
   },
   mapBtnRow: { flexDirection: 'row', gap: 12 },
@@ -637,8 +881,16 @@ const styles = StyleSheet.create({
     height: 48,
   },
   inputFocused: { borderColor: '#a52019', backgroundColor: '#fff' },
+  inputError: { borderColor: '#dc2626' },
   inputMultiline: { height: 'auto', alignItems: 'flex-start', paddingVertical: 12 },
   input: { flex: 1, fontSize: 14, color: '#1f2937', outlineStyle: 'none' },
+  radiusErrorText: {
+    marginTop: 6,
+    fontSize: 12,
+    color: '#dc2626',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
 
   locationBtnRow: { flexDirection: 'row', gap: 10, marginTop: 10 },
   btnOutline: {
@@ -682,6 +934,26 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   timeChipText: { fontSize: 13, fontWeight: '600', color: '#92400e' },
+  timePremiumRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  timeInput: {
+    minWidth: 52,
+    height: 34,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#f59e0b',
+    backgroundColor: '#fff9db',
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#92400e',
+    fontWeight: '700',
+    paddingHorizontal: 8,
+    outlineStyle: 'none',
+  },
 
   actionRow: { flexDirection: 'row', gap: 12, marginTop: 24 },
   cancelBtn: {

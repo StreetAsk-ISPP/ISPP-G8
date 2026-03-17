@@ -37,6 +37,7 @@ export default function HomeScreen({ navigation }) {
     const [comingSoon, setComingSoon] = useState(false);
     const [modalType, setModalType] = useState('notifications');
     const [currentLocation, setCurrentLocation] = useState(null);
+    const [isPremium, setIsPremium] = useState(false);
 
     const [feedbackVisible, setFeedbackVisible] = useState(false);
     const [feedbackType, setFeedbackType] = useState('SUGGESTION');
@@ -71,7 +72,28 @@ export default function HomeScreen({ navigation }) {
     useFocusEffect(
         useCallback(() => {
             loadQuestions();
-        }, [loadQuestions])
+            let isMounted = true;
+
+            const checkPremium = async () => {
+                if (!user?.id || user?.roles?.includes('ADMIN')) {
+                    if (isMounted) setIsPremium(false);
+                    return;
+                }
+
+                try {
+                    const res = await apiClient.get(`/api/v1/users/${user.id}`);
+                    if (isMounted) setIsPremium(res?.data?.premiumActive === true);
+                } catch (_) {
+                    // Silently ignore, default premium status remains false.
+                }
+            };
+
+            checkPremium();
+
+            return () => {
+                isMounted = false;
+            };
+        }, [loadQuestions, user?.id, user?.roles])
     );
 
     useEffect(() => {
@@ -240,6 +262,26 @@ export default function HomeScreen({ navigation }) {
                             >
                                 <Ionicons name="person-outline" size={20} color="#374151" />
                             </TouchableOpacity>
+
+                            {!user?.roles?.includes('ADMIN') && (
+                                isPremium ? (
+                                    <TouchableOpacity
+                                        style={styles.proBadge}
+                                        activeOpacity={0.85}
+                                        onPress={() => navigation.navigate('SubscriptionPlans')}
+                                    >
+                                        <Text style={styles.proBadgeText}>⭐ PRO</Text>
+                                    </TouchableOpacity>
+                                ) : (
+                                    <TouchableOpacity
+                                        style={styles.goProBtn}
+                                        activeOpacity={0.85}
+                                        onPress={() => navigation.navigate('SubscriptionPlans')}
+                                    >
+                                        <Text style={styles.goProText}>👑 GO PRO</Text>
+                                    </TouchableOpacity>
+                                )
+                            )}
 
                             {user?.roles?.includes('ADMIN') && (
                                 <TouchableOpacity
@@ -564,6 +606,38 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
+    },
+    goProBtn: {
+        paddingHorizontal: 12,
+        height: 38,
+        borderRadius: 12,
+        backgroundColor: '#1d4ed8',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#1e40af',
+    },
+    goProText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '800',
+        letterSpacing: 0.4,
+    },
+    proBadge: {
+        paddingHorizontal: 12,
+        height: 38,
+        borderRadius: 12,
+        backgroundColor: '#fbbf24',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#f59e0b',
+    },
+    proBadgeText: {
+        color: '#1f2937',
+        fontSize: 12,
+        fontWeight: '800',
+        letterSpacing: 0.4,
     },
     iconBtn: {
         width: 38,

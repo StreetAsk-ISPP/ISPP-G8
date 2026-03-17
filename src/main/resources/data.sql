@@ -81,3 +81,31 @@ VALUES (
     '123456789',
     NULL
 );
+
+-- Premium regular user: premium1@streetask.com / password: 4dm1n
+INSERT INTO appusers (id, email, user_name, password, first_name, last_name, authority, account_type, active, created_at)
+VALUES (
+    'cccccccc-cccc-cccc-cccc-cccccccccccc',
+    'premium1@streetask.com',
+    'premium1',
+    '$2a$10$nMmTWAhPTqXqLDJTag3prumFrAJpsYtroxf0ojesFYq0k4PmcbWUS',
+    'Premium',
+    'User',
+    '22222222-2222-2222-2222-222222222222',
+    'REGULAR_USER',
+    TRUE,
+    CURRENT_TIMESTAMP
+);
+
+-- RegularUser profile for premium1 (premium_active = TRUE)
+INSERT INTO regular_users (id, coin_balance, rating, verified, visibility_radius_km, phone, profile_photo, premium_active)
+VALUES (
+    'cccccccc-cccc-cccc-cccc-cccccccccccc',
+    0,
+    0.0,
+    FALSE,
+    10.0,
+    '987654321',
+    NULL,
+    TRUE
+);

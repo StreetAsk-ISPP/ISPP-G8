@@ -8,6 +8,7 @@ import BusinessSignupScreen from '../../features/auth/ui/BusinessSignupScreen';
 import PaymentGatewayPlaceholderScreen from '../../features/payments/ui/PaymentGatewayPlaceholderScreen';
 import HomeScreen from '../../features/home/ui/HomeScreen';
 import CreateQuestionScreen from '../../features/questions/ui/CreateQuestionScreen';
+import SubscriptionPlansScreen from '../../features/subscriptions/ui/SubscriptionPlansScreen';
 import QuestionThreadScreen from '../../features/answers/ui/QuestionThreadScreen';
 import ProfileScreen from '../../features/profile/ProfileScreen';
 import ProfileStats from '../../features/profile/ProfileStats';
@@ -48,19 +49,17 @@ export default function AppNavigator() {
                                 <Stack.Screen name="AdminDashboard" component={AdminScreen} />
                                 <Stack.Screen name="AdminUsers" component={AdminUsersScreen} />
                                 <Stack.Screen name="AdminFeedback" component={AdminFeedbackScreen} />
-                                {/* Incluimos las rutas de la app aquí para que formen parte del stack
-                                pero la inicial será AdminDashboard según el orden.
-                                El botón volver atrás o ir al dashboard debe estar en un panel o cabecera
-                            */}
                                 <Stack.Screen name="Home" component={HomeScreen} />
                                 <Stack.Screen name="CreateQuestion" component={CreateQuestionScreen} />
                                 <Stack.Screen name="QuestionThread" component={QuestionThreadScreen} />
                                 <Stack.Screen name="Profile" component={ProfileScreen} />
                                 <Stack.Screen name="ProfileStats" component={ProfileStats} options={{ headerShown: false }} />
+                                <Stack.Screen name="EditProfile" component={EditProfileScreen} />
                             </>
                         ) : (
                             <>
                                 <Stack.Screen name="Home" component={HomeScreen} />
+                                <Stack.Screen name="SubscriptionPlans" component={SubscriptionPlansScreen} />
                                 <Stack.Screen name="CreateQuestion" component={CreateQuestionScreen} />
                                 <Stack.Screen name="QuestionThread" component={QuestionThreadScreen} />
                                 <Stack.Screen name="Profile" component={ProfileScreen} />
