@@ -1,4 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { Platform, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -83,6 +84,28 @@ const toastConfig = {
 };
 
 export default function App() {
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+
+    const style = document.createElement('style');
+    style.setAttribute('data-password-reveal-fix', 'true');
+    style.textContent = `
+      input[type="password"]::-ms-reveal,
+      input[type="password"]::-ms-clear {
+        display: none !important;
+        visibility: hidden !important;
+      }
+    `;
+
+    document.head.appendChild(style);
+
+    return () => {
+      if (style.parentNode) {
+        style.parentNode.removeChild(style);
+      }
+    };
+  }, []);
+
   const webContainerStyle = {
     flex: 1,
     width: '100%',
