@@ -31,7 +31,6 @@ export default function ProfileStats() {
             }
 
             try {
-                // Ejecutamos las 3 peticiones en paralelo para mayor velocidad
                 const [resStats, resQuestions, resAnswers] = await Promise.all([
                     apiClient.get(`/api/v1/users/${user.id}/stats`),
                     apiClient.get(`/api/v1/users/${user.id}/questions`),
@@ -64,8 +63,8 @@ export default function ProfileStats() {
         fetchAllData();
     }, [user]);
 
-    const renderHistoryItem = (item, type) => (
-        <View key={item.id || Math.random().toString()} style={styles.historyItem}>
+    const renderHistoryItem = (item, type, index) => (
+        <View key={item.id ? `${type}-${item.id}` : `${type}-${index}`} style={styles.historyItem}>
             <View style={styles.iconCircle}>
                 <Ionicons
                     name={type === 'questions' ? "help-circle-outline" : "chatbubble-ellipses-outline"}
@@ -102,7 +101,6 @@ export default function ProfileStats() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            {/* Header / NavBar */}
             <View style={styles.navBar}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={28} color="white" />
@@ -114,7 +112,6 @@ export default function ProfileStats() {
             </View>
 
             <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-                {/* Rank & Coins Card */}
                 <View style={styles.headerCard}>
                     <Text style={styles.rangoText}>{serverStats.role}</Text>
                     <Text style={styles.userEmailText}>{user?.email || serverStats.username}</Text>
@@ -126,7 +123,6 @@ export default function ProfileStats() {
                     </View>
                 </View>
 
-                {/* Grid de Estadísticas */}
                 <View style={styles.statsGrid}>
                     <View style={styles.statBox}>
                         <Text style={styles.statValue}>{serverStats.questions}</Text>
@@ -146,7 +142,6 @@ export default function ProfileStats() {
                     </View>
                 </View>
 
-                {/* Reputation Card */}
                 <View style={styles.reputationCard}>
                     <View style={styles.reputationLeft}>
                         <View style={styles.trophyCircle}>
@@ -163,7 +158,6 @@ export default function ProfileStats() {
                     </View>
                 </View>
 
-                {/* Activity History */}
                 <Text style={styles.sectionTitle}>Activity History</Text>
                 <View style={styles.tabContainer}>
                     <TouchableOpacity
@@ -180,15 +174,14 @@ export default function ProfileStats() {
                     </TouchableOpacity>
                 </View>
 
-                {/* History List */}
                 <View style={styles.historyList}>
                     {activeTab === 'questions' ? (
                         userQuestions.length > 0
-                            ? userQuestions.map(q => renderHistoryItem(q, 'questions'))
+                            ? userQuestions.map((q, index) => renderHistoryItem(q, 'questions', index))
                             : <Text style={styles.emptyText}>{"You haven't asked any questions yet."}</Text>
                     ) : (
                         userAnswers.length > 0
-                            ? userAnswers.map(a => renderHistoryItem(a, 'answers'))
+                            ? userAnswers.map((a, index) => renderHistoryItem(a, 'answers', index))
                             : <Text style={styles.emptyText}>{"You haven't answered any questions yet."}</Text>
                     )}
                 </View>
