@@ -16,7 +16,6 @@ import com.streetask.app.answer.AnswerRepository;
 import com.streetask.app.exceptions.ResourceNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,10 +40,6 @@ public class UserService {
 		this.answerRepository = answerRepository;
 		this.questionRepository = questionRepository;
 		this.passwordEncoder = passwordEncoder;
-	}
-
-	private PasswordEncoder getPasswordEncoder() {
-		return passwordEncoder != null ? passwordEncoder : new BCryptPasswordEncoder();
 	}
 
 	@Transactional
@@ -106,7 +101,7 @@ public class UserService {
 		if (user.getPassword() == null || user.getPassword().isBlank()) {
 			toUpdate.setPassword(previousPassword);
 		} else {
-			toUpdate.setPassword(getPasswordEncoder().encode(user.getPassword()));
+			toUpdate.setPassword(passwordEncoder.encode(user.getPassword()));
 		}
 
 		userRepository.save(toUpdate);
@@ -192,9 +187,7 @@ public class UserService {
 		double rating = 0.0;
 		if (totalInteractions > 0) {
 			rating = ((double) likesCount / (double) totalInteractions) * 5.0;
-			if (rating < 0.0) {
-				rating = 0.0;
-			} else if (rating > 5.0) {
+			if (rating > 5.0) {
 				rating = 5.0;
 			}
 			rating = Math.round(rating * 10.0) / 10.0;
