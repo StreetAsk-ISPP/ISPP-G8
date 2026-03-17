@@ -37,7 +37,8 @@ public class User extends BaseEntity {
     @Size(max = 255)
     private String bio;
 
-    @Column(name = "profile_picture_url")
+    @Lob
+    @Column(name = "profile_picture_url", columnDefinition = "LONGTEXT")
     private String profilePictureUrl;
 
     @Enumerated(EnumType.STRING)

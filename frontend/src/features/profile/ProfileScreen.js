@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../app/providers/AuthProvider';
 import apiClient from '../../shared/services/http/apiClient';
 
@@ -16,8 +17,10 @@ export default function ProfileScreen({ navigation }) {
         profilePictureUrl: null 
     });
 
-    useEffect(() => {
+    // Función para cargar los datos (se ejecuta al entrar en la pantalla)
+    const loadProfileData = useCallback(() => {
         if (!user?.id) return;
+
         apiClient.get(`/api/v1/users/${user.id}/stats`)
             .then(res => {
                 if (res.data) {
@@ -25,14 +28,22 @@ export default function ProfileScreen({ navigation }) {
                         questions: res.data.questionsCount || 0,
                         answers: res.data.answersCount || 0,
                         rating: res.data.rating != null ? res.data.rating : 0,
-                        // Datos de la Issue #365
                         bio: res.data.bio || '',
                         profilePictureUrl: res.data.profilePictureUrl || null
                     });
                 }
             })
-            .catch(() => { });
-    }, [user]);
+            .catch((err) => {
+                console.error("Error al refrescar el perfil:", err);
+            });
+    }, [user?.id]);
+
+    // Este hook se dispara cada vez que la pantalla gana el "foco" (al volver atrás)
+    useFocusEffect(
+        useCallback(() => {
+            loadProfileData();
+        }, [loadProfileData])
+    );
 
     return (
         <SafeAreaView style={styles.screen}>
@@ -57,7 +68,7 @@ export default function ProfileScreen({ navigation }) {
                         <Text style={styles.userName}>{user?.username?.toUpperCase() || 'USER NAME'}</Text>
                         <Text style={styles.userSubRole}>{user?.role || 'Registered User'}</Text>
                         
-                        {/* Bloque de Biografía */}
+                        {/* Bloque de Biografía - Ahora se actualiza solo */}
                         {stats.bio ? (
                             <Text style={styles.bioText} numberOfLines={3}>{stats.bio}</Text>
                         ) : (
@@ -146,7 +157,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#d90429',
         padding: 20,
         paddingTop: 40,
-        paddingBottom: 45, // Un poco más de espacio para la bio
+        paddingBottom: 45,
     },
     backBtn: { marginBottom: 10 },
     userInfoRow: { flexDirection: 'row', alignItems: 'flex-start' },
@@ -157,7 +168,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         justifyContent: 'center',
         alignItems: 'center',
-        overflow: 'hidden' // Importante para que la imagen sea circular
+        overflow: 'hidden'
     },
     avatarImage: {
         width: '100%',
@@ -199,7 +210,6 @@ const styles = StyleSheet.create({
         borderRadius: 14,
         marginHorizontal: 16,
         marginTop: -28,
-        marginBottom: 0,
         paddingVertical: 14,
         elevation: 6,
         shadowColor: '#000',
@@ -208,29 +218,9 @@ const styles = StyleSheet.create({
         shadowRadius: 6,
         zIndex: 10,
     },
-    statItem: {
-        flex: 1,
-        alignItems: 'center',
-    },
-    statNumber: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#d90429',
-    },
-    statNumberSub: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#d90429',
-    },
-    statItemLabel: {
-        fontSize: 11,
-        color: '#666',
-        textAlign: 'center',
-        marginTop: 2,
-    },
-    statDivider: {
-        width: 1,
-        backgroundColor: '#e5e7eb',
-        marginVertical: 4,
-    },
+    statItem: { flex: 1, alignItems: 'center' },
+    statNumber: { fontSize: 22, fontWeight: 'bold', color: '#d90429' },
+    statNumberSub: { fontSize: 14, fontWeight: '600', color: '#d90429' },
+    statItemLabel: { fontSize: 11, color: '#666', textAlign: 'center', marginTop: 2 },
+    statDivider: { width: 1, backgroundColor: '#e5e7eb', marginVertical: 4 },
 });
