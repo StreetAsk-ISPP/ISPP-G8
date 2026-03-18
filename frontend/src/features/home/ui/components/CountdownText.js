@@ -9,16 +9,10 @@ export const CountdownText = ({ expiresAt, onExpire }) => {
         const updateTime = () => {
             const now = Date.now();
 
-            // 1. Normalización inicial
+            // Normalize separators without forcing timezone conversion.
             let normalizedDate = typeof expiresAt === 'string'
                 ? expiresAt.trim().replace(' ', 'T')
                 : expiresAt;
-
-            // 2. CORRECCIÓN DE ZONA HORARIA (UTC)
-            // Si es un string y no termina en 'Z' ni tiene offset (+/-), le añadimos la Z para forzar UTC
-            if (typeof normalizedDate === 'string' && !normalizedDate.includes('Z') && !normalizedDate.match(/[+-]\d{2}:\d{2}$/)) {
-                normalizedDate += 'Z';
-            }
 
             const expiration = new Date(normalizedDate).getTime();
 

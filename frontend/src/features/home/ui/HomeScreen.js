@@ -37,6 +37,7 @@ export default function HomeScreen({ navigation }) {
     const [comingSoon, setComingSoon] = useState(false);
     const [modalType, setModalType] = useState('notifications');
     const [currentLocation, setCurrentLocation] = useState(null);
+    const [isPremium, setIsPremium] = useState(false);
 
     const [feedbackVisible, setFeedbackVisible] = useState(false);
     const [feedbackType, setFeedbackType] = useState('SUGGESTION');
@@ -68,11 +69,22 @@ export default function HomeScreen({ navigation }) {
         }
     }, []);
 
-    useFocusEffect(
-        useCallback(() => {
-            loadQuestions();
-        }, [loadQuestions])
-    );
+    useFocusEffect(useCallback(() => {
+        loadQuestions();
+
+        let isMounted = true;
+        const checkPremium = async () => {
+            if (!user?.id) return;
+            try {
+                const res = await apiClient.get(`/api/v1/users/${user.id}`);
+                if (isMounted) setIsPremium(res?.data?.premiumActive === true);
+            } catch (_) {
+                // silently ignore — stays false
+            }
+        };
+        checkPremium();
+        return () => { isMounted = false; };
+    }, [loadQuestions, user?.id]));
 
     useEffect(() => {
         const unsub = observeNotifications((n) => {
@@ -233,62 +245,70 @@ export default function HomeScreen({ navigation }) {
                             <Text style={styles.appName}>StreetAsk</Text>
                         </View>
                         <View style={styles.topBarRight}>
+                        {isPremium ? (
+                            <TouchableOpacity
+                                style={styles.proBadge}
+                                activeOpacity={0.85}
+                                onPress={() => navigation.navigate('SubscriptionPlans')}
+                            >
+                                <Text style={styles.proBadgeText}>⭐ PRO</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity
+                                style={styles.goProBtn}
+                                activeOpacity={0.85}
+                                onPress={() => navigation.navigate('SubscriptionPlans')}
+                            >
+                                <Text style={styles.goProText}>👑 GO PRO</Text>
+                            </TouchableOpacity>
+                        )}
+
+                        {user?.roles?.includes('ADMIN') && (
                             <TouchableOpacity
                                 style={styles.iconBtn}
                                 activeOpacity={0.7}
-                                onPress={() => navigation.navigate('Profile')}
+                                onPress={() => navigation.navigate('AdminDashboard')}
                             >
-                                <Ionicons name="person-outline" size={20} color="#374151" />
+                                <Ionicons name="shield-checkmark-outline" size={20} color="#374151" />
                             </TouchableOpacity>
+                        )}
 
-                            {user?.roles?.includes('ADMIN') && (
-                                <TouchableOpacity
-                                    style={styles.iconBtn}
-                                    activeOpacity={0.7}
-                                    onPress={() => navigation.navigate('AdminDashboard')}
-                                >
-                                    <Ionicons name="shield-checkmark-outline" size={20} color="#374151" />
-                                </TouchableOpacity>
-                            )}
-
-                            <TouchableOpacity
-                                style={styles.iconBtn}
-                                activeOpacity={0.7}
-                                onPress={() => setFeedbackVisible(true)}
-                            >
-                                <Ionicons name="chatbox-ellipses-outline" size={20} color="#a52019" />
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={styles.iconBtn}
-                                activeOpacity={0.7}
-                                onPress={() => {
-                                    setModalType('search');
-                                    setComingSoon(true);
-                                }}
-                            >
-                                <Ionicons name="search-outline" size={20} color="#a52019" />
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={styles.iconBtn}
-                                activeOpacity={0.7}
-                                onPress={() => {
-                                    setModalType('notifications');
-                                    setComingSoon(true);
-                                }}
-                            >
-                                <Ionicons name="notifications-outline" size={20} color="#a52019" />
-                                {ephemeralNotification ? <View style={styles.badge} /> : null}
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.iconBtn, styles.logoutBtn]}
-                                onPress={logout}
-                                activeOpacity={0.7}
-                            >
-                                <Ionicons name="log-out-outline" size={20} color="#ef4444" />
-                            </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.iconBtn}
+                            activeOpacity={0.7}
+                            onPress={() => navigation.navigate('Profile')}
+                        >
+                            <Ionicons name="person-outline" size={20} color="#374151" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.iconBtn}
+                            activeOpacity={0.7}
+                            onPress={() => setFeedbackVisible(true)}
+                        >
+                            <Ionicons name="chatbox-ellipses-outline" size={20} color="#a52019" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.iconBtn}
+                            activeOpacity={0.7}
+                            onPress={() => { setModalType('search'); setComingSoon(true); }}
+                        >
+                            <Ionicons name="search-outline" size={20} color="#a52019" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.iconBtn}
+                            activeOpacity={0.7}
+                            onPress={() => { setModalType('notifications'); setComingSoon(true); }}
+                        >
+                            <Ionicons name="notifications-outline" size={20} color="#a52019" />
+                            {ephemeralNotification ? <View style={styles.badge} /> : null}
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.iconBtn, styles.logoutBtn]}
+                            onPress={logout}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons name="log-out-outline" size={20} color="#ef4444" />
+                        </TouchableOpacity>
                         </View>
                     </View>
 
@@ -564,6 +584,38 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
+    },
+    goProBtn: {
+        paddingHorizontal: 12,
+        height: 38,
+        borderRadius: 12,
+        backgroundColor: '#1d4ed8',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#1e40af',
+    },
+    goProText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '800',
+        letterSpacing: 0.4,
+    },
+    proBadge: {
+        paddingHorizontal: 12,
+        height: 38,
+        borderRadius: 12,
+        backgroundColor: '#fbbf24',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#f59e0b',
+    },
+    proBadgeText: {
+        color: '#1f2937',
+        fontSize: 12,
+        fontWeight: '800',
+        letterSpacing: 0.4,
     },
     iconBtn: {
         width: 38,
