@@ -32,6 +32,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
 
     const [question, setQuestion] = useState(null);
     const [answers, setAnswers] = useState([]);
+    const [sortOrder, setSortOrder] = useState('top');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [myVotes, setMyVotes] = useState({});
@@ -81,6 +82,22 @@ export default function QuestionThreadScreen({ route, navigation }) {
         return distKm <= questionRadiusKm;
     }, [hasGeoRestriction, questionCoords, questionRadiusKm, userLocation]);
 
+    const sortedAnswers = useMemo(() => {
+        const copy = [...answers];
+        if (sortOrder === 'top') {
+            copy.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+        } else {
+            const now = Date.now();
+            const withTs = copy.map((a) => ({
+                item: a,
+                ts: a.createdAt ? new Date(a.createdAt).getTime() : now,
+            }));
+            withTs.sort((a, b) => b.ts - a.ts);
+            return withTs.map((w) => w.item);
+        }
+        return copy;
+    }, [answers, sortOrder]);
+
     useEffect(() => {
         if (Platform.OS === 'web' && navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -127,6 +144,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
                     likes: a.upvotes || 0,
                     dislikes: a.downvotes || 0,
                     minutesAgo: getMinutesAgo(a.createdAt),
+                    createdAt: a.createdAt || null,
                     userId: a.user?.id,
                     isVerified: a.isVerified,
                 })));
@@ -247,7 +265,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
             setAnswers((p) => p.map((a) => a.id === optimistic.id ? {
                 id: saved.id, author: saved.user?.userName || saved.user?.username || 'Anonymous', color: theme.colors.primary,
                 text: saved.content, likes: saved.upvotes || 0, dislikes: saved.downvotes || 0,
-                minutesAgo: 0, userId: saved.user?.id, isVerified: saved.isVerified,
+                minutesAgo: 0, createdAt: saved.createdAt || new Date().toISOString(), userId: saved.user?.id, isVerified: saved.isVerified,
             } : a));
         } catch (e) {
             setAnswers((p) => p.filter((a) => a.id !== optimistic.id));
@@ -339,7 +357,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
 
     const renderAnswer = ({ item, index }) => {
         const v = myVotes[item.id];
-        const isLast = index === answers.length - 1;
+        const isLast = index === sortedAnswers.length - 1;
         return (
             <View style={styles.threadRow}>
                 {/* Thread line + dot */}
@@ -461,9 +479,29 @@ export default function QuestionThreadScreen({ route, navigation }) {
                             </View>
                         </View>
 
+                        {/* ── Sort Filter ── */}
+                        <View style={styles.filterRow}>
+                            <TouchableOpacity
+                                style={[styles.filterBtn, sortOrder === 'top' && styles.filterBtnActive]}
+                                onPress={() => setSortOrder('top')}
+                                activeOpacity={0.7}
+                            >
+                                <Ionicons name="trending-up" size={14} color={sortOrder === 'top' ? '#fff' : '#6b7280'} />
+                                <Text style={[styles.filterBtnText, sortOrder === 'top' && styles.filterBtnTextActive]}>Top</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.filterBtn, sortOrder === 'newest' && styles.filterBtnActive]}
+                                onPress={() => setSortOrder('newest')}
+                                activeOpacity={0.7}
+                            >
+                                <Ionicons name="time-outline" size={14} color={sortOrder === 'newest' ? '#fff' : '#6b7280'} />
+                                <Text style={[styles.filterBtnText, sortOrder === 'newest' && styles.filterBtnTextActive]}>Newest</Text>
+                            </TouchableOpacity>
+                        </View>
+
                         {/* ── Answers ── */}
                         <FlatList
-                            data={answers}
+                            data={sortedAnswers}
                             keyExtractor={(i) => String(i.id)}
                             contentContainerStyle={[styles.listContent, isNarrow && { paddingHorizontal: 12 }]}
                             renderItem={renderAnswer}
@@ -593,6 +631,38 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '700',
         color: '#374151',
+    },
+
+    /* ── Sort Filter ── */
+    filterRow: {
+        flexDirection: 'row',
+        gap: 8,
+        paddingHorizontal: 16,
+        paddingTop: 12,
+        paddingBottom: 4,
+    },
+    filterBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        paddingHorizontal: 14,
+        paddingVertical: 7,
+        borderRadius: 20,
+        backgroundColor: '#f3f4f6',
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+    },
+    filterBtnActive: {
+        backgroundColor: '#dc2626',
+        borderColor: '#dc2626',
+    },
+    filterBtnText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#6b7280',
+    },
+    filterBtnTextActive: {
+        color: '#fff',
     },
 
     /* ── Answer List (Forum Thread) ── */
