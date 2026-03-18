@@ -71,7 +71,6 @@ class QuestionRestControllerTest {
 		testCreator.setFirstName("Test");
 		testCreator.setLastName("Creator");
 		testCreator.setVisibilityRadiusKm(10.0f);
-		testCreator.setPremiumActive(false);
 		testCreator.setAuthority(userAuthority);
 		testCreator = userRepository.save(testCreator);
 
@@ -251,7 +250,7 @@ class QuestionRestControllerTest {
 
 	@Test
 	@WithMockUser(username = "testcreator@streetask.com")
-	void create_shouldForceFreeRadiusToHalfKmEvenWhenPayloadRadiusIsProvided() throws Exception {
+	void create_shouldUsePayloadRadiusWhenProvided() throws Exception {
 		Map<String, Object> questionPayload = createValidQuestionPayload();
 		questionPayload.put("radiusKm", 2.0);
 
@@ -259,40 +258,7 @@ class QuestionRestControllerTest {
 				.contentType(APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(questionPayload)))
 				.andExpect(status().isCreated())
-				.andExpect(jsonPath("$.radiusKm").value(0.5));
-	}
-
-	@Test
-	@WithMockUser(username = "testcreator@streetask.com")
-	void create_shouldAllowPremiumRadiusInRange() throws Exception {
-		testCreator.setPremiumActive(true);
-		userRepository.save(testCreator);
-
-		Map<String, Object> questionPayload = createValidQuestionPayload();
-		questionPayload.put("radiusKm", 0.2);
-		questionPayload.put("expiresAt", LocalDateTime.now().plusHours(3).toString());
-
-		mockMvc.perform(post("/api/v1/questions")
-				.contentType(APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(questionPayload)))
-				.andExpect(status().isCreated())
-				.andExpect(jsonPath("$.radiusKm").value(0.2));
-	}
-
-	@Test
-	@WithMockUser(username = "testcreator@streetask.com")
-	void create_shouldRejectPremiumRadiusOutOfRange() throws Exception {
-		testCreator.setPremiumActive(true);
-		userRepository.save(testCreator);
-
-		Map<String, Object> questionPayload = createValidQuestionPayload();
-		questionPayload.put("radiusKm", 2.0);
-		questionPayload.put("expiresAt", LocalDateTime.now().plusHours(3).toString());
-
-		mockMvc.perform(post("/api/v1/questions")
-				.contentType(APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(questionPayload)))
-				.andExpect(status().isBadRequest());
+				.andExpect(jsonPath("$.radiusKm").value(2.0));
 	}
 
 	@Test

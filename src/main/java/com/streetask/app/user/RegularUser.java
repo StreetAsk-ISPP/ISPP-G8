@@ -32,8 +32,6 @@ public class RegularUser extends User {
 
     private Float visibilityRadiusKm;
 
-    private Boolean premiumActive;
-
     private Boolean verified;
 
     @JsonIgnore

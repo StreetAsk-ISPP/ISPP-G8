@@ -1,7 +1,6 @@
 package com.streetask.app.question;
 
 import java.time.LocalDateTime;
-import java.time.Duration;
 import java.util.UUID;
 
 import org.springframework.beans.BeanUtils;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.streetask.app.exceptions.ResourceNotFoundException;
-import com.streetask.app.exceptions.UpperPlanFeatureException;
 import com.streetask.app.functionalities.notifications.events.QuestionCreatedEvent;
 import com.streetask.app.model.Question;
 import com.streetask.app.user.RegularUser;
@@ -27,13 +25,7 @@ import jakarta.validation.Valid;
 @Service
 public class QuestionService {
 
-	private static final float FREE_FIXED_RADIUS_KM = 0.5f;
-	private static final float PREMIUM_MIN_RADIUS_KM = 0.05f;
-	private static final float PREMIUM_MAX_RADIUS_KM = 1.0f;
-	private static final int FREE_DURATION_HOURS = 2;
-	private static final int PREMIUM_MIN_DURATION_HOURS = 1;
-	private static final int PREMIUM_MAX_DURATION_HOURS = 24;
-	private static final long PREMIUM_DURATION_CLOCK_DRIFT_SECONDS = 59L;
+	private static final float DEFAULT_QUESTION_RADIUS_KM = 1.0f;
 
 	private final QuestionRepository questionRepository;
 	private final RegularUserRepository regularUserRepository;
@@ -56,11 +48,10 @@ public class QuestionService {
 
 		RegularUser ru = regularUserRepository.findByEmail(email)
 				.orElseThrow(() -> new AccessDeniedException("Only regular users can create questions"));
-		boolean isPremium = Boolean.TRUE.equals(ru.getPremiumActive());
 
 		question.setCreator(ru);
-		question.setRadiusKm(resolveRadiusKm(question.getRadiusKm(), isPremium));
-		applyDefaults(question, isPremium);
+		question.setRadiusKm(resolveRadiusKm(question.getRadiusKm(), ru.getVisibilityRadiusKm()));
+		applyDefaults(question);
 		questionRepository.save(question);
 		eventPublisher.publishEvent(new QuestionCreatedEvent(question.getId()));
 		return question;
@@ -116,9 +107,7 @@ public class QuestionService {
 	public Question updateQuestion(@Valid Question question, UUID idToUpdate) {
 		Question toUpdate = findQuestion(idToUpdate);
 		BeanUtils.copyProperties(question, toUpdate, "id", "createdAt", "answerCount");
-		boolean isPremium = toUpdate.getCreator() != null
-				&& Boolean.TRUE.equals(toUpdate.getCreator().getPremiumActive());
-		applyDefaults(toUpdate, isPremium);
+		applyDefaults(toUpdate);
 		questionRepository.save(toUpdate);
 		return toUpdate;
 	}
@@ -130,20 +119,20 @@ public class QuestionService {
 	}
 
 	@Transactional
-	@Scheduled(cron = "0 * * * * *")
-	public void executeExpirationCron() {
-		LocalDateTime now = LocalDateTime.now();
-		Iterable<Question> expiredQuestions = questionRepository.findAllByActiveTrueAndExpiresAtBefore(now);
-
-		if (expiredQuestions.iterator().hasNext()) {
+    @Scheduled(cron = "0 * * * * *") 
+    public void executeExpirationCron() {
+        LocalDateTime now = LocalDateTime.now();
+        Iterable<Question> expiredQuestions = questionRepository.findAllByActiveTrueAndExpiresAtBefore(now);
+        
+        if (expiredQuestions.iterator().hasNext()) {
 			expiredQuestions.forEach(question -> {
 				question.setActive(false);
 			});
 			questionRepository.saveAll(expiredQuestions);
 		}
-	}
+    }
 
-	private void applyDefaults(Question question, boolean isPremium) {
+	private void applyDefaults(Question question) {
 		if (question.getCreatedAt() == null) {
 			question.setCreatedAt(LocalDateTime.now());
 		}
@@ -154,35 +143,19 @@ public class QuestionService {
 			question.setAnswerCount(0);
 		}
 		if (question.getExpiresAt() == null) {
-			question.setExpiresAt(question.getCreatedAt().plusHours(FREE_DURATION_HOURS));
+			question.setExpiresAt(question.getCreatedAt().plusHours(2));
 		}
-
-		if (!isPremium) {
-			question.setExpiresAt(question.getCreatedAt().plusHours(FREE_DURATION_HOURS));
-			return;
-		}
-
-		long durationSeconds = Duration.between(question.getCreatedAt(), question.getExpiresAt()).toSeconds();
-		long minDurationSeconds = (PREMIUM_MIN_DURATION_HOURS * 3600L) - PREMIUM_DURATION_CLOCK_DRIFT_SECONDS;
-		long maxDurationSeconds = PREMIUM_MAX_DURATION_HOURS * 3600L;
-		if (durationSeconds < minDurationSeconds || durationSeconds > maxDurationSeconds) {
-			throw new UpperPlanFeatureException("Premium question duration must be between 1h and 24h.");
-		}
+		// Para próximo sprint cuando pongamos planes de usuario regular, añadir: 
+		// if (question.getCreator().getPlan() == PREMIUM) {...}
 	}
 
-	private Float resolveRadiusKm(Float requestedRadiusKm, boolean isPremium) {
-		if (!isPremium) {
-			return FREE_FIXED_RADIUS_KM;
+	private Float resolveRadiusKm(Float requestedRadiusKm, Float userVisibilityRadiusKm) {
+		if (requestedRadiusKm != null && requestedRadiusKm > 0f) {
+			return requestedRadiusKm;
 		}
-
-		if (requestedRadiusKm == null) {
-			return FREE_FIXED_RADIUS_KM;
+		if (userVisibilityRadiusKm != null && userVisibilityRadiusKm > 0f) {
+			return userVisibilityRadiusKm;
 		}
-
-		if (requestedRadiusKm < PREMIUM_MIN_RADIUS_KM || requestedRadiusKm > PREMIUM_MAX_RADIUS_KM) {
-			throw new UpperPlanFeatureException("Premium question radius must be between 0.05km and 1km.");
-		}
-
-		return requestedRadiusKm;
+		return DEFAULT_QUESTION_RADIUS_KM;
 	}
 }

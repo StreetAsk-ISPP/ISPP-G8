@@ -30,7 +30,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.streetask.app.exceptions.ResourceNotFoundException;
-import com.streetask.app.exceptions.UpperPlanFeatureException;
 import com.streetask.app.functionalities.notifications.events.QuestionCreatedEvent;
 import com.streetask.app.model.Question;
 import com.streetask.app.user.RegularUser;
@@ -67,7 +66,6 @@ class QuestionServiceTest {
 		testCreator.setId(UUID.randomUUID());
 		testCreator.setEmail(TEST_EMAIL);
 		testCreator.setVisibilityRadiusKm(10.0f);
-		testCreator.setPremiumActive(false);
 
 		testQuestion = new Question();
 		testQuestion.setId(testId);
@@ -134,7 +132,7 @@ class QuestionServiceTest {
 	}
 
 	@Test
-	void saveQuestion_shouldKeepProvidedCreatedAtActiveAndAnswerCountForFreeUsers() {
+	void saveQuestion_shouldNotOverrideExistingValues() {
 		// Arrange
 		LocalDateTime specificCreatedAt = LocalDateTime.now().minusDays(1);
 		LocalDateTime specificExpiresAt = LocalDateTime.now().plusDays(1);
@@ -156,8 +154,7 @@ class QuestionServiceTest {
 		assertThat(saved.getCreatedAt()).isEqualTo(specificCreatedAt);
 		assertThat(saved.getActive()).isFalse();
 		assertThat(saved.getAnswerCount()).isEqualTo(5);
-		assertThat(saved.getExpiresAt()).isNotEqualTo(specificExpiresAt);
-		assertThat(saved.getExpiresAt()).isEqualTo(specificCreatedAt.plusHours(2));
+		assertThat(saved.getExpiresAt()).isEqualTo(specificExpiresAt);
 		assertThat(saved.getCreator()).isEqualTo(testCreator);
 	}
 
@@ -200,10 +197,10 @@ class QuestionServiceTest {
 	}
 
 	@Test
-	void saveQuestion_shouldForceFreeRadiusToHalfKmWhenRequestedRadiusIsProvided() {
+	void saveQuestion_shouldUseRequestedRadiusWhenProvided() {
 		Question newQuestion = new Question();
 		newQuestion.setTitle("Radius test");
-		newQuestion.setContent("Should ignore requested radius for free users");
+		newQuestion.setContent("Should use requested radius");
 		newQuestion.setRadiusKm(2.0f);
 
 		testCreator.setVisibilityRadiusKm(7.5f);
@@ -211,14 +208,14 @@ class QuestionServiceTest {
 
 		Question saved = questionService.saveQuestion(newQuestion);
 
-		assertThat(saved.getRadiusKm()).isEqualTo(0.5f);
+		assertThat(saved.getRadiusKm()).isEqualTo(2.0f);
 	}
 
 	@Test
-	void saveQuestion_shouldForceFreeRadiusToHalfKmWhenRequestedRadiusIsMissing() {
+	void saveQuestion_shouldUseCreatorVisibilityRadiusWhenRequestedRadiusIsMissing() {
 		Question newQuestion = new Question();
 		newQuestion.setTitle("Radius fallback");
-		newQuestion.setContent("Should use free fixed radius");
+		newQuestion.setContent("Should use creator visibility radius");
 		newQuestion.setRadiusKm(null);
 
 		testCreator.setVisibilityRadiusKm(3.0f);
@@ -226,14 +223,14 @@ class QuestionServiceTest {
 
 		Question saved = questionService.saveQuestion(newQuestion);
 
-		assertThat(saved.getRadiusKm()).isEqualTo(0.5f);
+		assertThat(saved.getRadiusKm()).isEqualTo(3.0f);
 	}
 
 	@Test
 	void saveQuestion_shouldSetDefaultRadiusWhenNoRadiusProvided() {
 		Question newQuestion = new Question();
 		newQuestion.setTitle("Default radius");
-		newQuestion.setContent("Should fallback to 0.5km");
+		newQuestion.setContent("Should fallback to 1km");
 		newQuestion.setRadiusKm(null);
 
 		testCreator.setVisibilityRadiusKm(null);
@@ -241,74 +238,7 @@ class QuestionServiceTest {
 
 		Question saved = questionService.saveQuestion(newQuestion);
 
-		assertThat(saved.getRadiusKm()).isEqualTo(0.5f);
-	}
-
-	@Test
-	void saveQuestion_shouldAllowPremiumRadiusAndDurationWithinRange() {
-		testCreator.setPremiumActive(true);
-
-		Question newQuestion = new Question();
-		newQuestion.setTitle("Premium question");
-		newQuestion.setContent("Premium controls");
-		newQuestion.setRadiusKm(0.2f);
-		newQuestion.setCreatedAt(LocalDateTime.now());
-		newQuestion.setExpiresAt(newQuestion.getCreatedAt().plusHours(5));
-
-		when(questionRepository.save(any(Question.class))).thenReturn(newQuestion);
-
-		Question saved = questionService.saveQuestion(newQuestion);
-
-		assertThat(saved.getRadiusKm()).isEqualTo(0.2f);
-		assertThat(saved.getExpiresAt()).isEqualTo(newQuestion.getCreatedAt().plusHours(5));
-	}
-
-	@Test
-	void saveQuestion_shouldAllowPremiumDurationAtOneHourWithSecondDrift() {
-		testCreator.setPremiumActive(true);
-
-		Question newQuestion = new Question();
-		newQuestion.setTitle("Premium 1h boundary");
-		newQuestion.setContent("One hour should be inclusive");
-		newQuestion.setRadiusKm(0.2f);
-		newQuestion.setCreatedAt(LocalDateTime.now());
-		newQuestion.setExpiresAt(newQuestion.getCreatedAt().plusHours(1).minusSeconds(1));
-
-		when(questionRepository.save(any(Question.class))).thenReturn(newQuestion);
-
-		Question saved = questionService.saveQuestion(newQuestion);
-
-		assertThat(saved.getExpiresAt()).isEqualTo(newQuestion.getCreatedAt().plusHours(1).minusSeconds(1));
-	}
-
-	@Test
-	void saveQuestion_shouldRejectPremiumRadiusOutsideAllowedRange() {
-		testCreator.setPremiumActive(true);
-
-		Question newQuestion = new Question();
-		newQuestion.setTitle("Premium radius");
-		newQuestion.setContent("Out of range radius");
-		newQuestion.setRadiusKm(2.5f);
-
-		assertThatThrownBy(() -> questionService.saveQuestion(newQuestion))
-				.isInstanceOf(UpperPlanFeatureException.class)
-				.hasMessageContaining("radius must be between 0.05km and 1km");
-	}
-
-	@Test
-	void saveQuestion_shouldRejectPremiumDurationOutsideAllowedRange() {
-		testCreator.setPremiumActive(true);
-
-		Question newQuestion = new Question();
-		newQuestion.setTitle("Premium duration");
-		newQuestion.setContent("Out of range duration");
-		newQuestion.setRadiusKm(0.5f);
-		newQuestion.setCreatedAt(LocalDateTime.now());
-		newQuestion.setExpiresAt(newQuestion.getCreatedAt().plusMinutes(30));
-
-		assertThatThrownBy(() -> questionService.saveQuestion(newQuestion))
-				.isInstanceOf(UpperPlanFeatureException.class)
-				.hasMessageContaining("duration must be between 1h and 24h");
+		assertThat(saved.getRadiusKm()).isEqualTo(1.0f);
 	}
 
 	// =============== FIND QUESTION TESTS ===============
