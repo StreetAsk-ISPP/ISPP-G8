@@ -10,7 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import com.streetask.app.auth.payload.request.BusinessSignupRequest;
 import com.streetask.app.auth.payload.request.CompleteSignupRequest;
+import com.streetask.app.auth.payload.request.ForgotPasswordRequest;
 import com.streetask.app.auth.payload.request.LoginRequest;
+import com.streetask.app.auth.payload.request.ResetPasswordRequest;
 import com.streetask.app.auth.payload.request.SignupRequest;
 import com.streetask.app.auth.payload.response.JwtResponse;
 import com.streetask.app.auth.payload.response.MessageResponse;
@@ -132,6 +134,24 @@ public class AuthController {
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().body(new MessageResponse("Error: User not found or already completed!"));
 		}
+	}
+
+	@PostMapping("/password/forgot")
+	public ResponseEntity<MessageResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+		authService.requestPasswordReset(request.getEmail());
+		return ResponseEntity.ok(new MessageResponse(
+				"If the email exists in our system, you will receive password reset instructions shortly."));
+	}
+
+	@PostMapping("/password/reset")
+	public ResponseEntity<MessageResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+		boolean updated = authService.resetPassword(request.getToken(), request.getNewPassword());
+		if (!updated) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+					.body(new MessageResponse("Error: Reset token is invalid or expired."));
+		}
+
+		return ResponseEntity.ok(new MessageResponse("Password updated successfully."));
 	}
 
 }

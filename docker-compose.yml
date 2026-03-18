@@ -45,6 +45,11 @@ services:
       MYSQL_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-streetask}?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true&serverTimezone=UTC
       MYSQL_USER: ${MYSQL_USER:-streetask}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-streetask}
+      BREVO_SMTP_HOST: ${BREVO_SMTP_HOST:-smtp-relay.brevo.com}
+      BREVO_SMTP_PORT: ${BREVO_SMTP_PORT:-587}
+      BREVO_SMTP_USERNAME: ${BREVO_SMTP_USERNAME:-}
+      BREVO_SMTP_PASSWORD: ${BREVO_SMTP_PASSWORD:-}
+      BREVO_MAIL_FROM: ${BREVO_MAIL_FROM:-streetask0@gmail.com}
     depends_on:  # Uncomment when using MySQL
       db:
         condition: service_healthy

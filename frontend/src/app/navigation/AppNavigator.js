@@ -5,6 +5,8 @@ import { ActivityIndicator, View } from 'react-native';
 import LoginScreen from '../../features/auth/ui/LoginScreen';
 import SignUpScreen from '../../features/auth/ui/SignUpScreen';
 import BusinessSignupScreen from '../../features/auth/ui/BusinessSignupScreen';
+import ForgotPasswordScreen from '../../features/auth/ui/ForgotPasswordScreen';
+import ResetPasswordScreen from '../../features/auth/ui/ResetPasswordScreen';
 import PaymentGatewayPlaceholderScreen from '../../features/payments/ui/PaymentGatewayPlaceholderScreen';
 import HomeScreen from '../../features/home/ui/HomeScreen';
 import CreateQuestionScreen from '../../features/questions/ui/CreateQuestionScreen';
@@ -39,6 +41,8 @@ export default function AppNavigator() {
                     <Stack.Screen name="Login" component={LoginScreen} />
                     <Stack.Screen name="SignUp" component={SignUpScreen} />
                     <Stack.Screen name="BusinessSignup" component={BusinessSignupScreen} />
+                    <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+                    <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
                     <Stack.Screen name="PaymentGatewayPlaceholder" component={PaymentGatewayPlaceholderScreen} />
                 </>
             ) : (
