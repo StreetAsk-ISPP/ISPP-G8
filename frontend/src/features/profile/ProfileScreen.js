@@ -80,21 +80,21 @@ export default function ProfileScreen({ navigation }) {
 
                 <TouchableOpacity
                     style={styles.menuItem}
-                    onPress={() => alert('Balance details (Coming Soon)')}>
+                    onPress={() => navigation.navigate('Balance')}>
                     <Ionicons name="wallet-outline" size={24} color="#fff" />
                     <Text style={styles.menuItemText}>Balance</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={styles.menuItem}
-                    onPress={() => alert('My purchases (Coming Soon)')}>
+                    onPress={() => navigation.navigate('MyPurchases')}>
                     <Ionicons name="cart-outline" size={24} color="#fff" />
                     <Text style={styles.menuItemText}>My purchases</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={styles.menuItem}
-                    onPress={() => alert('Settings (Coming Soon)')}>
+                    onPress={() => navigation.navigate('Settings')}>
                     <Ionicons name="settings-outline" size={24} color="#fff" />
                     <Text style={styles.menuItemText}>Settings</Text>
                 </TouchableOpacity>
