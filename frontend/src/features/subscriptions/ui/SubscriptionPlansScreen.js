@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+    Alert,
     SafeAreaView,
     View,
     Text,
@@ -9,7 +10,6 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { crossAlert } from '../../../shared/utils/crossAlert';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import apiClient from '../../../shared/services/http/apiClient';
 
@@ -60,7 +60,7 @@ export default function SubscriptionPlansScreen({ navigation }) {
     }, [user?.id]);
 
     const onChangePlan = () => {
-        crossAlert('Coming soon', 'Premium upgrade is coming soon.');
+        Alert.alert('Coming soon', 'Premium upgrade is coming soon.');
     };
 
     const isFreeCurrent = currentPlan === 'FREE';
