@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     View, Text, StyleSheet, SafeAreaView, FlatList, TextInput,
-    KeyboardAvoidingView, Platform, Pressable, ActivityIndicator,
+    KeyboardAvoidingView, Platform, Pressable, ActivityIndicator, Modal,
     TouchableOpacity, useWindowDimensions,
 } from 'react-native';
 import { theme } from '../../../shared/ui/theme/theme';
@@ -23,6 +23,12 @@ const parsePositiveNumber = (value) => {
     const num = Number(value);
     return Number.isFinite(num) && num > 0 ? num : null;
 };
+const REPORT_REASON_OPTIONS = [
+    { value: 'OFFENSIVE', label: 'Offensive' },
+    { value: 'SPAM', label: 'Spam' },
+    { value: 'IRRELEVANT', label: 'Irrelevant' },
+    { value: 'OTHER', label: 'Other' },
+];
 
 export default function QuestionThreadScreen({ route, navigation }) {
     const { questionId } = route?.params || {};
@@ -41,6 +47,12 @@ export default function QuestionThreadScreen({ route, navigation }) {
     const [pickMode, setPickMode] = useState(false);
     const [tempLat, setTempLat] = useState(null);
     const [tempLng, setTempLng] = useState(null);
+    const [reportModalVisible, setReportModalVisible] = useState(false);
+    const [reportTargetAnswerId, setReportTargetAnswerId] = useState(null);
+    const [reportReason, setReportReason] = useState('OFFENSIVE');
+    const [reportDescription, setReportDescription] = useState('');
+    const [reportSubmitting, setReportSubmitting] = useState(false);
+    const [reportedAnswers, setReportedAnswers] = useState({});
     const inputRef = useRef(null);
 
     const getMinutesAgo = (d) => d ? Math.floor((Date.now() - new Date(d)) / 60000) : 0;
@@ -312,6 +324,64 @@ export default function QuestionThreadScreen({ route, navigation }) {
         }
     };
 
+    const openReportModal = (answerId) => {
+        setReportTargetAnswerId(answerId);
+        setReportReason('OFFENSIVE');
+        setReportDescription('');
+        setReportModalVisible(true);
+    };
+
+    const closeReportModal = () => {
+        if (reportSubmitting) {
+            return;
+        }
+        setReportModalVisible(false);
+        setReportTargetAnswerId(null);
+        setReportDescription('');
+    };
+
+    const submitAnswerReport = async () => {
+        if (!reportTargetAnswerId || reportSubmitting) {
+            return;
+        }
+
+        try {
+            setReportSubmitting(true);
+            await apiClient.post('/api/v1/reports/answers', {
+                answerId: reportTargetAnswerId,
+                reason: reportReason,
+                description: reportDescription?.trim() || null,
+            });
+
+            setReportedAnswers((prev) => ({ ...prev, [reportTargetAnswerId]: true }));
+            setReportModalVisible(false);
+            setReportTargetAnswerId(null);
+            setReportDescription('');
+            Toast.show({
+                type: 'success',
+                text1: 'Report sent',
+                text2: 'Thanks for helping keep the community safe.',
+                position: 'top',
+            });
+        } catch (e) {
+            const status = e?.response?.status;
+            if (status === 409) {
+                setReportedAnswers((prev) => ({ ...prev, [reportTargetAnswerId]: true }));
+            }
+
+            Toast.show({
+                type: 'error',
+                text1: status === 409 ? 'Already reported' : 'Could not send report',
+                text2: status === 409
+                    ? 'You already reported this answer before.'
+                    : e?.response?.data?.message || e?.message || 'Try again in a few seconds.',
+                position: 'top',
+            });
+        } finally {
+            setReportSubmitting(false);
+        }
+    };
+
     const openMapPick = () => {
         setTempLat(userLocation?.latitude || null);
         setTempLng(userLocation?.longitude || null);
@@ -335,6 +405,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
     const renderAnswer = ({ item, index }) => {
         const v = myVotes[item.id];
         const isLast = index === answers.length - 1;
+        const alreadyReported = reportedAnswers[item.id] === true;
         return (
             <View style={styles.threadRow}>
                 {/* Thread line + dot */}
@@ -359,6 +430,20 @@ export default function QuestionThreadScreen({ route, navigation }) {
                         <Pressable onPress={() => vote(item.id, 'DISLIKE')} style={[styles.threadVoteBtn, v === 'LIKE' && { opacity: 0.3 }]}>
                             <Ionicons name={v === 'DISLIKE' ? 'thumbs-down' : 'thumbs-down-outline'} size={18} color={v === 'DISLIKE' ? '#ef4444' : '#9ca3af'} />
                             <Text style={[styles.threadVoteCount, v === 'DISLIKE' && { color: '#ef4444' }]}>{item.dislikes || 0}</Text>
+                        </Pressable>
+                        <Pressable
+                            onPress={() => openReportModal(item.id)}
+                            style={[styles.threadReportBtn, alreadyReported && styles.threadReportBtnDisabled]}
+                            disabled={alreadyReported}
+                        >
+                            <Ionicons
+                                name={alreadyReported ? 'flag' : 'flag-outline'}
+                                size={16}
+                                color={alreadyReported ? '#9ca3af' : '#b91c1c'}
+                            />
+                            <Text style={[styles.threadReportText, alreadyReported && styles.threadReportTextDisabled]}>
+                                {alreadyReported ? 'Reported' : 'Report'}
+                            </Text>
                         </Pressable>
                     </View>
                 </View>
@@ -505,6 +590,74 @@ export default function QuestionThreadScreen({ route, navigation }) {
                     )
                 )}
             </KeyboardAvoidingView>
+
+            <Modal
+                visible={reportModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={closeReportModal}
+            >
+                <View style={styles.reportModalOverlay}>
+                    <View style={styles.reportModalCard}>
+                        <Text style={styles.reportModalTitle}>Report answer</Text>
+                        <Text style={styles.reportModalSubtitle}>Why are you reporting this answer?</Text>
+
+                        <View style={styles.reportReasonWrap}>
+                            {REPORT_REASON_OPTIONS.map((option) => {
+                                const selected = reportReason === option.value;
+                                return (
+                                    <Pressable
+                                        key={option.value}
+                                        onPress={() => setReportReason(option.value)}
+                                        style={[styles.reportReasonChip, selected && styles.reportReasonChipSelected]}
+                                    >
+                                        <Text
+                                            style={[styles.reportReasonChipText, selected && styles.reportReasonChipTextSelected]}
+                                        >
+                                            {option.label}
+                                        </Text>
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+
+                        <Text style={styles.reportDescriptionLabel}>Description (optional)</Text>
+                        <TextInput
+                            value={reportDescription}
+                            onChangeText={setReportDescription}
+                            placeholder="Add more context to help moderation"
+                            placeholderTextColor="#9ca3af"
+                            multiline
+                            maxLength={500}
+                            style={styles.reportDescriptionInput}
+                            editable={!reportSubmitting}
+                        />
+
+                        <View style={styles.reportModalActions}>
+                            <TouchableOpacity
+                                onPress={closeReportModal}
+                                style={styles.reportCancelBtn}
+                                activeOpacity={0.85}
+                                disabled={reportSubmitting}
+                            >
+                                <Text style={styles.reportCancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={submitAnswerReport}
+                                style={[styles.reportSubmitBtn, reportSubmitting && styles.reportSubmitBtnDisabled]}
+                                activeOpacity={0.85}
+                                disabled={reportSubmitting}
+                            >
+                                {reportSubmitting ? (
+                                    <ActivityIndicator size="small" color="#fff" />
+                                ) : (
+                                    <Text style={styles.reportSubmitText}>Submit report</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -677,6 +830,134 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '600',
         color: '#6b7280',
+    },
+    threadReportBtn: {
+        marginLeft: 'auto',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 999,
+        backgroundColor: '#fef2f2',
+        borderWidth: 1,
+        borderColor: '#fecaca',
+    },
+    threadReportBtnDisabled: {
+        backgroundColor: '#f9fafb',
+        borderColor: '#e5e7eb',
+    },
+    threadReportText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#b91c1c',
+    },
+    threadReportTextDisabled: {
+        color: '#9ca3af',
+    },
+
+    reportModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(17, 24, 39, 0.5)',
+        justifyContent: 'center',
+        paddingHorizontal: 18,
+    },
+    reportModalCard: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 18,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+    },
+    reportModalTitle: {
+        fontSize: 19,
+        fontWeight: '800',
+        color: '#111827',
+    },
+    reportModalSubtitle: {
+        marginTop: 4,
+        fontSize: 13,
+        color: '#6b7280',
+    },
+    reportReasonWrap: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginTop: 14,
+    },
+    reportReasonChip: {
+        borderWidth: 1,
+        borderColor: '#d1d5db',
+        borderRadius: 999,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        backgroundColor: '#fff',
+    },
+    reportReasonChipSelected: {
+        backgroundColor: '#fee2e2',
+        borderColor: '#fca5a5',
+    },
+    reportReasonChipText: {
+        fontSize: 13,
+        color: '#374151',
+        fontWeight: '700',
+    },
+    reportReasonChipTextSelected: {
+        color: '#991b1b',
+    },
+    reportDescriptionLabel: {
+        marginTop: 16,
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#374151',
+    },
+    reportDescriptionInput: {
+        marginTop: 8,
+        minHeight: 86,
+        borderWidth: 1,
+        borderColor: '#d1d5db',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        textAlignVertical: 'top',
+        fontSize: 14,
+        color: '#111827',
+        backgroundColor: '#f9fafb',
+        outlineStyle: 'none',
+    },
+    reportModalActions: {
+        marginTop: 16,
+        flexDirection: 'row',
+        gap: 10,
+    },
+    reportCancelBtn: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: '#d1d5db',
+        borderRadius: 12,
+        paddingVertical: 12,
+        alignItems: 'center',
+        backgroundColor: '#fff',
+    },
+    reportCancelText: {
+        color: '#374151',
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    reportSubmitBtn: {
+        flex: 1,
+        borderRadius: 12,
+        paddingVertical: 12,
+        alignItems: 'center',
+        backgroundColor: '#b91c1c',
+    },
+    reportSubmitBtnDisabled: {
+        opacity: 0.75,
+    },
+    reportSubmitText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '800',
     },
 
     /* ── Composer ── */
