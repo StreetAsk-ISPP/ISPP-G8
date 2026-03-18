@@ -16,7 +16,6 @@ import com.streetask.app.answer.AnswerRepository;
 import com.streetask.app.exceptions.ResourceNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +32,7 @@ public class UserService {
 
     private static final int LIKE_WEIGHT = 2;
     private static final int DISLIKE_WEIGHT = 1;
+
 
     @Autowired
     public UserService(UserRepository userRepository, AnswerRepository answerRepository,
@@ -104,11 +104,11 @@ public class UserService {
         // BeanUtils copiará automáticamente bio y profilePictureUrl si vienen en el objeto 'user'
         BeanUtils.copyProperties(user, toUpdate, "id");
 
-        if (user.getPassword() == null || user.getPassword().isBlank()) {
-            toUpdate.setPassword(previousPassword);
-        } else {
-            toUpdate.setPassword(getPasswordEncoder().encode(user.getPassword()));
-        }
+		if (user.getPassword() == null || user.getPassword().isBlank()) {
+			toUpdate.setPassword(previousPassword);
+		} else {
+			toUpdate.setPassword(getPasswordEncoder().encode(user.getPassword()));
+		}
 
         userRepository.save(toUpdate);
         return enrichReputation(toUpdate);
