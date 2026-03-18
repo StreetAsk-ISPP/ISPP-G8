@@ -262,6 +262,76 @@ class AnswerServiceTest {
     }
 
     @Test
+    void testFindByQuestionSortedDefaultsToTopWhenSortIsNull() {
+        List<Answer> answers = List.of(answer);
+        when(answerRepository.findByQuestionIdOrderByUpvotesDescCreatedAtDesc(questionId)).thenReturn(answers);
+
+        List<Answer> result = answerService.findByQuestionSorted(questionId, null, null, null);
+
+        assertSame(answers, result);
+        verify(answerRepository, times(1)).findByQuestionIdOrderByUpvotesDescCreatedAtDesc(questionId);
+        verify(answerRepository, never()).findByQuestionIdOrderByCreatedAtDesc(questionId);
+    }
+
+    @Test
+    void testFindByQuestionSortedDateDescWithoutPagination() {
+        List<Answer> answers = List.of(answer);
+        when(answerRepository.findByQuestionIdOrderByCreatedAtDesc(questionId)).thenReturn(answers);
+
+        List<Answer> result = answerService.findByQuestionSorted(questionId, "date_desc", null, null);
+
+        assertSame(answers, result);
+        verify(answerRepository, times(1)).findByQuestionIdOrderByCreatedAtDesc(questionId);
+        verify(answerRepository, never()).findByQuestionIdOrderByUpvotesDescCreatedAtDesc(questionId);
+    }
+
+    @Test
+    void testFindByQuestionSortedDefaultsToTopForInvalidSort() {
+        List<Answer> answers = List.of(answer);
+        when(answerRepository.findByQuestionIdOrderByUpvotesDescCreatedAtDesc(questionId)).thenReturn(answers);
+
+        List<Answer> result = answerService.findByQuestionSorted(questionId, "invalid_sort", null, null);
+
+        assertSame(answers, result);
+        verify(answerRepository, times(1)).findByQuestionIdOrderByUpvotesDescCreatedAtDesc(questionId);
+    }
+
+    @Test
+    void testFindByQuestionSortedWithPaginationUsesTopOrder() {
+        List<Answer> answers = List.of(answer);
+        when(answerRepository.findByQuestionIdOrderByUpvotesDescCreatedAtDesc(eq(questionId), any()))
+                .thenReturn(answers);
+
+        List<Answer> result = answerService.findByQuestionSorted(questionId, "likes_desc", 0, 10);
+
+        assertSame(answers, result);
+        verify(answerRepository, times(1)).findByQuestionIdOrderByUpvotesDescCreatedAtDesc(eq(questionId), any());
+        verify(answerRepository, never()).findByQuestionIdOrderByCreatedAtDesc(eq(questionId), any());
+    }
+
+    @Test
+    void testFindByQuestionSortedWithPaginationUsesDateOrder() {
+        List<Answer> answers = List.of(answer);
+        when(answerRepository.findByQuestionIdOrderByCreatedAtDesc(eq(questionId), any()))
+                .thenReturn(answers);
+
+        List<Answer> result = answerService.findByQuestionSorted(questionId, "date_desc", 1, 5);
+
+        assertSame(answers, result);
+        verify(answerRepository, times(1)).findByQuestionIdOrderByCreatedAtDesc(eq(questionId), any());
+        verify(answerRepository, never()).findByQuestionIdOrderByUpvotesDescCreatedAtDesc(eq(questionId), any());
+    }
+
+    @Test
+    void testFindByQuestionSortedWithInvalidSizeReturnsEmpty() {
+        List<Answer> result = answerService.findByQuestionSorted(questionId, "likes_desc", 0, 0);
+
+        assertTrue(result.isEmpty());
+        verify(answerRepository, never()).findByQuestionIdOrderByUpvotesDescCreatedAtDesc(eq(questionId), any());
+        verify(answerRepository, never()).findByQuestionIdOrderByCreatedAtDesc(eq(questionId), any());
+    }
+
+    @Test
     void testFindByUserDelegatesToRepository() {
         List<Answer> answers = List.of(answer);
         when(answerRepository.findByUserId(userId)).thenReturn(answers);
