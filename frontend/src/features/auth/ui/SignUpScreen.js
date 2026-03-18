@@ -20,12 +20,15 @@ export default function SignUpScreen({ navigation }) {
 	const [email, setEmail] = useState('');
 	const [userName, setUserName] = useState('');
 	const [password, setPassword] = useState('');
+	const [confirmPassword, setConfirmPassword] = useState('');
+	const [showPassword, setShowPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [error, setError] = useState('');
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [focusedField, setFocusedField] = useState(null);
 
 	const validateForm = () => {
-		if (!firstName.trim() || !lastName.trim() || !email.trim() || !userName.trim() || !password.trim()) {
+		if (!firstName.trim() || !lastName.trim() || !email.trim() || !userName.trim() || !password.trim() || !confirmPassword.trim()) {
 			setError('Please fill in all required fields.');
 			return false;
 		}
@@ -36,6 +39,10 @@ export default function SignUpScreen({ navigation }) {
 		}
 		if (password.length < 6) {
 			setError('Password must be at least 6 characters long.');
+			return false;
+		}
+		if (password.localeCompare(confirmPassword) !== 0) {
+			setError('Passwords do not match.');
 			return false;
 		}
 		return true;
@@ -91,7 +98,7 @@ export default function SignUpScreen({ navigation }) {
 				<TextInput
 					value={value}
 					onChangeText={onChangeText}
-					secureTextEntry={opts.secure}
+					secureTextEntry={opts.secure && !opts.show}
 					keyboardType={opts.keyboardType}
 					autoCapitalize={opts.autoCapitalize || 'sentences'}
 					placeholder={opts.placeholder || ''}
@@ -100,6 +107,20 @@ export default function SignUpScreen({ navigation }) {
 					onFocus={() => setFocusedField(fieldKey)}
 					onBlur={() => setFocusedField(null)}
 				/>
+				{opts.secure && (
+					<TouchableOpacity
+						onPress={opts.onToggleShow}
+						activeOpacity={0.7}
+						accessibilityRole="button"
+						accessibilityLabel={opts.show ? 'Hide password' : 'Show password'}
+					>
+						<Ionicons
+							name={opts.show ? 'eye-off-outline' : 'eye-outline'}
+							size={20}
+							color="#6b7280"
+						/>
+					</TouchableOpacity>
+				)}
 			</View>
 		</View>
 	);
@@ -133,7 +154,20 @@ export default function SignUpScreen({ navigation }) {
 					{renderInput('Last Name *', lastName, setLastName, 'ln', { icon: 'person-outline', placeholder: 'Doe' })}
 					{renderInput('Email *', email, setEmail, 'em', { icon: 'mail-outline', keyboardType: 'email-address', autoCapitalize: 'none', placeholder: 'you@example.com' })}
 					{renderInput('Username *', userName, setUserName, 'un', { icon: 'at-outline', autoCapitalize: 'none', placeholder: 'johndoe' })}
-					{renderInput('Password *', password, setPassword, 'pw', { icon: 'lock-closed-outline', secure: true, placeholder: '********' })}
+					{renderInput('Password *', password, setPassword, 'pw', {
+						icon: 'lock-closed-outline',
+						secure: true,
+						show: showPassword,
+						onToggleShow: () => setShowPassword((prev) => !prev),
+						placeholder: '********',
+					})}
+					{renderInput('Confirm Password *', confirmPassword, setConfirmPassword, 'cpw', {
+						icon: 'lock-closed-outline',
+						secure: true,
+						show: showConfirmPassword,
+						onToggleShow: () => setShowConfirmPassword((prev) => !prev),
+						placeholder: '********',
+					})}
 
 					{error ? <Text style={styles.errorText}>{error}</Text> : null}
 

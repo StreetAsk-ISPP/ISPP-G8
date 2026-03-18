@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import apiClient from '../../../shared/services/http/apiClient';
-import { crossAlert } from '../../../shared/utils/crossAlert';
+import Toast from 'react-native-toast-message';
 import MapPickerWeb from '../../home/ui/components/MapPickerWeb';
 import { useAuth } from '../../../app/providers/AuthProvider';
 
@@ -89,10 +89,20 @@ export default function CreateQuestionScreen({ navigation }) {
     setIsSubmitting(true);
     try {
       await apiClient.post('/api/v1/questions', payload);
-      crossAlert('Success', 'Question created!');
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Question created!',
+        position: 'top',
+      });
       navigation.goBack();
     } catch (e) {
-      crossAlert('Error', e.response?.data?.message || e.message);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: e.response?.data?.message || e.message,
+        position: 'top',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -192,7 +202,12 @@ export default function CreateQuestionScreen({ navigation }) {
   const searchAddress = async () => {
     const q = place.trim();
     if (!q) {
-      crossAlert('Address is missing', 'Enter a street or place name to search.');
+      Toast.show({
+        type: 'info',
+        text1: 'Falta la dirección',
+        text2: 'Ingresa una calle o lugar para buscar.',
+        position: 'top'
+      });
       return;
     }
 
@@ -211,7 +226,13 @@ export default function CreateQuestionScreen({ navigation }) {
       }));
       setSearchResults(items);
       if (items.length === 0) {
-        crossAlert('No results', 'No addresses found. Try being more specific.');
+        Toast.show({
+          type: 'info',
+          text1: 'Sin resultados',
+          text2: 'No se encontraron direcciones. Intenta ser más específico.',
+          position: 'top'
+        });
+
       }
       if (items.length === 1) {
         setLatitude(items[0].lat);
@@ -221,7 +242,12 @@ export default function CreateQuestionScreen({ navigation }) {
       }
     } catch (e) {
       console.error('Nominatim search error:', e);
-      crossAlert('Error', 'The address could not be found. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error en la búsqueda',
+        text2: 'No se pudo encontrar la dirección. Por favor, inténtalo de nuevo.',
+        position: 'top'
+      });
     } finally {
       setSearching(false);
     }
@@ -245,7 +271,12 @@ export default function CreateQuestionScreen({ navigation }) {
 
   const confirmMapPick = () => {
     if (typeof tempLat !== 'number' || typeof tempLng !== 'number') {
-      crossAlert('Pick a point', 'Click on the map to choose a location.');
+      Toast.show({
+        type: 'info',
+        text1: 'Selecciona un punto',
+        text2: 'Toca en el mapa para elegir una ubicación.',
+        position: 'top'
+      });
       return;
     }
     setLatitude(tempLat);
@@ -283,13 +314,23 @@ export default function CreateQuestionScreen({ navigation }) {
     if (isPremium) {
       const premiumRadiusMeters = parseRadiusMeters(radiusInput);
       if (!isPremiumRadiusValid(premiumRadiusMeters)) {
-        crossAlert('Invalid radius', 'Premium radius must be between 50 m and 1000 m.');
+        Toast.show({
+          type: 'error',
+          text1: 'Invalid radius',
+          text2: 'Premium radius must be between 50 m and 1000 m.',
+          position: 'top',
+        });
         return;
       }
 
       const premiumHours = parseHours(hoursInput);
       if (!isPremiumHoursValid(premiumHours)) {
-        crossAlert('Invalid duration', 'Premium duration must be between 1h and 24h.');
+        Toast.show({
+          type: 'error',
+          text1: 'Invalid duration',
+          text2: 'Premium duration must be between 1h and 24h.',
+          position: 'top',
+        });
         return;
       }
 

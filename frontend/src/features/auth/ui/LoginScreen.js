@@ -15,6 +15,7 @@ export default function LoginScreen({ navigation }) {
 
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [focusedField, setFocusedField] = useState(null);
@@ -31,11 +32,21 @@ export default function LoginScreen({ navigation }) {
                 email: identifier,
                 password,
             });
-            await login(response.data.token, {
+            const user = {
                 id: response.data.id,
                 username: response.data.username,
                 roles: response.data.roles,
-            });
+            };
+
+            await login(response.data.token, user);
+
+            // Navigate based on role
+            /*
+            if (user.roles && user.roles.includes('ADMIN')) {
+                // The AppNavigator will handle the initial route based on the updated auth state
+                // But we can force a check if needed or just let the state update trigger the re-render of navigator
+            }
+            */
         } catch {
             setError('Login failed. Please check your credentials.');
         } finally {
@@ -87,13 +98,25 @@ export default function LoginScreen({ navigation }) {
                         <TextInput
                             value={password}
                             onChangeText={setPassword}
-                            secureTextEntry
+                            secureTextEntry={!showPassword}
                             placeholder="********"
                             placeholderTextColor="#c0c5ce"
                             style={styles.input}
                             onFocus={() => setFocusedField('pw')}
                             onBlur={() => setFocusedField(null)}
                         />
+                        <TouchableOpacity
+                            onPress={() => setShowPassword((prev) => !prev)}
+                            activeOpacity={0.7}
+                            accessibilityRole="button"
+                            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                        >
+                            <Ionicons
+                                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                                size={20}
+                                color="#6b7280"
+                            />
+                        </TouchableOpacity>
                     </View>
 
                     {error ? <Text style={styles.errorText}>{error}</Text> : null}

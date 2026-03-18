@@ -20,6 +20,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -40,6 +41,9 @@ class UserServiceTest {
 
     @Mock
     private QuestionRepository questionRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -334,6 +338,64 @@ class UserServiceTest {
         assertEquals(4, resultArray[0].getReputation());
         assertEquals(0, resultArray[1].getReputation());
         verify(answerRepository).aggregateVotesByUserIds(anyCollection());
+    }
+
+    @Test
+    void findUserById_shouldApplyFormulaLikesTimesTwoMinusDislikes() {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        user.setId(userId);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(answerRepository.aggregateVotesByUserIds(eq(List.of(userId))))
+                .thenReturn(Collections.singletonList(new Object[] { userId, 9L, 4L }));
+
+        User result = userService.findUser(userId);
+
+        assertEquals(14, result.getReputation());
+        verify(answerRepository).aggregateVotesByUserIds(eq(List.of(userId)));
+    }
+
+    @Test
+    void findAll_shouldHandlePositiveAndNegativeReputationScenarios() {
+        UUID positiveUserId = UUID.randomUUID();
+        UUID negativeUserId = UUID.randomUUID();
+
+        User positiveUser = new User();
+        positiveUser.setId(positiveUserId);
+
+        User negativeUser = new User();
+        negativeUser.setId(negativeUserId);
+
+        when(userRepository.findAll()).thenReturn(Arrays.asList(positiveUser, negativeUser));
+        when(answerRepository.aggregateVotesByUserIds(anyCollection())).thenReturn(Arrays.asList(
+                new Object[] { positiveUserId, 7L, 1L },
+                new Object[] { negativeUserId, 1L, 6L }));
+
+        List<User> result = (List<User>) userService.findAll();
+
+        assertEquals(13, result.get(0).getReputation());
+        assertEquals(-4, result.get(1).getReputation());
+    }
+
+    @Test
+    void findUserById_shouldRecalculateReputationConsistentlyWhenAggregatesChange() {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        user.setId(userId);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(answerRepository.aggregateVotesByUserIds(eq(List.of(userId))))
+                .thenReturn(Collections.singletonList(new Object[] { userId, 3L, 1L }))
+                .thenReturn(Collections.singletonList(new Object[] { userId, 4L, 2L }));
+
+        User firstRead = userService.findUser(userId);
+        int firstReputation = firstRead.getReputation();
+        User secondRead = userService.findUser(userId);
+
+        assertEquals(5, firstReputation);
+        assertEquals(6, secondRead.getReputation());
+        verify(answerRepository, times(2)).aggregateVotesByUserIds(eq(List.of(userId)));
     }
 
     // ================= USER STATS =================
