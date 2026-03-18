@@ -2,12 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../app/providers/AuthProvider';
+import ConfirmationModal from '../../shared/components/ConfirmationModal';
 import apiClient from '../../shared/services/http/apiClient';
 
 export default function ProfileScreen({ navigation }) {
     const { user, logout } = useAuth();
 
     const [stats, setStats] = useState({ questions: 0, answers: 0, rating: 0 });
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+    const handleLogoutConfirm = async () => {
+        setShowLogoutModal(false);
+        await logout();
+    };
 
     useEffect(() => {
         if (!user?.id) return;
@@ -101,17 +108,27 @@ export default function ProfileScreen({ navigation }) {
 
                 <TouchableOpacity
                     style={[styles.menuItem, { backgroundColor: '#4b5563', marginTop: 10 }]}
-                    onPress={logout}>
+                    onPress={() => setShowLogoutModal(true)}>
                     <Ionicons name="log-out-outline" size={24} color="#fff" />
                     <Text style={styles.menuItemText}>Log out</Text>
                 </TouchableOpacity>
+
 
                 <TouchableOpacity style={[styles.menuItem, { marginTop: 20, backgroundColor: '#fee2e2' }]}>
                     <Ionicons name="trash-outline" size={24} color="#ef4444" />
                     <Text style={[styles.menuItemText, { color: '#ef4444' }]}>Delete my account</Text>
                 </TouchableOpacity>
             </ScrollView>
-        </SafeAreaView>
+            <ConfirmationModal
+                visible={showLogoutModal}
+                title="Log out?"
+                message="Are you sure you want to log out?"
+                confirmText="Log out"
+                cancelText="Go Back"
+                onConfirm={handleLogoutConfirm}
+                onCancel={() => setShowLogoutModal(false)}
+                confirmButtonColor="danger"
+            />        </SafeAreaView>
     );
 }
 

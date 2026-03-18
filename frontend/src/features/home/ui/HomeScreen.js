@@ -20,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import MapComponent from './components/MapComponent';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useNotifications } from '../../../app/providers/NotificationProvider';
+import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import { APP_CONFIG } from '../../../app/config/config';
 import apiClient from '../../../shared/services/http/apiClient';
 import { bootstrapWebPushNotifications } from '../../../shared/services/notifications/webPushBootstrap';
@@ -44,6 +45,12 @@ export default function HomeScreen({ navigation }) {
     const [sendingFeedback, setSendingFeedback] = useState(false);
     const [feedbackSuccessVisible, setFeedbackSuccessVisible] = useState(false);
     const [feedbackSuccessMessage, setFeedbackSuccessMessage] = useState('');
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+    const handleLogoutConfirm = async () => {
+        setShowLogoutModal(false);
+        await logout();
+    };
 
     const pushBootstrappedRef = useRef(false);
     const pushSubscriptionRef = useRef(null);
@@ -284,7 +291,7 @@ export default function HomeScreen({ navigation }) {
 
                             <TouchableOpacity
                                 style={[styles.iconBtn, styles.logoutBtn]}
-                                onPress={logout}
+                                onPress={() => setShowLogoutModal(true)}
                                 activeOpacity={0.7}
                             >
                                 <Ionicons name="log-out-outline" size={20} color="#ef4444" />
@@ -519,6 +526,17 @@ export default function HomeScreen({ navigation }) {
                     </Pressable>
                 </Pressable>
             </Modal>
+
+            <ConfirmationModal
+                visible={showLogoutModal}
+                title="Log out?"
+                message="Are you sure you want to log out?"
+                confirmText="Log out"
+                cancelText="Go Back"
+                onConfirm={handleLogoutConfirm}
+                onCancel={() => setShowLogoutModal(false)}
+                confirmButtonColor="danger"
+            />
         </>
     );
 }
