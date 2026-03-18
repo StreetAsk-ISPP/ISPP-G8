@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
@@ -14,12 +14,14 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 
 /**
- * Accepts multiple datetime payload formats and normalizes them to LocalDateTime.
+ * Accepts multiple datetime payload formats and normalizes them to
+ * LocalDateTime.
  */
 public class FlexibleLocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
 
     private static final DateTimeFormatter SPACE_SEPARATED_SECONDS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final DateTimeFormatter SPACE_SEPARATED_MILLIS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+    private static final DateTimeFormatter SPACE_SEPARATED_MILLIS = DateTimeFormatter
+            .ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
     @Override
     public LocalDateTime deserialize(JsonParser parser, DeserializationContext context) throws IOException {
@@ -39,12 +41,16 @@ public class FlexibleLocalDateTimeDeserializer extends JsonDeserializer<LocalDat
         }
 
         try {
-            return OffsetDateTime.parse(value, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toLocalDateTime();
+            return OffsetDateTime.parse(value, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                    .atZoneSameInstant(ZoneId.systemDefault())
+                    .toLocalDateTime();
         } catch (DateTimeParseException ignored) {
         }
 
         try {
-            return Instant.parse(value).atOffset(ZoneOffset.UTC).toLocalDateTime();
+            return Instant.parse(value)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
         } catch (DateTimeParseException ignored) {
         }
 
