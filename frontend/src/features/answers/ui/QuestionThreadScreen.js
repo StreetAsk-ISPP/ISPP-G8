@@ -32,7 +32,7 @@ const REPORT_REASON_OPTIONS = [
 
 export default function QuestionThreadScreen({ route, navigation }) {
     const { questionId } = route?.params || {};
-    const { user } = useAuth();
+    const { user, isAuthenticated } = useAuth();
     const { width } = useWindowDimensions();
     const isNarrow = width < 500;
 
@@ -53,6 +53,11 @@ export default function QuestionThreadScreen({ route, navigation }) {
     const [reportDescription, setReportDescription] = useState('');
     const [reportSubmitting, setReportSubmitting] = useState(false);
     const [reportedAnswers, setReportedAnswers] = useState({});
+    const [questionReportModalVisible, setQuestionReportModalVisible] = useState(false);
+    const [questionReportReason, setQuestionReportReason] = useState('OFFENSIVE');
+    const [questionReportDescription, setQuestionReportDescription] = useState('');
+    const [questionReportSubmitting, setQuestionReportSubmitting] = useState(false);
+    const [questionReported, setQuestionReported] = useState(false);
     const inputRef = useRef(null);
 
     const getMinutesAgo = (d) => d ? Math.floor((Date.now() - new Date(d)) / 60000) : 0;
@@ -159,6 +164,14 @@ export default function QuestionThreadScreen({ route, navigation }) {
             }
         })();
     }, [questionId, pickColor]);
+
+    useEffect(() => {
+        setQuestionReported(false);
+        setQuestionReportModalVisible(false);
+        setQuestionReportReason('OFFENSIVE');
+        setQuestionReportDescription('');
+        setQuestionReportSubmitting(false);
+    }, [questionId]);
 
     const [timeLeft, setTimeLeft] = useState(0);
     useEffect(() => {
@@ -382,6 +395,84 @@ export default function QuestionThreadScreen({ route, navigation }) {
         }
     };
 
+    const openQuestionReportModal = () => {
+        if (questionReportSubmitting || questionReported) {
+            return;
+        }
+        setQuestionReportReason('OFFENSIVE');
+        setQuestionReportDescription('');
+        setQuestionReportModalVisible(true);
+    };
+
+    const closeQuestionReportModal = () => {
+        if (questionReportSubmitting) {
+            return;
+        }
+        setQuestionReportModalVisible(false);
+        setQuestionReportDescription('');
+    };
+
+    const submitQuestionReport = async () => {
+        if (!question?.id || questionReportSubmitting || questionReported) {
+            return;
+        }
+
+        if (!questionReportReason) {
+            Toast.show({
+                type: 'error',
+                text1: 'Motivo requerido',
+                text2: 'Selecciona un motivo para reportar la pregunta.',
+                position: 'top',
+            });
+            return;
+        }
+
+        if (questionReportDescription?.length > 500) {
+            Toast.show({
+                type: 'error',
+                text1: 'Descripcion demasiado larga',
+                text2: 'La descripcion no puede superar 500 caracteres.',
+                position: 'top',
+            });
+            return;
+        }
+
+        try {
+            setQuestionReportSubmitting(true);
+            await apiClient.post('/api/v1/reports/questions', {
+                questionId: question.id,
+                reason: questionReportReason,
+                description: questionReportDescription?.trim() || null,
+            });
+
+            setQuestionReported(true);
+            setQuestionReportModalVisible(false);
+            setQuestionReportDescription('');
+            Toast.show({
+                type: 'success',
+                text1: 'Reporte enviado correctamente',
+                text2: 'Gracias por ayudar a mantener la comunidad segura.',
+                position: 'top',
+            });
+        } catch (e) {
+            const status = e?.response?.status;
+            if (status === 409) {
+                setQuestionReported(true);
+            }
+
+            Toast.show({
+                type: 'error',
+                text1: status === 409 ? 'Ya has reportado esta pregunta' : 'No se pudo enviar el reporte',
+                text2: status === 409
+                    ? 'Ya habias reportado esta pregunta antes.'
+                    : e?.response?.data?.message || e?.message || 'Intentalo de nuevo en unos segundos.',
+                position: 'top',
+            });
+        } finally {
+            setQuestionReportSubmitting(false);
+        }
+    };
+
     const openMapPick = () => {
         setTempLat(userLocation?.latitude || null);
         setTempLng(userLocation?.longitude || null);
@@ -539,6 +630,26 @@ export default function QuestionThreadScreen({ route, navigation }) {
                                     <Text style={styles.chipVal}>{formatHms(timeLeft)}</Text>
                                 </View>
                             </View>
+
+                            {isAuthenticated && (
+                                <View style={styles.questionReportRow}>
+                                    <TouchableOpacity
+                                        onPress={openQuestionReportModal}
+                                        style={[styles.questionReportBtn, questionReported && styles.questionReportBtnDisabled]}
+                                        activeOpacity={0.85}
+                                        disabled={questionReported || questionReportSubmitting}
+                                    >
+                                        <Ionicons
+                                            name={questionReported ? 'flag' : 'flag-outline'}
+                                            size={16}
+                                            color={questionReported ? '#9ca3af' : '#b91c1c'}
+                                        />
+                                        <Text style={[styles.questionReportText, questionReported && styles.questionReportTextDisabled]}>
+                                            {questionReported ? 'Reportado' : 'Reportar'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
                         </View>
 
                         {/* ── Answers ── */}
@@ -590,6 +701,74 @@ export default function QuestionThreadScreen({ route, navigation }) {
                     )
                 )}
             </KeyboardAvoidingView>
+
+            <Modal
+                visible={questionReportModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={closeQuestionReportModal}
+            >
+                <View style={styles.reportModalOverlay}>
+                    <View style={styles.reportModalCard}>
+                        <Text style={styles.reportModalTitle}>Report question</Text>
+                        <Text style={styles.reportModalSubtitle}>Why are you reporting this question?</Text>
+
+                        <View style={styles.reportReasonWrap}>
+                            {REPORT_REASON_OPTIONS.map((option) => {
+                                const selected = questionReportReason === option.value;
+                                return (
+                                    <Pressable
+                                        key={option.value}
+                                        onPress={() => setQuestionReportReason(option.value)}
+                                        style={[styles.reportReasonChip, selected && styles.reportReasonChipSelected]}
+                                    >
+                                        <Text
+                                            style={[styles.reportReasonChipText, selected && styles.reportReasonChipTextSelected]}
+                                        >
+                                            {option.label}
+                                        </Text>
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+
+                        <Text style={styles.reportDescriptionLabel}>Description (optional)</Text>
+                        <TextInput
+                            value={questionReportDescription}
+                            onChangeText={setQuestionReportDescription}
+                            placeholder="Add more context to help moderation"
+                            placeholderTextColor="#9ca3af"
+                            multiline
+                            maxLength={500}
+                            style={styles.reportDescriptionInput}
+                            editable={!questionReportSubmitting}
+                        />
+
+                        <View style={styles.reportModalActions}>
+                            <TouchableOpacity
+                                onPress={closeQuestionReportModal}
+                                style={styles.reportCancelBtn}
+                                activeOpacity={0.85}
+                                disabled={questionReportSubmitting}
+                            >
+                                <Text style={styles.reportCancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={submitQuestionReport}
+                                style={[styles.reportSubmitBtn, questionReportSubmitting && styles.reportSubmitBtnDisabled]}
+                                activeOpacity={0.85}
+                                disabled={questionReportSubmitting}
+                            >
+                                {questionReportSubmitting ? (
+                                    <ActivityIndicator size="small" color="#fff" />
+                                ) : (
+                                    <Text style={styles.reportSubmitText}>Submit report</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
 
             <Modal
                 visible={reportModalVisible}
@@ -741,6 +920,33 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '700',
         color: '#374151',
+    },
+    questionReportRow: {
+        marginTop: 12,
+        alignItems: 'flex-start',
+    },
+    questionReportBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: '#fecaca',
+        backgroundColor: '#fff1f2',
+    },
+    questionReportBtnDisabled: {
+        borderColor: '#e5e7eb',
+        backgroundColor: '#f3f4f6',
+    },
+    questionReportText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#b91c1c',
+    },
+    questionReportTextDisabled: {
+        color: '#9ca3af',
     },
 
     /* ── Answer List (Forum Thread) ── */
