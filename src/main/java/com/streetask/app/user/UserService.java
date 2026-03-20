@@ -7,20 +7,21 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
 
-import jakarta.validation.Valid;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import com.streetask.app.answer.AnswerRepository;
-import com.streetask.app.exceptions.ResourceNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.streetask.app.question.QuestionRepository;
+
+import com.streetask.app.answer.AnswerRepository;
+import com.streetask.app.exceptions.ResourceNotFoundException;
 import com.streetask.app.model.Question;
+import com.streetask.app.question.QuestionRepository;
+
+import jakarta.validation.Valid;
 
 @Service
 public class UserService {
@@ -96,7 +97,7 @@ public class UserService {
 
 		String previousPassword = toUpdate.getPassword();
 
-		BeanUtils.copyProperties(user, toUpdate, "id");
+		BeanUtils.copyProperties(user, toUpdate, "id", "authority", "accountType", "createdAt", "lastLogin", "active");
 
 		if (user.getPassword() == null || user.getPassword().isBlank()) {
 			toUpdate.setPassword(previousPassword);
@@ -159,7 +160,6 @@ public class UserService {
 
 		long questionsCount = questionRepository.countByCreatorId(userId);
 		long answersCount = answerRepository.countByUserId(userId);
-
 
 		// Aggregate likes (upvotes) and dislikes (downvotes) for all answers by this
 		// user
