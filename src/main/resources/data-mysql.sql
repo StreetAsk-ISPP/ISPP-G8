@@ -72,3 +72,48 @@ ON DUPLICATE KEY UPDATE
     visibility_radius_km = VALUES(visibility_radius_km),
     phone = VALUES(phone),
     profile_photo = VALUES(profile_photo);
+
+-- Premium regular user: premium1@streetask.com / password: 4dm1n
+INSERT INTO appusers (id, email, user_name, password, first_name, last_name, authority, account_type, active, created_at)
+VALUES (
+    UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'),
+    'premium1@streetask.com',
+    'premium1',
+    '$2a$10$nMmTWAhPTqXqLDJTag3prumFrAJpsYtroxf0ojesFYq0k4PmcbWUS',
+    'Premium',
+    'User',
+    UUID_TO_BIN('22222222-2222-2222-2222-222222222222'),
+    'REGULAR_USER',
+    TRUE,
+    CURRENT_TIMESTAMP
+)
+ON DUPLICATE KEY UPDATE
+    email = VALUES(email),
+    user_name = VALUES(user_name),
+    password = VALUES(password),
+    first_name = VALUES(first_name),
+    last_name = VALUES(last_name),
+    authority = VALUES(authority),
+    account_type = VALUES(account_type),
+    active = VALUES(active);
+
+-- RegularUser profile for premium1 (premium_active = TRUE)
+INSERT INTO regular_users (id, coin_balance, rating, verified, visibility_radius_km, phone, profile_photo, premium_active)
+VALUES (
+    UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'),
+    0,
+    0,
+    FALSE,
+    10,
+    '987654321',
+    NULL,
+    TRUE
+)
+ON DUPLICATE KEY UPDATE
+    coin_balance = VALUES(coin_balance),
+    rating = VALUES(rating),
+    verified = VALUES(verified),
+    visibility_radius_km = VALUES(visibility_radius_km),
+    phone = VALUES(phone),
+    profile_photo = VALUES(profile_photo),
+    premium_active = VALUES(premium_active);
