@@ -16,6 +16,9 @@ import AdminFeedbackScreen from '../../features/admin/ui/AdminFeedbackScreen';
 import AdminScreen from '../../features/admin/ui/AdminScreen';
 import AdminUsersScreen from '../../features/admin/ui/AdminUsersScreen';
 import EditProfileScreen from '../../features/profile/EditProfileScreen';
+import BalanceScreen from '../../features/profile/BalanceScreen';
+import MyPurchasesScreen from '../../features/profile/MyPurchasesScreen';
+import SettingsScreen from '../../features/profile/SettingsScreen';
 import { useAuth } from '../providers/AuthProvider';
 import { theme } from '../../shared/ui/theme/theme';
 
@@ -66,6 +69,9 @@ export default function AppNavigator() {
                                 <Stack.Screen name="Profile" component={ProfileScreen} />
                                 <Stack.Screen name="ProfileStats" component={ProfileStats} options={{ headerShown: false }} />
                                 <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+                                <Stack.Screen name="Balance" component={BalanceScreen} options={{ headerShown: false }} />
+                                <Stack.Screen name="MyPurchases" component={MyPurchasesScreen} options={{ headerShown: false }} />
+                                <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
                             </>
                         )
                     }
