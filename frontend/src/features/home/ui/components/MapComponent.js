@@ -13,6 +13,8 @@ import * as Location from 'expo-location';
 import { locationService } from '../../../../shared/services/location/locationService';
 import { CountdownText } from './CountdownText';
 import { calculateDistanceInKm } from '../../../../shared/utils/helpers';
+import Toast from 'react-native-toast-message';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 // Para web: importar Leaflet y CSS
 let MapContainer, TileLayer, Marker, Popup;
@@ -113,6 +115,13 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                     if (typeof onPermissionChange === 'function') {
                         onPermissionChange(false);
                     }
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Ubicación desactivada',
+                        text2: 'Por favor, activa la ubicación para poder hacer preguntas.',
+                        position: 'top',
+                        visibilityTime: 10000,
+                    });
                     return;
                 }
 
@@ -237,6 +246,8 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
     if (error) {
         return (
             <View style={styles.container}>
+                <MaterialIcons name="location-off" size={84} color="darkred" />
+
                 <Text style={styles.errorText}>{error}</Text>
             </View>
         );

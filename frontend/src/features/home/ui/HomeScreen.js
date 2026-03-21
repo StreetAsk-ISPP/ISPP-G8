@@ -26,6 +26,7 @@ import apiClient from '../../../shared/services/http/apiClient';
 import { bootstrapWebPushNotifications } from '../../../shared/services/notifications/webPushBootstrap';
 import { updateWebPushZone } from '../../../shared/services/notifications/webPushService';
 import { resolveZoneKey } from '../../../shared/services/notifications/zoneService';
+import Toast from 'react-native-toast-message';
 
 export default function HomeScreen({ navigation }) {
     const { logout, token, user } = useAuth();
@@ -39,7 +40,9 @@ export default function HomeScreen({ navigation }) {
     const [modalType, setModalType] = useState('notifications');
     const [currentLocation, setCurrentLocation] = useState(null);
     const [isPremium, setIsPremium] = useState(false);
-    const [hasLocationPermission, setHasLocationPermission] = useState(false);
+
+    // null = revisando, true = concedido, false = denegado
+    const [hasLocationPermission, setHasLocationPermission] = useState(null);
 
     const [feedbackVisible, setFeedbackVisible] = useState(false);
     const [feedbackType, setFeedbackType] = useState('SUGGESTION');
@@ -447,6 +450,7 @@ export default function HomeScreen({ navigation }) {
                             <Text style={styles.fabText}>Ask a question</Text>
                         </TouchableOpacity>
                     )}
+
 
                 </View>
             </SafeAreaView>
