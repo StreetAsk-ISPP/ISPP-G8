@@ -101,6 +101,7 @@ public class SecurityConfiguration {
 						// Questions & Answers require auth
 						.requestMatchers("/api/v1/questions/**").authenticated()
 						.requestMatchers("/api/v1/answers", "/api/v1/answers/**").authenticated()
+						.requestMatchers("/api/v1/reports/**").authenticated()
 
 						// Feedback requires auth
 						.requestMatchers("/api/v1/feedback", "/api/v1/feedback/**").authenticated()
