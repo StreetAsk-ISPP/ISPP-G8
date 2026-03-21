@@ -74,7 +74,7 @@ const getQuestionCoords = (q) => {
     return { lat, lng };
 };
 
-export default function MapComponent({ questions = [], onQuestionPress, onLocationChange }) {
+export default function MapComponent({ questions = [], onQuestionPress, onLocationChange, onPermissionChange }) {
     const [location, setLocation] = useState(null);
     const [publicLocations, setPublicLocations] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -110,7 +110,14 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                 if (status !== 'granted') {
                     setError('Permiso de ubicación denegado');
                     setLoading(false);
+                    if (typeof onPermissionChange === 'function') {
+                        onPermissionChange(false);
+                    }
                     return;
+                }
+
+                if (typeof onPermissionChange === 'function') {
+                    onPermissionChange(true);
                 }
 
                 const initialLocation = await Location.getCurrentPositionAsync({
@@ -144,6 +151,9 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
             } catch (err) {
                 setError('Error al obtener ubicación: ' + err.message);
                 setLoading(false);
+                if (typeof onPermissionChange === 'function') {
+                    onPermissionChange(false);
+                }
             }
         };
 
@@ -154,7 +164,7 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                 locationSubscription.remove();
             }
         };
-    }, [onLocationChange]);
+    }, [onLocationChange, onPermissionChange]);
 
     const loadPublicLocations = async () => {
         try {

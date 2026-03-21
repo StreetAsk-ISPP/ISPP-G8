@@ -39,6 +39,7 @@ export default function HomeScreen({ navigation }) {
     const [modalType, setModalType] = useState('notifications');
     const [currentLocation, setCurrentLocation] = useState(null);
     const [isPremium, setIsPremium] = useState(false);
+    const [hasLocationPermission, setHasLocationPermission] = useState(false);
 
     const [feedbackVisible, setFeedbackVisible] = useState(false);
     const [feedbackType, setFeedbackType] = useState('SUGGESTION');
@@ -423,6 +424,7 @@ export default function HomeScreen({ navigation }) {
                                 navigation.navigate('QuestionThread', { questionId: qId })
                             }
                             onLocationChange={setCurrentLocation}
+                            onPermissionChange={setHasLocationPermission}
                         />
                     </View>
 
@@ -435,15 +437,17 @@ export default function HomeScreen({ navigation }) {
                             thumbColor="#fff"
                         />
                     </View>
+                    {hasLocationPermission && (
+                        <TouchableOpacity
+                            style={[styles.fab, isNarrow && { width: 220 }]}
+                            onPress={() => navigation.navigate('CreateQuestion')}
+                            activeOpacity={0.85}
+                        >
+                            <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
+                            <Text style={styles.fabText}>Ask a question</Text>
+                        </TouchableOpacity>
+                    )}
 
-                    <TouchableOpacity
-                        style={[styles.fab, isNarrow && { width: 220 }]}
-                        onPress={() => navigation.navigate('CreateQuestion')}
-                        activeOpacity={0.85}
-                    >
-                        <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
-                        <Text style={styles.fabText}>Ask a question</Text>
-                    </TouchableOpacity>
                 </View>
             </SafeAreaView>
 
