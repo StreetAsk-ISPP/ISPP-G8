@@ -46,7 +46,9 @@ public class AnswerRestController {
 
 	@GetMapping
 	public ResponseEntity<Iterable<Answer>> findAll(@RequestParam(required = false) UUID questionId,
-			@RequestParam(required = false) UUID userId, @RequestParam(required = false) Boolean isVerified) {
+			@RequestParam(required = false) UUID userId, @RequestParam(required = false) Boolean isVerified,
+			@RequestParam(required = false) String sort, @RequestParam(required = false) Integer page,
+			@RequestParam(required = false) Integer size) {
 		Iterable<Answer> res;
 		if (questionId != null && userId != null && isVerified != null) {
 			res = answerService.findByQuestionAndUserAndIsVerified(questionId, userId, isVerified);
@@ -57,7 +59,7 @@ public class AnswerRestController {
 		} else if (userId != null && isVerified != null) {
 			res = answerService.findByUserAndIsVerified(userId, isVerified);
 		} else if (questionId != null) {
-			res = answerService.findByQuestion(questionId);
+			res = answerService.findByQuestionSorted(questionId, sort, page, size);
 		} else if (userId != null) {
 			res = answerService.findByUser(userId);
 		} else if (isVerified != null) {
