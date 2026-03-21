@@ -26,7 +26,6 @@ import apiClient from '../../../shared/services/http/apiClient';
 import { bootstrapWebPushNotifications } from '../../../shared/services/notifications/webPushBootstrap';
 import { updateWebPushZone } from '../../../shared/services/notifications/webPushService';
 import { resolveZoneKey } from '../../../shared/services/notifications/zoneService';
-import Toast from 'react-native-toast-message';
 
 export default function HomeScreen({ navigation }) {
     const { logout, token, user } = useAuth();
