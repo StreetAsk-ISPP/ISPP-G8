@@ -645,7 +645,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
                                             color={questionReported ? '#9ca3af' : '#b91c1c'}
                                         />
                                         <Text style={[styles.questionReportText, questionReported && styles.questionReportTextDisabled]}>
-                                            {questionReported ? 'Reportado' : 'Reportar'}
+                                            {questionReported ? 'Reported' : 'Report'}
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
