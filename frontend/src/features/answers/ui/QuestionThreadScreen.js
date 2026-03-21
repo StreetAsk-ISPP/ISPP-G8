@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     View, Text, StyleSheet, SafeAreaView, FlatList, TextInput,
-    KeyboardAvoidingView, Platform, Pressable, ActivityIndicator,
+    KeyboardAvoidingView, Platform, Pressable, ActivityIndicator, Modal,
     TouchableOpacity, useWindowDimensions,
 } from 'react-native';
 import { theme } from '../../../shared/ui/theme/theme';
@@ -19,20 +19,34 @@ const formatHms = (t) => {
     return `${Math.floor(s / 3600)}:${pad2(Math.floor((s % 3600) / 60))}:${pad2(s % 60)}`;
 };
 const avatarColors = ['#dbeafe', '#fce7f3', '#fef3c7', '#d1fae5', '#ede9fe', '#e0e7ff'];
+const ANSWERS_PAGE_SIZE = 5;
+const SORT_LIKES_DESC = 'likes_desc';
+const SORT_DATE_DESC = 'date_desc';
 const parsePositiveNumber = (value) => {
     const num = Number(value);
     return Number.isFinite(num) && num > 0 ? num : null;
 };
+const REPORT_REASON_OPTIONS = [
+    { value: 'OFFENSIVE', label: 'Offensive' },
+    { value: 'SPAM', label: 'Spam' },
+    { value: 'IRRELEVANT', label: 'Irrelevant' },
+    { value: 'OTHER', label: 'Other' },
+];
 
 export default function QuestionThreadScreen({ route, navigation }) {
     const { questionId } = route?.params || {};
-    const { user } = useAuth();
+    const { user, isAuthenticated } = useAuth();
     const { width } = useWindowDimensions();
     const isNarrow = width < 500;
 
     const [question, setQuestion] = useState(null);
     const [answers, setAnswers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [refreshingAnswers, setRefreshingAnswers] = useState(false);
+    const [hasMoreAnswers, setHasMoreAnswers] = useState(true);
+    const [answersPage, setAnswersPage] = useState(0);
+    const [selectedSort, setSelectedSort] = useState(SORT_LIKES_DESC);
     const [error, setError] = useState(null);
     const [myVotes, setMyVotes] = useState({});
     const [draft, setDraft] = useState('');
@@ -41,6 +55,17 @@ export default function QuestionThreadScreen({ route, navigation }) {
     const [pickMode, setPickMode] = useState(false);
     const [tempLat, setTempLat] = useState(null);
     const [tempLng, setTempLng] = useState(null);
+    const [reportModalVisible, setReportModalVisible] = useState(false);
+    const [reportTargetAnswerId, setReportTargetAnswerId] = useState(null);
+    const [reportReason, setReportReason] = useState('OFFENSIVE');
+    const [reportDescription, setReportDescription] = useState('');
+    const [reportSubmitting, setReportSubmitting] = useState(false);
+    const [reportedAnswers, setReportedAnswers] = useState({});
+    const [questionReportModalVisible, setQuestionReportModalVisible] = useState(false);
+    const [questionReportReason, setQuestionReportReason] = useState('OFFENSIVE');
+    const [questionReportDescription, setQuestionReportDescription] = useState('');
+    const [questionReportSubmitting, setQuestionReportSubmitting] = useState(false);
+    const [questionReported, setQuestionReported] = useState(false);
     const inputRef = useRef(null);
 
     const getMinutesAgo = (d) => d ? Math.floor((Date.now() - new Date(d)) / 60000) : 0;
@@ -53,6 +78,80 @@ export default function QuestionThreadScreen({ route, navigation }) {
         }
         return avatarColors[Math.abs(hash) % avatarColors.length];
     }, []);
+
+    const mapAnswer = useCallback((a) => ({
+        id: a.id,
+        author: a.user?.userName || a.user?.username || 'Anonymous',
+        color: pickColor(a.id),
+        text: a.content || '',
+        likes: Number(a.upvotes) || 0,
+        dislikes: Number(a.downvotes) || 0,
+        minutesAgo: getMinutesAgo(a.createdAt),
+        createdAt: a.createdAt || null,
+        userId: a.user?.id,
+        isVerified: a.isVerified,
+    }), [pickColor]);
+
+    const sortAnswersInMemory = useCallback((items, sort) => {
+        const copy = [...items];
+        if (sort === SORT_DATE_DESC) {
+            copy.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+            return copy;
+        }
+        copy.sort((a, b) => {
+            const likesDiff = (b.likes || 0) - (a.likes || 0);
+            if (likesDiff !== 0) return likesDiff;
+            return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+        });
+        return copy;
+    }, []);
+
+    const fetchAnswers = useCallback(async ({ pageToLoad = 0, replace = false } = {}) => {
+        if (!questionId) return;
+
+        if (replace) {
+            setRefreshingAnswers(true);
+            setError(null);
+        } else {
+            setLoadingMore(true);
+        }
+
+        try {
+            const aRes = await apiClient.get(
+                `/api/v1/answers?questionId=${questionId}&sort=${selectedSort}&page=${pageToLoad}&size=${ANSWERS_PAGE_SIZE}`
+            );
+            const list = Array.isArray(aRes.data) ? aRes.data : Array.from(aRes.data || []);
+
+            // Some environments may ignore page/size and return the full dataset.
+            // In that case, paginate defensively on the client so UX is still correct.
+            const offset = pageToLoad * ANSWERS_PAGE_SIZE;
+            const end = offset + ANSWERS_PAGE_SIZE;
+            const usingClientFallbackPaging = list.length > ANSWERS_PAGE_SIZE;
+            const pageSlice = usingClientFallbackPaging ? list.slice(offset, end) : list;
+            const mapped = pageSlice.map(mapAnswer);
+
+            setAnswers((prev) => {
+                if (replace) {
+                    return sortAnswersInMemory(mapped, selectedSort);
+                }
+
+                const seen = new Set(prev.map((item) => item.id));
+                const merged = [...prev, ...mapped.filter((item) => !seen.has(item.id))];
+                return sortAnswersInMemory(merged, selectedSort);
+            });
+
+            setHasMoreAnswers(usingClientFallbackPaging ? end < list.length : mapped.length === ANSWERS_PAGE_SIZE);
+            setAnswersPage(pageToLoad);
+        } catch (e) {
+            setError(e.message || 'Error loading answers');
+        } finally {
+            if (replace) {
+                setRefreshingAnswers(false);
+            } else {
+                setLoadingMore(false);
+            }
+        }
+    }, [mapAnswer, questionId, selectedSort, sortAnswersInMemory]);
 
     const canSend = useMemo(() => draft.trim().length > 0, [draft]);
     const questionRadiusKm = useMemo(() => parsePositiveNumber(question?.radiusKm), [question?.radiusKm]);
@@ -117,19 +216,6 @@ export default function QuestionThreadScreen({ route, navigation }) {
                 setError(null);
                 const qRes = await apiClient.get(`/api/v1/questions/${questionId}`);
                 setQuestion(qRes.data);
-                const aRes = await apiClient.get(`/api/v1/answers?questionId=${questionId}`);
-                const list = Array.isArray(aRes.data) ? aRes.data : Array.from(aRes.data || []);
-                setAnswers(list.map((a) => ({
-                    id: a.id,
-                    author: a.user?.userName || a.user?.username || 'Anonymous',
-                    color: pickColor(a.id),
-                    text: a.content || '',
-                    likes: a.upvotes || 0,
-                    dislikes: a.downvotes || 0,
-                    minutesAgo: getMinutesAgo(a.createdAt),
-                    userId: a.user?.id,
-                    isVerified: a.isVerified,
-                })));
                 // Cargar los votos previos del usuario para esta pregunta
                 if (user?.id) {
                     try {
@@ -146,7 +232,20 @@ export default function QuestionThreadScreen({ route, navigation }) {
                 setLoading(false);
             }
         })();
-    }, [questionId, pickColor]);
+    }, [questionId, user?.id]);
+
+    useEffect(() => {
+        if (!questionId) return;
+        fetchAnswers({ pageToLoad: 0, replace: true });
+    }, [fetchAnswers, questionId, selectedSort]);
+
+    useEffect(() => {
+        setQuestionReported(false);
+        setQuestionReportModalVisible(false);
+        setQuestionReportReason('OFFENSIVE');
+        setQuestionReportDescription('');
+        setQuestionReportSubmitting(false);
+    }, [questionId]);
 
     const [timeLeft, setTimeLeft] = useState(0);
     useEffect(() => {
@@ -167,7 +266,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
         if (!content || !question) return;
 
         const optimistic = { id: `tmp-${Date.now()}`, author: '@me', minutesAgo: 0, text: content, likes: 0, dislikes: 0, color: '#47d22b', optimistic: true };
-        setAnswers((p) => [...p, optimistic]);
+        setAnswers((p) => sortAnswersInMemory([...p, optimistic], selectedSort));
         setDraft('');
         inputRef.current?.blur();
         setSendingAnswer(true);
@@ -239,11 +338,22 @@ export default function QuestionThreadScreen({ route, navigation }) {
             const res = await apiClient.post('/api/v1/answers', payload);
 
             const saved = res.data;
-            setAnswers((p) => p.map((a) => a.id === optimistic.id ? {
-                id: saved.id, author: saved.user?.userName || saved.user?.username || 'Anonymous', color: theme.colors.primary,
-                text: saved.content, likes: saved.upvotes || 0, dislikes: saved.downvotes || 0,
-                minutesAgo: 0, userId: saved.user?.id, isVerified: saved.isVerified,
-            } : a));
+            setAnswers((p) => {
+                const updated = p.map((a) => (a.id === optimistic.id ? {
+                    id: saved.id,
+                    author: saved.user?.userName || saved.user?.username || 'Anonymous',
+                    color: theme.colors.primary,
+                    text: saved.content,
+                    likes: saved.upvotes || 0,
+                    dislikes: saved.downvotes || 0,
+                    minutesAgo: 0,
+                    createdAt: saved.createdAt,
+                    userId: saved.user?.id,
+                    isVerified: saved.isVerified,
+                } : a));
+                return sortAnswersInMemory(updated, selectedSort);
+            });
+            await fetchAnswers({ pageToLoad: 0, replace: true });
         } catch (e) {
             setAnswers((p) => p.filter((a) => a.id !== optimistic.id));
             let msg = 'Error sending answer';
@@ -273,14 +383,14 @@ export default function QuestionThreadScreen({ route, navigation }) {
 
         if (cur === type) {
             // Deseleccionar: quitar el voto
-            setAnswers((pa) => pa.map((a) => {
+            setAnswers((pa) => sortAnswersInMemory(pa.map((a) => {
                 if (a.id !== answerId) return a;
                 return {
                     ...a,
                     likes: type === 'LIKE' ? Math.max(0, (a.likes || 0) - 1) : (a.likes || 0),
                     dislikes: type === 'DISLIKE' ? Math.max(0, (a.dislikes || 0) - 1) : (a.dislikes || 0),
                 };
-            }));
+            }), selectedSort));
             setMyVotes((prev) => { const n = { ...prev }; delete n[answerId]; return n; });
             try {
                 await apiClient.delete(`/api/v1/answers/${answerId}/votes?userId=${user.id}`);
@@ -291,7 +401,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
         }
 
         // Actualización optimista (voto nuevo o cambio)
-        setAnswers((pa) => pa.map((a) => {
+        setAnswers((pa) => sortAnswersInMemory(pa.map((a) => {
             if (a.id !== answerId) return a;
             const newLikes = type === 'LIKE'
                 ? (a.likes || 0) + 1
@@ -300,7 +410,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
                 ? (a.dislikes || 0) + 1
                 : cur === 'DISLIKE' ? Math.max(0, (a.dislikes || 0) - 1) : (a.dislikes || 0);
             return { ...a, likes: newLikes, dislikes: newDislikes };
-        }));
+        }), selectedSort));
         setMyVotes((prev) => ({ ...prev, [answerId]: type }));
 
         try {
@@ -309,6 +419,142 @@ export default function QuestionThreadScreen({ route, navigation }) {
             );
         } catch (error) {
             console.error('Error al votar:', error);
+        }
+    };
+
+    const openReportModal = (answerId) => {
+        setReportTargetAnswerId(answerId);
+        setReportReason('OFFENSIVE');
+        setReportDescription('');
+        setReportModalVisible(true);
+    };
+
+    const closeReportModal = () => {
+        if (reportSubmitting) {
+            return;
+        }
+        setReportModalVisible(false);
+        setReportTargetAnswerId(null);
+        setReportDescription('');
+    };
+
+    const submitAnswerReport = async () => {
+        if (!reportTargetAnswerId || reportSubmitting) {
+            return;
+        }
+
+        try {
+            setReportSubmitting(true);
+            await apiClient.post('/api/v1/reports/answers', {
+                answerId: reportTargetAnswerId,
+                reason: reportReason,
+                description: reportDescription?.trim() || null,
+            });
+
+            setReportedAnswers((prev) => ({ ...prev, [reportTargetAnswerId]: true }));
+            setReportModalVisible(false);
+            setReportTargetAnswerId(null);
+            setReportDescription('');
+            Toast.show({
+                type: 'success',
+                text1: 'Report sent',
+                text2: 'Thanks for helping keep the community safe.',
+                position: 'top',
+            });
+        } catch (e) {
+            const status = e?.response?.status;
+            if (status === 409) {
+                setReportedAnswers((prev) => ({ ...prev, [reportTargetAnswerId]: true }));
+            }
+
+            Toast.show({
+                type: 'error',
+                text1: status === 409 ? 'Already reported' : 'Could not send report',
+                text2: status === 409
+                    ? 'You already reported this answer before.'
+                    : e?.response?.data?.message || e?.message || 'Try again in a few seconds.',
+                position: 'top',
+            });
+        } finally {
+            setReportSubmitting(false);
+        }
+    };
+
+    const openQuestionReportModal = () => {
+        if (questionReportSubmitting || questionReported) {
+            return;
+        }
+        setQuestionReportReason('OFFENSIVE');
+        setQuestionReportDescription('');
+        setQuestionReportModalVisible(true);
+    };
+
+    const closeQuestionReportModal = () => {
+        if (questionReportSubmitting) {
+            return;
+        }
+        setQuestionReportModalVisible(false);
+        setQuestionReportDescription('');
+    };
+
+    const submitQuestionReport = async () => {
+        if (!question?.id || questionReportSubmitting || questionReported) {
+            return;
+        }
+
+        if (!questionReportReason) {
+            Toast.show({
+                type: 'error',
+                text1: 'Motivo requerido',
+                text2: 'Selecciona un motivo para reportar la pregunta.',
+                position: 'top',
+            });
+            return;
+        }
+
+        if (questionReportDescription?.length > 500) {
+            Toast.show({
+                type: 'error',
+                text1: 'Descripcion demasiado larga',
+                text2: 'La descripcion no puede superar 500 caracteres.',
+                position: 'top',
+            });
+            return;
+        }
+
+        try {
+            setQuestionReportSubmitting(true);
+            await apiClient.post('/api/v1/reports/questions', {
+                questionId: question.id,
+                reason: questionReportReason,
+                description: questionReportDescription?.trim() || null,
+            });
+
+            setQuestionReported(true);
+            setQuestionReportModalVisible(false);
+            setQuestionReportDescription('');
+            Toast.show({
+                type: 'success',
+                text1: 'Reporte enviado correctamente',
+                text2: 'Gracias por ayudar a mantener la comunidad segura.',
+                position: 'top',
+            });
+        } catch (e) {
+            const status = e?.response?.status;
+            if (status === 409) {
+                setQuestionReported(true);
+            }
+
+            Toast.show({
+                type: 'error',
+                text1: status === 409 ? 'Ya has reportado esta pregunta' : 'No se pudo enviar el reporte',
+                text2: status === 409
+                    ? 'Ya habias reportado esta pregunta antes.'
+                    : e?.response?.data?.message || e?.message || 'Intentalo de nuevo en unos segundos.',
+                position: 'top',
+            });
+        } finally {
+            setQuestionReportSubmitting(false);
         }
     };
 
@@ -335,6 +581,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
     const renderAnswer = ({ item, index }) => {
         const v = myVotes[item.id];
         const isLast = index === answers.length - 1;
+        const alreadyReported = reportedAnswers[item.id] === true;
         return (
             <View style={styles.threadRow}>
                 {/* Thread line + dot */}
@@ -360,10 +607,29 @@ export default function QuestionThreadScreen({ route, navigation }) {
                             <Ionicons name={v === 'DISLIKE' ? 'thumbs-down' : 'thumbs-down-outline'} size={18} color={v === 'DISLIKE' ? '#ef4444' : '#9ca3af'} />
                             <Text style={[styles.threadVoteCount, v === 'DISLIKE' && { color: '#ef4444' }]}>{item.dislikes || 0}</Text>
                         </Pressable>
+                        <Pressable
+                            onPress={() => openReportModal(item.id)}
+                            style={[styles.threadReportBtn, alreadyReported && styles.threadReportBtnDisabled]}
+                            disabled={alreadyReported}
+                        >
+                            <Ionicons
+                                name={alreadyReported ? 'flag' : 'flag-outline'}
+                                size={16}
+                                color={alreadyReported ? '#9ca3af' : '#b91c1c'}
+                            />
+                            <Text style={[styles.threadReportText, alreadyReported && styles.threadReportTextDisabled]}>
+                                {alreadyReported ? 'Reported' : 'Report'}
+                            </Text>
+                        </Pressable>
                     </View>
                 </View>
             </View>
         );
+    };
+
+    const loadMoreAnswers = () => {
+        if (loading || loadingMore || refreshingAnswers || !hasMoreAnswers) return;
+        fetchAnswers({ pageToLoad: answersPage + 1, replace: false });
     };
 
     if (pickMode) {
@@ -454,6 +720,44 @@ export default function QuestionThreadScreen({ route, navigation }) {
                                     <Text style={styles.chipVal}>{formatHms(timeLeft)}</Text>
                                 </View>
                             </View>
+
+                            {isAuthenticated && (
+                                <View style={styles.questionReportRow}>
+                                    <TouchableOpacity
+                                        onPress={openQuestionReportModal}
+                                        style={[styles.questionReportBtn, questionReported && styles.questionReportBtnDisabled]}
+                                        activeOpacity={0.85}
+                                        disabled={questionReported || questionReportSubmitting}
+                                    >
+                                        <Ionicons
+                                            name={questionReported ? 'flag' : 'flag-outline'}
+                                            size={16}
+                                            color={questionReported ? '#9ca3af' : '#b91c1c'}
+                                        />
+                                        <Text style={[styles.questionReportText, questionReported && styles.questionReportTextDisabled]}>
+                                            {questionReported ? 'Reported' : 'Report'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </View>
+
+                        <View style={[styles.answersToolbar, isNarrow && { marginHorizontal: 12 }]}>
+                            <Text style={styles.answersToolbarTitle}>Answers</Text>
+                            <View style={styles.sortSwitch}>
+                                <Pressable
+                                    style={[styles.sortOption, selectedSort === SORT_LIKES_DESC && styles.sortOptionActive]}
+                                    onPress={() => setSelectedSort(SORT_LIKES_DESC)}
+                                >
+                                    <Text style={[styles.sortOptionLabel, selectedSort === SORT_LIKES_DESC && styles.sortOptionLabelActive]}>Top</Text>
+                                </Pressable>
+                                <Pressable
+                                    style={[styles.sortOption, selectedSort === SORT_DATE_DESC && styles.sortOptionActive]}
+                                    onPress={() => setSelectedSort(SORT_DATE_DESC)}
+                                >
+                                    <Text style={[styles.sortOptionLabel, selectedSort === SORT_DATE_DESC && styles.sortOptionLabelActive]}>Newest</Text>
+                                </Pressable>
+                            </View>
                         </View>
 
                         {/* ── Answers ── */}
@@ -462,8 +766,22 @@ export default function QuestionThreadScreen({ route, navigation }) {
                             keyExtractor={(i) => String(i.id)}
                             contentContainerStyle={[styles.listContent, isNarrow && { paddingHorizontal: 12 }]}
                             renderItem={renderAnswer}
+                            ListFooterComponent={
+                                <View style={styles.listFooterWrap}>
+                                    {loadingMore && (
+                                        <ActivityIndicator style={styles.listFooterLoader} size="small" color={theme.colors.accent} />
+                                    )}
+                                    {!loadingMore && hasMoreAnswers && answers.length > 0 && (
+                                        <Pressable style={styles.loadMoreBtn} onPress={loadMoreAnswers}>
+                                            <Text style={styles.loadMoreText}>Cargar mas</Text>
+                                        </Pressable>
+                                    )}
+                                </View>
+                            }
                             ListEmptyComponent={
-                                <Text style={styles.emptyText}>No answers yet. Be the first!</Text>
+                                refreshingAnswers
+                                    ? null
+                                    : <Text style={styles.emptyText}>No answers yet. Be the first!</Text>
                             }
                         />
                     </>
@@ -505,6 +823,142 @@ export default function QuestionThreadScreen({ route, navigation }) {
                     )
                 )}
             </KeyboardAvoidingView>
+
+            <Modal
+                visible={questionReportModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={closeQuestionReportModal}
+            >
+                <View style={styles.reportModalOverlay}>
+                    <View style={styles.reportModalCard}>
+                        <Text style={styles.reportModalTitle}>Report question</Text>
+                        <Text style={styles.reportModalSubtitle}>Why are you reporting this question?</Text>
+
+                        <View style={styles.reportReasonWrap}>
+                            {REPORT_REASON_OPTIONS.map((option) => {
+                                const selected = questionReportReason === option.value;
+                                return (
+                                    <Pressable
+                                        key={option.value}
+                                        onPress={() => setQuestionReportReason(option.value)}
+                                        style={[styles.reportReasonChip, selected && styles.reportReasonChipSelected]}
+                                    >
+                                        <Text
+                                            style={[styles.reportReasonChipText, selected && styles.reportReasonChipTextSelected]}
+                                        >
+                                            {option.label}
+                                        </Text>
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+
+                        <Text style={styles.reportDescriptionLabel}>Description (optional)</Text>
+                        <TextInput
+                            value={questionReportDescription}
+                            onChangeText={setQuestionReportDescription}
+                            placeholder="Add more context to help moderation"
+                            placeholderTextColor="#9ca3af"
+                            multiline
+                            maxLength={500}
+                            style={styles.reportDescriptionInput}
+                            editable={!questionReportSubmitting}
+                        />
+
+                        <View style={styles.reportModalActions}>
+                            <TouchableOpacity
+                                onPress={closeQuestionReportModal}
+                                style={styles.reportCancelBtn}
+                                activeOpacity={0.85}
+                                disabled={questionReportSubmitting}
+                            >
+                                <Text style={styles.reportCancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={submitQuestionReport}
+                                style={[styles.reportSubmitBtn, questionReportSubmitting && styles.reportSubmitBtnDisabled]}
+                                activeOpacity={0.85}
+                                disabled={questionReportSubmitting}
+                            >
+                                {questionReportSubmitting ? (
+                                    <ActivityIndicator size="small" color="#fff" />
+                                ) : (
+                                    <Text style={styles.reportSubmitText}>Submit report</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            <Modal
+                visible={reportModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={closeReportModal}
+            >
+                <View style={styles.reportModalOverlay}>
+                    <View style={styles.reportModalCard}>
+                        <Text style={styles.reportModalTitle}>Report answer</Text>
+                        <Text style={styles.reportModalSubtitle}>Why are you reporting this answer?</Text>
+
+                        <View style={styles.reportReasonWrap}>
+                            {REPORT_REASON_OPTIONS.map((option) => {
+                                const selected = reportReason === option.value;
+                                return (
+                                    <Pressable
+                                        key={option.value}
+                                        onPress={() => setReportReason(option.value)}
+                                        style={[styles.reportReasonChip, selected && styles.reportReasonChipSelected]}
+                                    >
+                                        <Text
+                                            style={[styles.reportReasonChipText, selected && styles.reportReasonChipTextSelected]}
+                                        >
+                                            {option.label}
+                                        </Text>
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+
+                        <Text style={styles.reportDescriptionLabel}>Description (optional)</Text>
+                        <TextInput
+                            value={reportDescription}
+                            onChangeText={setReportDescription}
+                            placeholder="Add more context to help moderation"
+                            placeholderTextColor="#9ca3af"
+                            multiline
+                            maxLength={500}
+                            style={styles.reportDescriptionInput}
+                            editable={!reportSubmitting}
+                        />
+
+                        <View style={styles.reportModalActions}>
+                            <TouchableOpacity
+                                onPress={closeReportModal}
+                                style={styles.reportCancelBtn}
+                                activeOpacity={0.85}
+                                disabled={reportSubmitting}
+                            >
+                                <Text style={styles.reportCancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={submitAnswerReport}
+                                style={[styles.reportSubmitBtn, reportSubmitting && styles.reportSubmitBtnDisabled]}
+                                activeOpacity={0.85}
+                                disabled={reportSubmitting}
+                            >
+                                {reportSubmitting ? (
+                                    <ActivityIndicator size="small" color="#fff" />
+                                ) : (
+                                    <Text style={styles.reportSubmitText}>Submit report</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -589,6 +1043,72 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#374151',
     },
+    questionReportRow: {
+        marginTop: 12,
+        alignItems: 'flex-start',
+    },
+    questionReportBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: '#fecaca',
+        backgroundColor: '#fff1f2',
+    },
+    questionReportBtnDisabled: {
+        borderColor: '#e5e7eb',
+        backgroundColor: '#f3f4f6',
+    },
+    questionReportText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#b91c1c',
+    },
+    questionReportTextDisabled: {
+        color: '#9ca3af',
+    },
+
+    answersToolbar: {
+        marginHorizontal: 16,
+        marginTop: 12,
+        marginBottom: 4,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    answersToolbarTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#374151',
+    },
+    sortSwitch: {
+        flexDirection: 'row',
+        backgroundColor: '#e5e7eb',
+        borderRadius: 12,
+        padding: 3,
+        gap: 4,
+    },
+    sortOption: {
+        minWidth: 74,
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 9,
+        alignItems: 'center',
+    },
+    sortOptionActive: {
+        backgroundColor: '#b91c1c',
+    },
+    sortOptionLabel: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#4b5563',
+    },
+    sortOptionLabelActive: {
+        color: '#fff',
+    },
 
     /* ── Answer List (Forum Thread) ── */
     listContent: {
@@ -600,6 +1120,26 @@ const styles = StyleSheet.create({
         color: '#9ca3af',
         marginTop: 24,
         fontSize: 14,
+    },
+    listFooterLoader: {
+        marginTop: 8,
+        marginBottom: 12,
+    },
+    listFooterWrap: {
+        paddingBottom: 12,
+    },
+    loadMoreBtn: {
+        alignSelf: 'center',
+        marginTop: 8,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 10,
+        backgroundColor: '#b91c1c',
+    },
+    loadMoreText: {
+        color: '#fff',
+        fontWeight: '700',
+        fontSize: 13,
     },
     threadRow: {
         flexDirection: 'row',
@@ -677,6 +1217,134 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '600',
         color: '#6b7280',
+    },
+    threadReportBtn: {
+        marginLeft: 'auto',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 999,
+        backgroundColor: '#fef2f2',
+        borderWidth: 1,
+        borderColor: '#fecaca',
+    },
+    threadReportBtnDisabled: {
+        backgroundColor: '#f9fafb',
+        borderColor: '#e5e7eb',
+    },
+    threadReportText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#b91c1c',
+    },
+    threadReportTextDisabled: {
+        color: '#9ca3af',
+    },
+
+    reportModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(17, 24, 39, 0.5)',
+        justifyContent: 'center',
+        paddingHorizontal: 18,
+    },
+    reportModalCard: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 18,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+    },
+    reportModalTitle: {
+        fontSize: 19,
+        fontWeight: '800',
+        color: '#111827',
+    },
+    reportModalSubtitle: {
+        marginTop: 4,
+        fontSize: 13,
+        color: '#6b7280',
+    },
+    reportReasonWrap: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginTop: 14,
+    },
+    reportReasonChip: {
+        borderWidth: 1,
+        borderColor: '#d1d5db',
+        borderRadius: 999,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        backgroundColor: '#fff',
+    },
+    reportReasonChipSelected: {
+        backgroundColor: '#fee2e2',
+        borderColor: '#fca5a5',
+    },
+    reportReasonChipText: {
+        fontSize: 13,
+        color: '#374151',
+        fontWeight: '700',
+    },
+    reportReasonChipTextSelected: {
+        color: '#991b1b',
+    },
+    reportDescriptionLabel: {
+        marginTop: 16,
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#374151',
+    },
+    reportDescriptionInput: {
+        marginTop: 8,
+        minHeight: 86,
+        borderWidth: 1,
+        borderColor: '#d1d5db',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        textAlignVertical: 'top',
+        fontSize: 14,
+        color: '#111827',
+        backgroundColor: '#f9fafb',
+        outlineStyle: 'none',
+    },
+    reportModalActions: {
+        marginTop: 16,
+        flexDirection: 'row',
+        gap: 10,
+    },
+    reportCancelBtn: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: '#d1d5db',
+        borderRadius: 12,
+        paddingVertical: 12,
+        alignItems: 'center',
+        backgroundColor: '#fff',
+    },
+    reportCancelText: {
+        color: '#374151',
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    reportSubmitBtn: {
+        flex: 1,
+        borderRadius: 12,
+        paddingVertical: 12,
+        alignItems: 'center',
+        backgroundColor: '#b91c1c',
+    },
+    reportSubmitBtnDisabled: {
+        opacity: 0.75,
+    },
+    reportSubmitText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '800',
     },
 
     /* ── Composer ── */

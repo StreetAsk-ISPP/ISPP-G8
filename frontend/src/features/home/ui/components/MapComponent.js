@@ -312,17 +312,17 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                                             />
                                         </div>
                                         <span style={{ color: canAnswer ? '#ea580c' : '#6b7280', fontWeight: 700 }}>
-                                            {canAnswer ? 'Puedes responder' : 'Fuera de tu radio'}
+                                            {canAnswer ? 'You can answer' : 'Out of your range'}
                                         </span>
                                         <br />
                                         {Number.isFinite(radiusKm) && radiusKm > 0 && (
                                             <>
                                                 <span style={{ opacity: 0.85 }}>
-                                                    Radio respuesta: {radiusKm.toFixed(2)} km
+                                                    Answer radius: {radiusKm.toFixed(2)} km
                                                 </span>
                                                 <br />
                                                 <span style={{ opacity: 0.85 }}>
-                                                    Tu distancia: {distanceKm.toFixed(2)} km
+                                                    Your distance: {distanceKm.toFixed(2)} km
                                                 </span>
                                                 <br />
                                             </>

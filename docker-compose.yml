@@ -11,16 +11,16 @@ services:
     image: mysql:8.0
     container_name: streetask-db
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-streetask}
-      MYSQL_USER: ${MYSQL_USER:-streetask}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-streetask}
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: streetask
+      MYSQL_USER: streetask
+      MYSQL_PASSWORD: streetask
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -39,18 +39,17 @@ services:
       - .:/app
       - maven_cache:/root/.m2
     environment:
-      #SPRING_PROFILES_ACTIVE: default
-      # For MySQL, uncomment these and comment out the line above:
       SPRING_PROFILES_ACTIVE: mysql
-      MYSQL_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-streetask}?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true&serverTimezone=UTC
-      MYSQL_USER: ${MYSQL_USER:-streetask}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-streetask}
+      MYSQL_URL: jdbc:mysql://db:3306/streetask?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true&serverTimezone=UTC
+      MYSQL_USER: streetask
+      MYSQL_PASSWORD: streetask
       BREVO_SMTP_HOST: ${BREVO_SMTP_HOST:-smtp-relay.brevo.com}
       BREVO_SMTP_PORT: ${BREVO_SMTP_PORT:-587}
       BREVO_SMTP_USERNAME: ${BREVO_SMTP_USERNAME:-}
       BREVO_SMTP_PASSWORD: ${BREVO_SMTP_PASSWORD:-}
       BREVO_MAIL_FROM: ${BREVO_MAIL_FROM:-streetask0@gmail.com}
-    depends_on:  # Uncomment when using MySQL
+    depends_on:
+      # Uncomment when using MySQL
       db:
         condition: service_healthy
     restart: unless-stopped

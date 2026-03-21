@@ -48,6 +48,7 @@ replay_pid*
 # Test reports
 allure-results/
 allure-report/
+.allure/
 
 # Expo / React Native generated files
 .expo/

@@ -15,18 +15,13 @@
  */
 package com.streetask.app.user;
 
-import java.util.UUID;
-import java.util.Map;
 import java.util.List;
-
-import jakarta.validation.Valid;
+import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import com.streetask.app.auth.payload.response.MessageResponse;
-import com.streetask.app.exceptions.AccessDeniedException;
-import com.streetask.app.util.RestPreconditions;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,7 +33,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.streetask.app.auth.payload.response.MessageResponse;
+import com.streetask.app.exceptions.AccessDeniedException;
+import com.streetask.app.util.RestPreconditions;
+
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -106,6 +106,14 @@ class UserRestController {
 	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<User> update(@PathVariable("userId") UUID id, @RequestBody @Valid User user) {
 		RestPreconditions.checkNotNull(userService.findUser(id), "User", "ID", id);
+
+		User currentUser = userService.findCurrentUser();
+		boolean isAdmin = currentUser.hasAuthority("ADMIN");
+		boolean isOwner = currentUser.getId().equals(id);
+
+		if (!isAdmin && !isOwner) {
+			throw new AccessDeniedException("You don't have permission to edit this profile.");
+		}
 		return new ResponseEntity<>(this.userService.updateUser(user, id), HttpStatus.OK);
 	}
 

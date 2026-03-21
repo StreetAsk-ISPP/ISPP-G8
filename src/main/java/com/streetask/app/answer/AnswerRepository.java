@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
@@ -12,6 +13,14 @@ import com.streetask.app.model.Answer;
 public interface AnswerRepository extends CrudRepository<Answer, UUID> {
 
 	Iterable<Answer> findByQuestionId(UUID questionId);
+
+	List<Answer> findByQuestionIdOrderByUpvotesDescCreatedAtDesc(UUID questionId);
+
+	List<Answer> findByQuestionIdOrderByCreatedAtDesc(UUID questionId);
+
+	List<Answer> findByQuestionIdOrderByUpvotesDescCreatedAtDesc(UUID questionId, Pageable pageable);
+
+	List<Answer> findByQuestionIdOrderByCreatedAtDesc(UUID questionId, Pageable pageable);
 
 	Iterable<Answer> findByUserId(UUID userId);
 
