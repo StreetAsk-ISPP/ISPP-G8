@@ -520,6 +520,7 @@ class UserServiceTest {
         assertEquals(8, stats.get("likesCount"));
         assertEquals(2, stats.get("dislikesCount"));
         assertNotNull(stats.get("reputation"));
+        assertEquals(4.0, stats.get("rating"));
         verify(questionRepository).countByCreatorId(testUserId);
         verify(answerRepository).countByUserId(testUserId);
     }
@@ -541,6 +542,7 @@ class UserServiceTest {
         assertEquals(0L, stats.get("answersCount"));
         assertEquals(0, stats.get("likesCount"));
         assertEquals(0, stats.get("dislikesCount"));
+        assertEquals(0.0, stats.get("rating"));
     }
 
     @Test

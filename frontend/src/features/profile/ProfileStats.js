@@ -17,7 +17,8 @@ export default function ProfileStats() {
         role: '',
         likes: 0,
         dislikes: 0,
-        reputation: 0
+        reputation: 0,
+        rating: 0
     });
     const [userQuestions, setUserQuestions] = useState([]);
     const [userAnswers, setUserAnswers] = useState([]);
@@ -31,7 +32,6 @@ export default function ProfileStats() {
             }
 
             try {
-                // Ejecutamos las 3 peticiones en paralelo para mayor velocidad
                 const [resStats, resQuestions, resAnswers] = await Promise.all([
                     apiClient.get(`/api/v1/users/${user.id}/stats`),
                     apiClient.get(`/api/v1/users/${user.id}/questions`),
@@ -47,7 +47,8 @@ export default function ProfileStats() {
                         role: data.role === 'ADMIN' ? 'Moderator' : 'Local Expert',
                         likes: data.likesCount || 0,
                         dislikes: data.dislikesCount || 0,
-                        reputation: data.reputation || 0
+                        reputation: data.reputation || 0,
+                        rating: data.rating != null ? data.rating : 0
                     });
                 }
 
@@ -150,8 +151,8 @@ export default function ProfileStats() {
                         <Text style={styles.reputationSub}>{"Based on your answers' votes"}</Text>
                     </View>
                     <View style={styles.reputationRight}>
-                        <Text style={styles.reputationValue}>{serverStats.reputation}</Text>
-                        <Text style={styles.reputationPts}>pts</Text>
+                        <Text style={styles.reputationValue}>{parseFloat(serverStats.rating).toFixed(1)}</Text>
+                        <Text style={styles.reputationPts}>/5</Text>
                     </View>
                 </View>
 
