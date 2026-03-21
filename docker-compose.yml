@@ -7,25 +7,25 @@
 services:
   # MySQL Database for local development (commented out - using H2 for now)
   # Uncomment this section and update backend environment if you need MySQL
-  # db:
-  #   image: mysql:8.0
-  #   container_name: streetask-db
-  #   environment:
-  #     MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
-  #     MYSQL_DATABASE: ${MYSQL_DATABASE:-streetask}
-  #     MYSQL_USER: ${MYSQL_USER:-streetask}
-  #     MYSQL_PASSWORD: ${MYSQL_PASSWORD:-streetask}
-  #   ports:
-  #     - "3306:3306"
-  #   volumes:
-  #     - mysql_data:/var/lib/mysql
-  #   healthcheck:
-  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #     start_period: 30s
-  #   restart: unless-stopped
+  db:
+    image: mysql:8.0
+    container_name: streetask-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: streetask
+      MYSQL_USER: streetask
+      MYSQL_PASSWORD: streetask
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
 
   backend:
     build:
@@ -39,12 +39,14 @@ services:
       - .:/app
       - maven_cache:/root/.m2
     environment:
-      SPRING_PROFILES_ACTIVE: default
-      # For MySQL, uncomment these and comment out the line above:
-      # SPRING_PROFILES_ACTIVE: mysql
-      # MYSQL_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-streetask}?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true&serverTimezone=UTC
-      # MYSQL_USER: ${MYSQL_USER:-streetask}
-      # MYSQL_PASSWORD: ${MYSQL_PASSWORD:-streetask}
+      SPRING_PROFILES_ACTIVE: mysql
+      MYSQL_URL: jdbc:mysql://db:3306/streetask?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true&serverTimezone=UTC
+      MYSQL_USER: streetask
+      MYSQL_PASSWORD: streetask
+    depends_on:
+      # Uncomment when using MySQL
+      db:
+        condition: service_healthy
     restart: unless-stopped
     command: ./mvnw spring-boot:run -DskipTests
 

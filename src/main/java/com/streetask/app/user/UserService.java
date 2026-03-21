@@ -7,21 +7,22 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
 
-import jakarta.validation.Valid;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import com.streetask.app.answer.AnswerRepository;
-import com.streetask.app.exceptions.ResourceNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.streetask.app.question.QuestionRepository;
+
+import com.streetask.app.answer.AnswerRepository;
+import com.streetask.app.exceptions.ResourceNotFoundException;
 import com.streetask.app.model.Question;
+import com.streetask.app.question.QuestionRepository;
+
+import jakarta.validation.Valid;
 
 @Service
 public class UserService {
@@ -102,8 +103,7 @@ public class UserService {
 
         String previousPassword = toUpdate.getPassword();
 
-        // BeanUtils copiará automáticamente bio y profilePictureUrl si vienen en el objeto 'user'
-        BeanUtils.copyProperties(user, toUpdate, "id");
+		BeanUtils.copyProperties(user, toUpdate, "id", "authority", "accountType", "createdAt", "lastLogin", "active");
 
 		if (user.getPassword() == null || user.getPassword().isBlank()) {
 			toUpdate.setPassword(previousPassword);
@@ -164,17 +164,20 @@ public class UserService {
     public Map<String, Object> getUserStats(UUID userId) {
         User user = findUser(userId);
 
-        long questionsCount = questionRepository.countByCreatorId(userId);
-        long answersCount = answerRepository.countByUserId(userId);
+		long questionsCount = questionRepository.countByCreatorId(userId);
+		long answersCount = answerRepository.countByUserId(userId);
 
-        List<Object[]> aggregates = answerRepository.aggregateVotesByUserIds(List.of(userId));
-        int likesCount = 0;
-        int dislikesCount = 0;
-        if (!aggregates.isEmpty()) {
-            Object[] row = aggregates.get(0);
-            likesCount = ((Number) row[1]).intValue();
-            dislikesCount = ((Number) row[2]).intValue();
-        }
+
+		// Aggregate likes (upvotes) and dislikes (downvotes) for all answers by this
+		// user
+		List<Object[]> aggregates = answerRepository.aggregateVotesByUserIds(List.of(userId));
+		int likesCount = 0;
+		int dislikesCount = 0;
+		if (!aggregates.isEmpty()) {
+			Object[] row = aggregates.get(0);
+			likesCount = ((Number) row[1]).intValue();
+			dislikesCount = ((Number) row[2]).intValue();
+		}
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("questionsCount", questionsCount);
