@@ -41,6 +41,9 @@ export default function HomeScreen({ navigation }) {
     const [currentLocation, setCurrentLocation] = useState(null);
     const [isPremium, setIsPremium] = useState(false);
 
+    // null = revisando, true = concedido, false = denegado
+    const [hasLocationPermission, setHasLocationPermission] = useState(null);
+
     const [feedbackVisible, setFeedbackVisible] = useState(false);
     const [feedbackType, setFeedbackType] = useState('SUGGESTION');
     const [feedbackMessage, setFeedbackMessage] = useState('');
@@ -430,6 +433,7 @@ export default function HomeScreen({ navigation }) {
                                 navigation.navigate('QuestionThread', { questionId: qId })
                             }
                             onLocationChange={setCurrentLocation}
+                            onPermissionChange={setHasLocationPermission}
                         />
                     </View>
 
@@ -442,15 +446,18 @@ export default function HomeScreen({ navigation }) {
                             thumbColor="#fff"
                         />
                     </View>
+                    {hasLocationPermission && (
+                        <TouchableOpacity
+                            style={[styles.fab, isNarrow && { width: 220 }]}
+                            onPress={() => navigation.navigate('CreateQuestion')}
+                            activeOpacity={0.85}
+                        >
+                            <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
+                            <Text style={styles.fabText}>Ask a question</Text>
+                        </TouchableOpacity>
+                    )}
 
-                    <TouchableOpacity
-                        style={[styles.fab, isNarrow && { width: 220 }]}
-                        onPress={() => navigation.navigate('CreateQuestion')}
-                        activeOpacity={0.85}
-                    >
-                        <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
-                        <Text style={styles.fabText}>Ask a question</Text>
-                    </TouchableOpacity>
+
                 </View>
             </SafeAreaView>
 
