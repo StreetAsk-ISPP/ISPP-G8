@@ -76,7 +76,9 @@ export default function ProfileStats() {
             <View style={styles.historyText}>
                 <Text style={styles.itemTitle} numberOfLines={2}>
                     {type === 'questions' ? 'Q: ' : 'A: '}
-                    {item.text || item.title || "No content"}
+                    {type === 'answers'
+                        ? (item.content || item.text || item.title || "No content")
+                        : (item.title || item.text || item.content || "No content")}
                 </Text>
                 <Text style={styles.itemDate}>
                     {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Unknown date'}
