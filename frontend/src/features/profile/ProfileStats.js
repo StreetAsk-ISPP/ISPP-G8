@@ -83,7 +83,6 @@ export default function ProfileStats() {
                     {type === 'answers'
                         ? (item.content || item.text || item.title || "No content")
                         : (item.title || item.text || item.content || "No content")}
-                    </Text>
                 </Text>
                 <View style={styles.itemFooter}>
                     <Ionicons name="calendar-outline" size={12} color="#999" />
