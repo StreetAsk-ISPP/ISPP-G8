@@ -13,11 +13,18 @@ API_BASE = "https://api.github.com"
 # Admins who can request changes
 ADMINS = {"javpalgon", "santiabregu", "manumnzz", "Glinbor10"}
 
-# Issue type labels
+# Issue type prefixes in issue titles
 ISSUE_TYPES = {
-    "documentation": "📚 Documentation",
-    "feature": "✨ Feature",
-    "fix": "🐛 Fix"
+    "[DOCS]": "📚 Documentation",
+    "[FEATURE]": "✨ Feature",
+    "[BUG]": "🐛 Fix",
+}
+
+ISSUE_WEIGHTS = {
+    "📚 Documentation": 0.7,
+    "✨ Feature": 1.0,
+    "🐛 Fix": 1.0,
+    "❓ Other": 0.7,
 }
 
 
@@ -107,14 +114,14 @@ def extract_sprint_number(labels: list) -> int | None:
     return None
 
 
-def get_issue_type(labels: list) -> str:
-    """Get issue type from labels"""
-    label_names = {label.get("name", "").lower() for label in labels}
-    
-    for key, display in ISSUE_TYPES.items():
-        if key in label_names:
+def get_issue_type(title: str | None) -> str:
+    """Get issue type from title prefix: [FEATURE], [DOCS], [BUG]."""
+    normalized = (title or "").strip().upper()
+
+    for prefix, display in ISSUE_TYPES.items():
+        if normalized.startswith(prefix):
             return display
-    
+
     return "❓ Other"
 
 
@@ -125,6 +132,7 @@ def check_pr_changes_requested(gh: GitHubClient, owner: str, repo: str, issue_nu
         "has_pr": bool,
         "pr_number": int | None,
         "pr_url": str | None,
+        "pr_author": str,
         "admin_reviewers": list[str],
         "changes_requested": bool,
         "requested_by": list[str],
@@ -138,6 +146,7 @@ def check_pr_changes_requested(gh: GitHubClient, owner: str, repo: str, issue_nu
         "has_pr": False,
         "pr_number": None,
         "pr_url": None,
+        "pr_author": "",
         "admin_reviewers": [],
         "changes_requested": False,
         "requested_by": [],
@@ -167,6 +176,7 @@ def check_pr_changes_requested(gh: GitHubClient, owner: str, repo: str, issue_nu
             result["pr_number"] = pr.get("number")
             result["pr_url"] = pr.get("html_url")
             pr_author = pr.get("user", {}).get("login", "")
+            result["pr_author"] = pr_author
             admin_reviewers = set()
             
             try:
@@ -256,6 +266,7 @@ def calculate_performance_score(data: dict) -> float:
     Returns: float score from 0.0 to 10.0
     """
     total_issues = data["total_issues"]
+    weighted_issues = data.get("weighted_issues", 0.0)
 
     # No activity in the sprint means a zero score.
     if total_issues == 0:
@@ -270,13 +281,12 @@ def calculate_performance_score(data: dict) -> float:
     has_contributor_commits = data.get("has_contributor_commits_after_review", False)
     has_admin_commits = data.get("has_admin_commits_after_review", False)
     
-    # Issue completion component (0-3 points)
-    # Minimum 1 issue to get any points
-    if total_issues >= 8:
+    # Issue completion component (0-3 points) based on weighted issue effort.
+    if weighted_issues >= 8:
         score += 3.0
-    elif total_issues >= 5:
+    elif weighted_issues >= 5:
         score += 2.0
-    elif total_issues >= 2:
+    elif weighted_issues >= 2:
         score += 1.0
     elif total_issues >= 1:
         score += 0.0  # 1 issue = 0 bonus points (but already have 5 base)
@@ -320,6 +330,7 @@ def calculate_contributor_metrics(issues_by_sprint: dict, gh: GitHubClient, owne
         issues = issues_by_sprint[sprint_num]
         contributors_data = defaultdict(lambda: {
             "total_issues": 0,
+            "weighted_issues": 0.0,
             "by_type": defaultdict(int),
             "prs_analyzed": 0,
             "prs_with_changes": 0,
@@ -340,7 +351,7 @@ def calculate_contributor_metrics(issues_by_sprint: dict, gh: GitHubClient, owne
                 # Exclude unassigned issues from contributor ranking/scoring.
                 continue
             
-            issue_type = get_issue_type(issue.get("labels", []))
+            issue_type = get_issue_type(issue.get("title"))
             
             # Get PR change info
             pr_info = check_pr_changes_requested(gh, owner, repo, issue.get("number"), issue)
@@ -352,33 +363,37 @@ def calculate_contributor_metrics(issues_by_sprint: dict, gh: GitHubClient, owne
                 
                 contributors_data[login]["total_issues"] += 1
                 contributors_data[login]["by_type"][issue_type] += 1
+                contributors_data[login]["weighted_issues"] += ISSUE_WEIGHTS.get(issue_type, 0.7)
 
                 if issue_number and issue_url:
                     contributors_data[login]["issues"][issue_number] = issue_url
 
-                if pr_info["has_pr"]:
-                    contributors_data[login]["prs_analyzed"] += 1
-                    if pr_info["pr_number"] and pr_info["pr_url"]:
-                        contributors_data[login]["prs"][pr_info["pr_number"]] = pr_info["pr_url"]
-                    for admin in pr_info["admin_reviewers"]:
-                        if admin not in contributors_data[login]["admins_involved"]:
-                            contributors_data[login]["admins_involved"].append(admin)
-                        contributors_data[login]["admins_pr_counts"][admin] += 1
-                
+            # PR-related metrics and links belong exclusively to the PR creator.
+            pr_author = pr_info.get("pr_author", "")
+            if pr_info["has_pr"] and pr_author:
+                contributors_data[pr_author]["prs_analyzed"] += 1
+                if pr_info["pr_number"] and pr_info["pr_url"]:
+                    contributors_data[pr_author]["prs"][pr_info["pr_number"]] = pr_info["pr_url"]
+
+                for admin in pr_info["admin_reviewers"]:
+                    if admin not in contributors_data[pr_author]["admins_involved"]:
+                        contributors_data[pr_author]["admins_involved"].append(admin)
+                    contributors_data[pr_author]["admins_pr_counts"][admin] += 1
+
                 if pr_info["changes_requested"]:
-                    contributors_data[login]["prs_with_changes"] += 1
+                    contributors_data[pr_author]["prs_with_changes"] += 1
                     for admin in pr_info["requested_by"]:
-                        if admin not in contributors_data[login]["changes_requested_by_admin"][login]:
-                            contributors_data[login]["changes_requested_by_admin"][login].append(admin)
-                
-                # Track commits by contributor vs admin
+                        if admin not in contributors_data[pr_author]["changes_requested_by_admin"][pr_author]:
+                            contributors_data[pr_author]["changes_requested_by_admin"][pr_author].append(admin)
+
+                # Track commits by contributor vs admin for PR creator.
                 if pr_info["commits_by_contributor"] > 0:
-                    contributors_data[login]["commits_by_contributor"] += pr_info["commits_by_contributor"]
-                    contributors_data[login]["has_contributor_commits_after_review"] = True
-                
+                    contributors_data[pr_author]["commits_by_contributor"] += pr_info["commits_by_contributor"]
+                    contributors_data[pr_author]["has_contributor_commits_after_review"] = True
+
                 if pr_info["commits_by_admin"] > 0:
-                    contributors_data[login]["commits_by_admin"] += pr_info["commits_by_admin"]
-                    contributors_data[login]["has_admin_commits_after_review"] = True
+                    contributors_data[pr_author]["commits_by_admin"] += pr_info["commits_by_admin"]
+                    contributors_data[pr_author]["has_admin_commits_after_review"] = True
         
         # Calculate performance scores
         for contributor in contributors_data:
@@ -447,8 +462,8 @@ def build_report(
         
         # Create table header
         lines.extend([
-            "| Contributor | Score | Status | Total Issues | Issue Links | PR Links | 📚 Doc | ✨ Features | 🐛 Fixes | Changes Requested | Commits After Review | Admins |",
-            "|---|---:|---|---:|---|---|---:|---:|---:|---:|---|---|",
+            "| Contributor | Score | Status | Total Issues | Issue Links | PR Links | 📚 Doc | ✨ Features | 🐛 Fixes | Other(deliverables, presentation, etc) | Changes Requested | Commits After Review | Admins |",
+            "|---|---:|---|---:|---|---|---:|---:|---:|---:|---:|---|---|",
         ])
         
         # Add contributor rows, sorted by score (descending)
@@ -468,6 +483,7 @@ def build_report(
             doc_count = data["by_type"]["📚 Documentation"]
             feat_count = data["by_type"]["✨ Feature"]
             fix_count = data["by_type"]["🐛 Fix"]
+            other_count = data["by_type"]["❓ Other"]
             
             changes_count = data["prs_with_changes"]
             contributor_commits = data["commits_by_contributor"]
@@ -495,7 +511,7 @@ def build_report(
                     commits_info += f"-{admin_commits}"
             
             lines.append(
-                f"| {contributor} | {score:.1f} | {status} | {total} | {issue_links} | {pr_links} | {doc_count} | {feat_count} | {fix_count} | {changes_count} | {commits_info} | {admins_str} |"
+                f"| {contributor} | {score:.1f} | {status} | {total} | {issue_links} | {pr_links} | {doc_count} | {feat_count} | {fix_count} | {other_count} | {changes_count} | {commits_info} | {admins_str} |"
             )
         
         lines.extend(["", ""])
@@ -503,14 +519,24 @@ def build_report(
     lines.extend([
         "## Scoring System (0-10)",
         "",
+        "### Formula:",
+        "- **If total_issues = 0**: score = 0",
+        "- **Otherwise**:",
+        "  - score = clamp(0, 10, 5.0 + issue_points + quality_points + responsiveness_points)",
+        "  - issue_points in {0, 1, 2, 3}",
+        "  - weighted_issues = 1.0*(feature + fix) + 0.7*(documentation + other)",
+        "  - quality_points in {0, 0.5, 1.0, 1.5, 2.0} (only if PRs are analyzed)",
+        "  - responsiveness_points in {-0.3, 0, +0.3}",
+        "",
         "### Components:",
         "- **Base Score**: 5.0 points",
-        "- **Issue Completion** (0-3 points):",
-        "  - 8+ issues: 3.0 points",
-        "  - 5-7 issues: 2.0 points",
-        "  - 2-4 issues: 1.0 point",
+        "- **Issue Completion** (0-3 points, weighted):",
+        "  - 8+ weighted issues: 3.0 points",
+        "  - 5-7.99 weighted issues: 2.0 points",
+        "  - 2-4.99 weighted issues: 1.0 point",
         "  - 1 issue: 0 points",
         "  - 0 issues: 0 points",
+        "  - Weights: [FEATURE]=1.0, [BUG]=1.0, [DOCS]=0.7, other=0.7",
         "- **Quality** (0-2 points, only PRs analyzed):",
         "  - 80%+ PRs without changes requested: 2.0 points",
         "  - 60-79% without changes: 1.5 points",
@@ -535,10 +561,11 @@ def build_report(
         "| **Status** | ✅ Acceptable or ⚠️ Below Threshold |",
         "| **Total Issues** | Number of assigned issues in the sprint (unassigned excluded) |",
         "| **Issue Links** | Links to contributor issues for the sprint |",
-        "| **PR Links** | Links to contributor PRs associated with those issues |",
-        "| **Documentation** | Issues labeled as documentation |",
-        "| **Features** | Issues labeled as feature |",
-        "| **Fixes** | Issues labeled as fix |",
+        "| **PR Links** | Links to PRs created by the contributor (associated to sprint issues) |",
+        "| **Documentation** | Issues with title starting with [DOCS] |",
+        "| **Features** | Issues with title starting with [FEATURE] |",
+        "| **Fixes** | Issues with title starting with [BUG] |",
+        "| **Other(deliverables, presentation, etc)** | Issues whose title does not start with [FEATURE], [BUG], or [DOCS] (weighted as documentation) |",
         "| **Changes Requested** | Number of PRs where an admin requested changes |",
         "| **Commits After Review** | +X: commits by contributor / -X: commits by admin after changes requested |",
         "| **Admins** | Admin reviewers involved, with PR count per contributor (e.g., javpalgon (3 PRs)) |",
