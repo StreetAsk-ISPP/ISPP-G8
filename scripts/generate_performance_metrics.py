@@ -154,8 +154,9 @@ def check_pr_changes_requested(gh: GitHubClient, owner: str, repo: str, issue_nu
         search_query = f"repo:{owner}/{repo} is:pr #{issue_number}"
         search_result = gh.get("/search/issues", params={"q": search_query, "per_page": 5})
         related_prs = search_result.get("items", [])
-    except:
-        pass
+    except Exception as exc:
+        print(f"Warning: Could not search related PRs for issue #{issue_number}: {exc}")
+        related_prs = []
 
     if not related_prs:
         return result
@@ -214,7 +215,6 @@ def check_pr_changes_requested(gh: GitHubClient, owner: str, repo: str, issue_nu
                         if first_review_dt:
                             for commit in commits:
                                 commit_date = parse_dt(commit.get("commit", {}).get("committer", {}).get("date"))
-                                commit_author = commit.get("commit", {}).get("author", {}).get("name", "")
                                 commit_message = commit.get("commit", {}).get("message", "")
                                 
                                 # Skip merge commits
