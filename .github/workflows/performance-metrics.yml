@@ -53,6 +53,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BRANCH_NAME="${GITHUB_REF_NAME}"
           git add metrics/performance-metrics.md
 
           if git diff --cached --quiet; then
@@ -61,4 +62,21 @@ jobs:
           fi
 
           git commit -m "docs(metrics): update weekly performance metrics report"
-          git push
+
+          for attempt in 1 2 3; do
+            if git push origin "HEAD:${BRANCH_NAME}"; then
+              echo "Push succeeded on attempt ${attempt}."
+              exit 0
+            fi
+
+            echo "Push failed on attempt ${attempt}. Fetching and rebasing..."
+            git fetch origin "${BRANCH_NAME}"
+            if ! git rebase "origin/${BRANCH_NAME}"; then
+              echo "Rebase failed. Aborting rebase."
+              git rebase --abort || true
+              exit 1
+            fi
+          done
+
+          echo "Push failed after 3 attempts."
+          exit 1
