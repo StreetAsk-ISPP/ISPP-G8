@@ -3,6 +3,10 @@ name: Performance Metrics Report
 on:
   workflow_dispatch:
     inputs:
+      sprint:
+        description: 'Sprint number to analyze (e.g., 2 analyzes only issues with label SPRINT 2). Empty = all sprints'
+        required: false
+        default: ''
       threshold:
         description: 'Performance threshold (0-10, default: 6.0)'
         required: false
@@ -34,6 +38,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          TARGET_SPRINT: ${{ github.event.inputs.sprint || '' }}
           PERFORMANCE_THRESHOLD: ${{ github.event.inputs.threshold || '6.0' }}
         run: python scripts/generate_performance_metrics.py
 

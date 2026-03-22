@@ -351,7 +351,13 @@ def get_score_status(score: float, threshold: float = 6.0) -> str:
         return "⚠️"
 
 
-def build_report(repo: str, generated_at: datetime, metrics: dict, threshold: float = 6.0) -> str:
+def build_report(
+    repo: str,
+    generated_at: datetime,
+    metrics: dict,
+    threshold: float = 6.0,
+    target_sprint: int | None = None,
+) -> str:
     """Build markdown report with performance metrics"""
     lines = [
         "# Performance Metrics Report - Individual Contributors",
@@ -359,6 +365,7 @@ def build_report(repo: str, generated_at: datetime, metrics: dict, threshold: fl
         f"- Repository: `{repo}`",
         f"- Generated at (UTC): `{generated_at.strftime('%Y-%m-%d %H:%M:%S')}`",
         f"- Performance Threshold: `{threshold}/10`",
+        f"- Target Sprint: `SPRINT {target_sprint}`" if target_sprint is not None else "- Target Sprint: `ALL`",
         "",
     ]
     
@@ -481,6 +488,7 @@ def build_report(repo: str, generated_at: datetime, metrics: dict, threshold: fl
 def main():
     token = os.getenv("GITHUB_TOKEN")
     repository = os.getenv("GITHUB_REPOSITORY")
+    target_sprint_env = os.getenv("TARGET_SPRINT", "").strip()
     threshold_env = os.getenv("PERFORMANCE_THRESHOLD", "6.0")
 
     if not token:
@@ -493,6 +501,15 @@ def main():
     except ValueError:
         print(f"Warning: Invalid PERFORMANCE_THRESHOLD '{threshold_env}', using default 6.0")
         threshold = 6.0
+
+    target_sprint = None
+    if target_sprint_env:
+        try:
+            target_sprint = int(target_sprint_env)
+        except ValueError as exc:
+            raise RuntimeError(
+                f"Invalid TARGET_SPRINT '{target_sprint_env}'. Use an integer sprint number, e.g. 2"
+            ) from exc
 
     owner, repo_name = repository.split("/", 1)
     gh = GitHubClient(token)
@@ -516,12 +533,17 @@ def main():
     # Group issues by sprint
     print(f"Found {len(issues_all)} issues. Grouping by sprint...")
     issues_by_sprint = defaultdict(list)
+
+    if target_sprint is not None:
+        print(f"Target sprint filter enabled: SPRINT {target_sprint}")
+    else:
+        print("Target sprint filter disabled: processing all sprints")
     
     for issue in issues_all:
         labels = issue.get("labels", [])
         sprint_num = extract_sprint_number(labels)
-        
-        if sprint_num is not None:
+
+        if sprint_num is not None and (target_sprint is None or sprint_num == target_sprint):
             issues_by_sprint[sprint_num].append(issue)
 
     if not issues_by_sprint:
@@ -536,7 +558,7 @@ def main():
     # Generate report
     print("Generating report...")
     os.makedirs("metrics", exist_ok=True)
-    report = build_report(repository, now, metrics, threshold=threshold)
+    report = build_report(repository, now, metrics, threshold=threshold, target_sprint=target_sprint)
     
     with open("metrics/performance-metrics.md", "w", encoding="utf-8") as report_file:
         report_file.write(report)
