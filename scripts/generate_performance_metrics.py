@@ -234,10 +234,16 @@ def calculate_performance_score(data: dict) -> float:
     
     Returns: float score from 0.0 to 10.0
     """
-    score = 5.0  # Base score
-    
     total_issues = data["total_issues"]
+
+    # No activity in the sprint means a zero score.
+    if total_issues == 0:
+        return 0.0
+
+    score = 5.0  # Base score
+
     prs_with_changes = data["prs_with_changes"]
+    prs_analyzed = data.get("prs_analyzed", 0)
     commits_by_contributor = data.get("commits_by_contributor", 0)
     commits_by_admin = data.get("commits_by_admin", 0)
     has_contributor_commits = data.get("has_contributor_commits_after_review", False)
@@ -255,11 +261,11 @@ def calculate_performance_score(data: dict) -> float:
         score += 0.0  # 1 issue = 0 bonus points (but already have 5 base)
     
     # Quality component (0-2 points)
-    # Based on how many PRs didn't need changes
-    if total_issues > 0:
-        prs_without_changes = total_issues - prs_with_changes
-        quality_rate = prs_without_changes / total_issues
-        
+    # Based only on PRs actually analyzed. If no PR exists, quality stays neutral (0 points).
+    if prs_analyzed > 0:
+        prs_without_changes = max(prs_analyzed - prs_with_changes, 0)
+        quality_rate = prs_without_changes / prs_analyzed
+
         if quality_rate >= 0.8:  # 80%+ without changes
             score += 2.0
         elif quality_rate >= 0.6:  # 60-79% without changes
@@ -268,18 +274,18 @@ def calculate_performance_score(data: dict) -> float:
             score += 1.0
         elif quality_rate >= 0.2:  # 20-39% without changes
             score += 0.5
-        # else: 0 bonus points if too many issues with changes
-        
-        # Responsivity bonus/penalty (±0.3 points)
-        # If contributor fixed their own issues: +0.3
-        # If admin had to fix issues: -0.3
-        if prs_with_changes > 0:
-            if has_contributor_commits and commits_by_contributor > 0:
-                # Contributor responded to feedback positively
-                score += 0.3
-            elif has_admin_commits and commits_by_admin > 0 and commits_by_contributor == 0:
-                # Admin had to make the fixes (contributor didn't respond)
-                score -= 0.3
+        # else: 0 bonus points if too many PRs with changes
+
+    # Responsivity bonus/penalty (±0.3 points)
+    # If contributor fixed their own issues: +0.3
+    # If admin had to fix issues: -0.3
+    if prs_with_changes > 0:
+        if has_contributor_commits and commits_by_contributor > 0:
+            # Contributor responded to feedback positively
+            score += 0.3
+        elif has_admin_commits and commits_by_admin > 0 and commits_by_contributor == 0:
+            # Admin had to make the fixes (contributor didn't respond)
+            score -= 0.3
     
     # Ensure score is between 0 and 10
     return max(0.0, min(10.0, score))
@@ -294,6 +300,7 @@ def calculate_contributor_metrics(issues_by_sprint: dict, gh: GitHubClient, owne
         contributors_data = defaultdict(lambda: {
             "total_issues": 0,
             "by_type": defaultdict(int),
+            "prs_analyzed": 0,
             "prs_with_changes": 0,
             "commits_by_contributor": 0,
             "commits_by_admin": 0,
@@ -305,7 +312,8 @@ def calculate_contributor_metrics(issues_by_sprint: dict, gh: GitHubClient, owne
         for issue in issues:
             assignees = issue.get("assignees", [])
             if not assignees:
-                assignees = [{"login": "unassigned"}]
+                # Exclude unassigned issues from contributor ranking/scoring.
+                continue
             
             issue_type = get_issue_type(issue.get("labels", []))
             
@@ -317,6 +325,9 @@ def calculate_contributor_metrics(issues_by_sprint: dict, gh: GitHubClient, owne
                 
                 contributors_data[login]["total_issues"] += 1
                 contributors_data[login]["by_type"][issue_type] += 1
+
+                if pr_info["has_pr"]:
+                    contributors_data[login]["prs_analyzed"] += 1
                 
                 if pr_info["changes_requested"]:
                     contributors_data[login]["prs_with_changes"] += 1
@@ -451,12 +462,13 @@ def build_report(
         "  - 2-4 issues: 1.0 point",
         "  - 1 issue: 0 points",
         "  - 0 issues: 0 points",
-        "- **Quality** (0-2 points):",
+        "- **Quality** (0-2 points, only PRs analyzed):",
         "  - 80%+ PRs without changes requested: 2.0 points",
         "  - 60-79% without changes: 1.5 points",
         "  - 40-59% without changes: 1.0 point",
         "  - 20-39% without changes: 0.5 points",
         "  - <20% without changes: 0 points",
+        "  - If no associated PRs are found: quality is neutral (0 points)",
         "- **Responsiveness Bonus/Penalty** (±0.3 points):",
         "  - **+0.3 points**: If contributor made commits to fix issues after admin requested changes",
         "  - **-0.3 points**: If admin had to make commits to fix issues and contributor did not respond",
@@ -472,7 +484,7 @@ def build_report(
         "|---|---|",
         "| **Score** | Overall performance score (0-10) |",
         "| **Status** | ✅ Acceptable or ⚠️ Below Threshold |",
-        "| **Total Issues** | Number of issues assigned in the sprint |",
+        "| **Total Issues** | Number of assigned issues in the sprint (unassigned excluded) |",
         "| **Documentation** | Issues labeled as documentation |",
         "| **Features** | Issues labeled as feature |",
         "| **Fixes** | Issues labeled as fix |",
