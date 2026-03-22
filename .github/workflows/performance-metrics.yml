@@ -60,5 +60,5 @@ jobs:
             exit 0
           fi
 
-          git commit -m "docs: update weekly performance metrics report"
+          git commit -m "docs(metrics): update weekly performance metrics report"
           git push
