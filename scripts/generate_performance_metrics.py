@@ -124,6 +124,7 @@ def check_pr_changes_requested(gh: GitHubClient, owner: str, repo: str, issue_nu
     Returns: {
         "has_pr": bool,
         "pr_number": int | None,
+        "admin_reviewers": list[str],
         "changes_requested": bool,
         "requested_by": list[str],
         "commits_by_contributor": int,
@@ -135,6 +136,7 @@ def check_pr_changes_requested(gh: GitHubClient, owner: str, repo: str, issue_nu
     result = {
         "has_pr": False,
         "pr_number": None,
+        "admin_reviewers": [],
         "changes_requested": False,
         "requested_by": [],
         "commits_by_contributor": 0,
@@ -161,13 +163,27 @@ def check_pr_changes_requested(gh: GitHubClient, owner: str, repo: str, issue_nu
             result["has_pr"] = True
             result["pr_number"] = pr.get("number")
             pr_author = pr.get("user", {}).get("login", "")
+            admin_reviewers = set()
             
             try:
+                # Get PR details to extract requested reviewers
+                pr_details = gh.get(f"/repos/{owner}/{repo}/pulls/{pr['number']}")
+                for reviewer in pr_details.get("requested_reviewers", []):
+                    reviewer_login = reviewer.get("login", "")
+                    if reviewer_login in ADMINS:
+                        admin_reviewers.add(reviewer_login)
+
                 # Get PR reviews
                 reviews = gh.get_paginated(
                     f"/repos/{owner}/{repo}/pulls/{pr['number']}/reviews",
                     params={"per_page": 100}
                 )
+
+                # Include admins that actually reviewed (APPROVED/COMMENTED/CHANGES_REQUESTED)
+                for review in reviews:
+                    reviewer_login = review.get("user", {}).get("login", "")
+                    if reviewer_login in ADMINS:
+                        admin_reviewers.add(reviewer_login)
                 
                 # Check for changes_requested state
                 changes_reviews = [r for r in reviews if r.get("state") == "CHANGES_REQUESTED"]
@@ -213,6 +229,8 @@ def check_pr_changes_requested(gh: GitHubClient, owner: str, repo: str, issue_nu
                                         # Commit by PR author (contributor)
                                         result["commits_by_contributor"] += 1
                                         result["has_contributor_commits_after_review"] = True
+
+                result["admin_reviewers"] = sorted(admin_reviewers)
                 
             except Exception as e:
                 print(f"Warning: Could not fetch PR details for #{pr.get('number')}: {e}")
@@ -306,7 +324,8 @@ def calculate_contributor_metrics(issues_by_sprint: dict, gh: GitHubClient, owne
             "commits_by_admin": 0,
             "has_contributor_commits_after_review": False,
             "has_admin_commits_after_review": False,
-            "changes_requested_by_admin": defaultdict(list)
+            "changes_requested_by_admin": defaultdict(list),
+            "admins_involved": []
         })
         
         for issue in issues:
@@ -328,6 +347,9 @@ def calculate_contributor_metrics(issues_by_sprint: dict, gh: GitHubClient, owne
 
                 if pr_info["has_pr"]:
                     contributors_data[login]["prs_analyzed"] += 1
+                    for admin in pr_info["admin_reviewers"]:
+                        if admin not in contributors_data[login]["admins_involved"]:
+                            contributors_data[login]["admins_involved"].append(admin)
                 
                 if pr_info["changes_requested"]:
                     contributors_data[login]["prs_with_changes"] += 1
@@ -427,11 +449,8 @@ def build_report(
             admin_commits = data["commits_by_admin"]
             
             admins_str = ""
-            if data["changes_requested_by_admin"]:
-                all_admins = set()
-                for admins_list in data["changes_requested_by_admin"].values():
-                    all_admins.update(admins_list)
-                admins_str = ", ".join(sorted(all_admins)) if all_admins else "-"
+            if data["admins_involved"]:
+                admins_str = ", ".join(sorted(data["admins_involved"]))
             else:
                 admins_str = "-"
             
