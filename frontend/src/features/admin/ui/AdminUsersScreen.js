@@ -147,7 +147,7 @@ export default function AdminUsersScreen() {
 
     const confirmDeleteUserAction = async () => {
         try {
-            const res = await apiClient.delete(
+            await apiClient.delete(
                 `/api/v1/moderation/users/${userToDelete.id}`,
                 {
                     params: {
@@ -203,7 +203,7 @@ export default function AdminUsersScreen() {
                 description: strikeForm.description || null,
             };
 
-            const res = await apiClient.post(
+            await apiClient.post(
                 `/api/v1/moderation/users/${selectedUserForStrike.id}/strike`,
                 payload
             );
