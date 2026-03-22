@@ -1,78 +1,89 @@
 # Performance Metrics Report - Individual Contributors
 
 - Repository: `StreetAsk-ISPP/ISPP-G10`
-- Generated at (UTC): `2026-03-22 15:46:04`
+- Generated at (UTC): `2026-03-22 18:33:45`
 - Performance Threshold: `6.0/10`
 - Target Sprint: `ALL`
 
 ## Sprint 1
 
-| Contributor | Score | Status | Total Issues | Issue Links | PR Links | 📚 Doc | ✨ Features | 🐛 Fixes | Changes Requested | Commits After Review | Admins |
-|---|---:|---|---:|---|---|---:|---:|---:|---:|---|---|
-| OscarGomezGonzalezz | 9.0 | ✅ | 5 | [#113](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/113), [#114](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/114), [#131](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/131), [#143](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/143), [#167](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/167) | [#132](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/132) | 0 | 2 | 0 | 0 |  | santiabregu (1 PR) |
-| manortper1 | 8.0 | ✅ | 2 | [#123](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/123), [#148](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/148) | [#386](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/386) | 1 | 0 | 0 | 0 |  | - |
-| Glinbor10 | 8.0 | ✅ | 3 | [#123](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/123), [#145](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/145), [#148](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/148) | [#386](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/386) | 1 | 0 | 0 | 0 |  | - |
-| josegicar | 8.0 | ✅ | 2 | [#112](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/112), [#141](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/141) | [#151](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/151), [#187](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/187) | 0 | 1 | 0 | 0 |  | manumnzz (1 PR) |
-| 60Manu82 | 8.0 | ✅ | 2 | [#126](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/126), [#140](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/140) | [#168](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/168) | 0 | 1 | 0 | 0 |  | manumnzz (1 PR) |
-| darzafrui | 7.0 | ✅ | 6 | [#117](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/117), [#120](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/120), [#176](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/176), [#208](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/208), [#214](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/214), [#216](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/216) | - | 0 | 0 | 3 | 0 |  | - |
-| jossilguz | 7.0 | ✅ | 6 | [#110](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/110), [#149](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/149), [#150](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/150), [#169](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/169), [#176](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/176), [#219](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/219) | - | 2 | 1 | 0 | 0 |  | - |
-| raqgarhor | 7.0 | ✅ | 1 | [#137](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/137) | [#366](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/366) | 0 | 0 | 0 | 0 |  | - |
-| manchilop | 6.3 | ✅ | 3 | [#117](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/117), [#119](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/119), [#125](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/125) | [#155](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/155) | 0 | 0 | 0 | 1 | +1 | javpalgon (1 PR) |
-| darrodsas | 6.0 | ✅ | 2 | [#124](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/124), [#148](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/148) | - | 0 | 0 | 0 | 0 |  | - |
-| pabloarrabalh | 6.0 | ✅ | 2 | [#124](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/124), [#148](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/148) | - | 0 | 0 | 0 | 0 |  | - |
-| santiabregu | 6.0 | ✅ | 3 | [#134](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/134), [#195](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/195), [#220](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/220) | - | 0 | 0 | 0 | 0 |  | - |
-| sfernandez07 | 6.0 | ✅ | 3 | [#120](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/120), [#169](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/169), [#207](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/207) | - | 0 | 1 | 1 | 0 |  | - |
-| celdorrui | 6.0 | ✅ | 2 | [#136](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/136), [#177](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/177) | - | 0 | 0 | 0 | 0 |  | - |
-| Robmunnper | 6.0 | ✅ | 2 | [#115](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/115), [#138](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/138) | - | 0 | 2 | 0 | 0 |  | - |
-| javpalgon | 6.0 | ✅ | 3 | [#117](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/117), [#121](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/121), [#150](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/150) | - | 2 | 0 | 0 | 0 |  | - |
-| manumnzz | 6.0 | ✅ | 2 | [#111](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/111), [#115](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/115) | - | 1 | 1 | 0 | 0 |  | - |
-| miguelmirceballos | 5.0 | ⚠️ | 1 | [#139](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/139) | - | 0 | 1 | 0 | 0 |  | - |
+| Contributor | Score | Status | Total Issues | Issue Links | PR Links | 📚 Doc | ✨ Features | 🐛 Fixes | Other(deliverables, presentation, etc) | Changes Requested | Commits After Review | Admins |
+|---|---:|---|---:|---|---|---:|---:|---:|---:|---:|---|---|
+| OscarGomezGonzalezz | 9.0 | ✅ | 5 | [#113](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/113), [#114](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/114), [#131](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/131), [#143](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/143), [#167](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/167) | [#132](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/132) | 0 | 5 | 0 | 0 | 0 |  | santiabregu (1 PR) |
+| josegicar | 8.0 | ✅ | 2 | [#112](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/112), [#141](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/141) | [#151](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/151), [#187](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/187) | 0 | 2 | 0 | 0 | 0 |  | manumnzz (1 PR) |
+| 60Manu82 | 8.0 | ✅ | 2 | [#126](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/126), [#140](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/140) | [#168](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/168) | 0 | 2 | 0 | 0 | 0 |  | manumnzz (1 PR) |
+| darzafrui | 7.0 | ✅ | 6 | [#117](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/117), [#120](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/120), [#176](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/176), [#208](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/208), [#214](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/214), [#216](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/216) | - | 1 | 2 | 3 | 0 | 0 |  | - |
+| jossilguz | 7.0 | ✅ | 6 | [#110](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/110), [#149](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/149), [#150](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/150), [#169](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/169), [#176](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/176), [#219](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/219) | - | 3 | 3 | 0 | 0 | 0 |  | - |
+| manumnzz | 7.0 | ✅ | 2 | [#111](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/111), [#115](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/115) | [#366](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/366) | 1 | 1 | 0 | 0 | 0 |  | - |
+| manchilop | 6.3 | ✅ | 3 | [#117](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/117), [#119](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/119), [#125](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/125) | [#155](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/155) | 0 | 3 | 0 | 0 | 1 | +1 | javpalgon (1 PR) |
+| Glinbor10 | 6.0 | ✅ | 3 | [#123](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/123), [#145](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/145), [#148](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/148) | - | 3 | 0 | 0 | 0 | 0 |  | - |
+| santiabregu | 6.0 | ✅ | 3 | [#134](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/134), [#195](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/195), [#220](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/220) | - | 0 | 2 | 1 | 0 | 0 |  | - |
+| sfernandez07 | 6.0 | ✅ | 3 | [#120](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/120), [#169](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/169), [#207](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/207) | - | 0 | 2 | 1 | 0 | 0 |  | - |
+| Robmunnper | 6.0 | ✅ | 2 | [#115](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/115), [#138](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/138) | - | 0 | 2 | 0 | 0 | 0 |  | - |
+| javpalgon | 6.0 | ✅ | 3 | [#117](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/117), [#121](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/121), [#150](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/150) | - | 2 | 1 | 0 | 0 | 0 |  | - |
+| manortper1 | 5.0 | ⚠️ | 2 | [#123](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/123), [#148](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/148) | - | 2 | 0 | 0 | 0 | 0 |  | - |
+| darrodsas | 5.0 | ⚠️ | 2 | [#124](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/124), [#148](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/148) | - | 1 | 1 | 0 | 0 | 0 |  | - |
+| pabloarrabalh | 5.0 | ⚠️ | 2 | [#124](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/124), [#148](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/148) | - | 1 | 1 | 0 | 0 | 0 |  | - |
+| miguelmirceballos | 5.0 | ⚠️ | 1 | [#139](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/139) | - | 0 | 1 | 0 | 0 | 0 |  | - |
+| celdorrui | 5.0 | ⚠️ | 2 | [#136](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/136), [#177](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/177) | - | 1 | 1 | 0 | 0 | 0 |  | - |
+| raqgarhor | 5.0 | ⚠️ | 1 | [#137](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/137) | - | 0 | 1 | 0 | 0 | 0 |  | - |
+| Copilot | 0.0 | ⚠️ | 0 | - | [#386](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/386) | 0 | 0 | 0 | 0 | 0 |  | - |
 
 
 ## Sprint 2
 
-| Contributor | Score | Status | Total Issues | Issue Links | PR Links | 📚 Doc | ✨ Features | 🐛 Fixes | Changes Requested | Commits After Review | Admins |
-|---|---:|---|---:|---|---|---:|---:|---:|---:|---|---|
-| Glinbor10 | 10.0 | ✅ | 9 | [#251](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/251), [#280](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/280), [#284](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/284), [#341](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/341), [#348](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/348), [#394](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/394), [#404](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/404), [#419](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/419), [#421](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/421) | [#347](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/347), [#393](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/393) | 0 | 4 | 4 | 0 |  | javpalgon (1 PR), manumnzz (2 PRs), santiabregu (1 PR) |
-| 60Manu82 | 10.0 | ✅ | 10 | [#240](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/240), [#244](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/244), [#289](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/289), [#311](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/311), [#318](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/318), [#331](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/331), [#332](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/332), [#340](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/340), [#353](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/353), [#418](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/418) | [#357](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/357) | 1 | 4 | 3 | 0 |  | Glinbor10 (1 PR), javpalgon (1 PR) |
-| darzafrui | 10.0 | ✅ | 8 | [#269](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/269), [#290](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/290), [#291](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/291), [#297](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/297), [#340](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/340), [#379](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/379), [#403](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/403), [#417](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/417) | [#393](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/393) | 3 | 1 | 1 | 0 |  | manumnzz (1 PR) |
-| santiabregu | 10.0 | ✅ | 9 | [#304](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/304), [#305](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/305), [#340](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/340), [#344](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/344), [#361](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/361), [#398](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/398), [#404](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/404), [#405](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/405), [#406](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/406) | [#393](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/393) | 4 | 2 | 1 | 0 |  | manumnzz (1 PR) |
-| javpalgon | 9.0 | ✅ | 6 | [#253](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/253), [#255](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/255), [#342](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/342), [#365](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/365), [#400](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/400), [#404](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/404) | [#276](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/276), [#324](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/324), [#371](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/371), [#393](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/393) | 1 | 3 | 1 | 0 |  | Glinbor10 (1 PR), javpalgon (1 PR), manumnzz (4 PRs), santiabregu (1 PR) |
-| Sergiootl | 8.5 | ✅ | 6 | [#248](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/248), [#252](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/252), [#253](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/253), [#286](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/286), [#365](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/365), [#415](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/415) | [#258](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/258), [#282](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/282), [#324](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/324) | 0 | 3 | 2 | 1 |  | Glinbor10 (1 PR), javpalgon (2 PRs), manumnzz (1 PR), santiabregu (1 PR) |
-| celdorrui | 8.0 | ✅ | 9 | [#217](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/217), [#268](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/268), [#309](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/309), [#321](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/321), [#345](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/345), [#360](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/360), [#396](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/396), [#399](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/399), [#402](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/402) | - | 1 | 2 | 4 | 0 |  | - |
-| manumnzz | 8.0 | ✅ | 2 | [#400](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/400), [#404](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/404) | [#276](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/276), [#393](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/393) | 1 | 0 | 0 | 0 |  | manumnzz (2 PRs) |
-| josegicar | 8.0 | ✅ | 2 | [#203](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/203), [#293](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/293) | [#393](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/393) | 0 | 0 | 1 | 0 |  | manumnzz (1 PR) |
-| sfernandez07 | 8.0 | ✅ | 3 | [#254](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/254), [#294](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/294), [#363](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/363) | [#371](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/371) | 0 | 0 | 2 | 0 |  | javpalgon (1 PR), manumnzz (1 PR) |
-| raqgarhor | 7.0 | ✅ | 7 | [#246](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/246), [#292](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/292), [#295](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/295), [#314](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/314), [#346](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/346), [#369](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/369), [#388](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/388) | - | 0 | 0 | 3 | 0 |  | - |
-| jossilguz | 7.0 | ✅ | 5 | [#267](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/267), [#296](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/296), [#364](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/364), [#380](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/380), [#383](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/383) | - | 0 | 3 | 1 | 0 |  | - |
-| manchilop | 7.0 | ✅ | 1 | [#272](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/272) | [#276](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/276) | 0 | 0 | 1 | 0 |  | manumnzz (1 PR) |
-| anamarva2 | 6.0 | ✅ | 2 | [#266](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/266), [#375](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/375) | - | 0 | 2 | 0 | 0 |  | - |
-| Robmunnper | 6.0 | ✅ | 4 | [#288](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/288), [#304](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/304), [#312](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/312), [#381](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/381) | - | 0 | 2 | 0 | 0 |  | - |
-| darrodsas | 6.0 | ✅ | 4 | [#245](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/245), [#247](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/247), [#286](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/286), [#376](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/376) | - | 0 | 2 | 0 | 0 |  | - |
-| pabloarrabalh | 6.0 | ✅ | 3 | [#200](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/200), [#286](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/286), [#373](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/373) | - | 0 | 2 | 0 | 0 |  | - |
-| OscarGomezGonzalezz | 6.0 | ✅ | 3 | [#243](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/243), [#336](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/336), [#351](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/351) | - | 0 | 2 | 1 | 0 |  | - |
-| manortper1 | 6.0 | ✅ | 2 | [#256](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/256), [#286](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/286) | - | 0 | 1 | 0 | 0 |  | - |
-| miguelmirceballos | 5.0 | ⚠️ | 1 | [#278](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/278) | - | 0 | 0 | 1 | 0 |  | - |
+| Contributor | Score | Status | Total Issues | Issue Links | PR Links | 📚 Doc | ✨ Features | 🐛 Fixes | Other(deliverables, presentation, etc) | Changes Requested | Commits After Review | Admins |
+|---|---:|---|---:|---|---|---:|---:|---:|---:|---:|---|---|
+| Glinbor10 | 10.0 | ✅ | 9 | [#251](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/251), [#280](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/280), [#284](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/284), [#341](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/341), [#348](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/348), [#394](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/394), [#404](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/404), [#419](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/419), [#421](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/421) | [#347](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/347) | 0 | 5 | 3 | 1 | 0 |  | javpalgon (1 PR), manumnzz (1 PR), santiabregu (1 PR) |
+| javpalgon | 9.0 | ✅ | 6 | [#253](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/253), [#255](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/255), [#342](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/342), [#365](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/365), [#400](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/400), [#404](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/404) | [#324](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/324) | 1 | 3 | 1 | 1 | 0 |  | Glinbor10 (1 PR), manumnzz (1 PR), santiabregu (1 PR) |
+| Sergiootl | 8.5 | ✅ | 6 | [#248](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/248), [#252](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/252), [#253](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/253), [#286](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/286), [#365](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/365), [#415](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/415) | [#258](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/258), [#282](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/282), [#371](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/371) | 0 | 5 | 1 | 0 | 1 |  | javpalgon (4 PRs), manumnzz (2 PRs) |
+| celdorrui | 8.0 | ✅ | 9 | [#217](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/217), [#268](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/268), [#309](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/309), [#321](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/321), [#345](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/345), [#360](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/360), [#396](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/396), [#399](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/399), [#402](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/402) | - | 1 | 3 | 3 | 2 | 0 |  | - |
+| josegicar | 8.0 | ✅ | 2 | [#203](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/203), [#293](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/293) | [#393](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/393) | 0 | 1 | 1 | 0 | 0 |  | manumnzz (3 PRs) |
+| 60Manu82 | 8.0 | ✅ | 10 | [#240](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/240), [#244](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/244), [#289](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/289), [#311](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/311), [#318](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/318), [#331](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/331), [#332](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/332), [#340](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/340), [#353](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/353), [#418](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/418) | - | 1 | 5 | 4 | 0 | 0 |  | - |
+| darzafrui | 7.0 | ✅ | 8 | [#269](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/269), [#290](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/290), [#291](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/291), [#297](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/297), [#340](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/340), [#379](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/379), [#403](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/403), [#417](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/417) | - | 3 | 4 | 1 | 0 | 0 |  | - |
+| raqgarhor | 7.0 | ✅ | 7 | [#246](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/246), [#292](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/292), [#295](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/295), [#314](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/314), [#346](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/346), [#369](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/369), [#388](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/388) | - | 0 | 2 | 5 | 0 | 0 |  | - |
+| jossilguz | 7.0 | ✅ | 5 | [#267](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/267), [#296](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/296), [#364](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/364), [#380](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/380), [#383](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/383) | - | 0 | 4 | 1 | 0 | 0 |  | - |
+| santiabregu | 7.0 | ✅ | 9 | [#304](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/304), [#305](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/305), [#340](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/340), [#344](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/344), [#361](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/361), [#398](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/398), [#404](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/404), [#405](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/405), [#406](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/406) | - | 4 | 2 | 1 | 2 | 0 |  | - |
+| manumnzz | 7.0 | ✅ | 2 | [#400](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/400), [#404](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/404) | [#357](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/357) | 1 | 0 | 0 | 1 | 0 |  | Glinbor10 (1 PR), javpalgon (1 PR) |
+| manchilop | 7.0 | ✅ | 1 | [#272](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/272) | [#276](https://github.com/StreetAsk-ISPP/ISPP-G10/pull/276) | 0 | 0 | 1 | 0 | 0 |  | manumnzz (2 PRs) |
+| pabloarrabalh | 6.0 | ✅ | 3 | [#200](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/200), [#286](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/286), [#373](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/373) | - | 0 | 3 | 0 | 0 | 0 |  | - |
+| anamarva2 | 6.0 | ✅ | 2 | [#266](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/266), [#375](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/375) | - | 0 | 2 | 0 | 0 | 0 |  | - |
+| Robmunnper | 6.0 | ✅ | 4 | [#288](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/288), [#304](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/304), [#312](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/312), [#381](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/381) | - | 0 | 2 | 1 | 1 | 0 |  | - |
+| darrodsas | 6.0 | ✅ | 4 | [#245](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/245), [#247](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/247), [#286](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/286), [#376](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/376) | - | 0 | 3 | 1 | 0 | 0 |  | - |
+| sfernandez07 | 6.0 | ✅ | 3 | [#254](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/254), [#294](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/294), [#363](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/363) | - | 0 | 1 | 2 | 0 | 0 |  | - |
+| OscarGomezGonzalezz | 6.0 | ✅ | 3 | [#243](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/243), [#336](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/336), [#351](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/351) | - | 0 | 2 | 1 | 0 | 0 |  | - |
+| manortper1 | 6.0 | ✅ | 2 | [#256](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/256), [#286](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/286) | - | 0 | 2 | 0 | 0 | 0 |  | - |
+| miguelmirceballos | 5.0 | ⚠️ | 1 | [#278](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/278) | - | 0 | 0 | 1 | 0 | 0 |  | - |
 
 
 ## Sprint 3
 
-| Contributor | Score | Status | Total Issues | Issue Links | PR Links | 📚 Doc | ✨ Features | 🐛 Fixes | Changes Requested | Commits After Review | Admins |
-|---|---:|---|---:|---|---|---:|---:|---:|---:|---|---|
-| jossilguz | 5.0 | ⚠️ | 1 | [#413](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/413) | - | 0 | 1 | 0 | 0 |  | - |
-| darzafrui | 5.0 | ⚠️ | 1 | [#412](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/412) | - | 0 | 1 | 0 | 0 |  | - |
+| Contributor | Score | Status | Total Issues | Issue Links | PR Links | 📚 Doc | ✨ Features | 🐛 Fixes | Other(deliverables, presentation, etc) | Changes Requested | Commits After Review | Admins |
+|---|---:|---|---:|---|---|---:|---:|---:|---:|---:|---|---|
+| jossilguz | 5.0 | ⚠️ | 1 | [#413](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/413) | - | 0 | 1 | 0 | 0 | 0 |  | - |
+| darzafrui | 5.0 | ⚠️ | 1 | [#412](https://github.com/StreetAsk-ISPP/ISPP-G10/issues/412) | - | 0 | 1 | 0 | 0 | 0 |  | - |
 
 
 ## Scoring System (0-10)
 
+### Formula:
+- **If total_issues = 0**: score = 0
+- **Otherwise**:
+  - score = clamp(0, 10, 5.0 + issue_points + quality_points + responsiveness_points)
+  - issue_points in {0, 1, 2, 3}
+  - weighted_issues = 1.0*(feature + fix) + 0.7*(documentation + other)
+  - quality_points in {0, 0.5, 1.0, 1.5, 2.0} (only if PRs are analyzed)
+  - responsiveness_points in {-0.3, 0, +0.3}
+
 ### Components:
 - **Base Score**: 5.0 points
-- **Issue Completion** (0-3 points):
-  - 8+ issues: 3.0 points
-  - 5-7 issues: 2.0 points
-  - 2-4 issues: 1.0 point
+- **Issue Completion** (0-3 points, weighted):
+  - 8+ weighted issues: 3.0 points
+  - 5-7.99 weighted issues: 2.0 points
+  - 2-4.99 weighted issues: 1.0 point
   - 1 issue: 0 points
   - 0 issues: 0 points
+  - Weights: [FEATURE]=1.0, [BUG]=1.0, [DOCS]=0.7, other=0.7
 - **Quality** (0-2 points, only PRs analyzed):
   - 80%+ PRs without changes requested: 2.0 points
   - 60-79% without changes: 1.5 points
@@ -97,10 +108,11 @@
 | **Status** | ✅ Acceptable or ⚠️ Below Threshold |
 | **Total Issues** | Number of assigned issues in the sprint (unassigned excluded) |
 | **Issue Links** | Links to contributor issues for the sprint |
-| **PR Links** | Links to contributor PRs associated with those issues |
-| **Documentation** | Issues labeled as documentation |
-| **Features** | Issues labeled as feature |
-| **Fixes** | Issues labeled as fix |
+| **PR Links** | Links to PRs created by the contributor (associated to sprint issues) |
+| **Documentation** | Issues with title starting with [DOCS] |
+| **Features** | Issues with title starting with [FEATURE] |
+| **Fixes** | Issues with title starting with [BUG] |
+| **Other(deliverables, presentation, etc)** | Issues whose title does not start with [FEATURE], [BUG], or [DOCS] (weighted as documentation) |
 | **Changes Requested** | Number of PRs where an admin requested changes |
 | **Commits After Review** | +X: commits by contributor / -X: commits by admin after changes requested |
 | **Admins** | Admin reviewers involved, with PR count per contributor (e.g., javpalgon (3 PRs)) |
