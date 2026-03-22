@@ -16,6 +16,7 @@ import apiClient from '../../../shared/services/http/apiClient';
 import Toast from 'react-native-toast-message';
 import MapPickerWeb from '../../home/ui/components/MapPickerWeb';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import Slider from '@react-native-community/slider';
 
 const FREE_FIXED_RADIUS_KM = 0.5;
 const FREE_FIXED_RADIUS_M = 500;
@@ -391,38 +392,29 @@ export default function CreateQuestionScreen({ navigation }) {
               </Text>
               <Text style={styles.mapRadiusLabel}>Response radius (m)</Text>
               {isPremium ? (
-                <View
-                  style={[
-                    styles.mapRadiusInputWrapper,
-                    focusedField === 'radiusMap' && styles.inputFocused,
-                    showRadiusRangeError && styles.inputError,
-                  ]}
-                >
-                  <Ionicons
-                    name="ellipse-outline"
-                    size={18}
-                    color="#9ca3af"
-                    style={{ marginRight: 8 }}
-                  />
-                  <TextInput
-                    value={radiusInput}
-                    onChangeText={onRadiusInputChange}
-                    keyboardType={Platform.OS === 'ios' ? 'decimal-pad' : 'numeric'}
-                    placeholder="500"
-                    placeholderTextColor="#9ca3af"
-                    style={styles.input}
-                    onFocus={() => setFocusedField('radiusMap')}
-                    onBlur={() => {
-                      setFocusedField(null);
-                      const parsedMeters = parseRadiusMeters(radiusInput);
-                      if (parsedMeters !== null) {
-                        setRadiusInput(String(parsedMeters));
-                        setRadiusKm(parsedMeters / 1000);
-                      }
-                    }}
-                  />
+                 <View style={styles.sliderBlock}>
+                 <Slider
+                 minimumValue={PREMIUM_MIN_RADIUS_M}
+                 maximumValue={PREMIUM_MAX_RADIUS_M}
+                 step={10}
+                 value={parsedRadiusMeters ?? FREE_FIXED_RADIUS_M}
+                 onValueChange={(value) => {
+                 setRadiusInput(String(Math.round(value)));
+                 setRadiusKm(value / 1000);
+                 }}
+                 minimumTrackTintColor="#a52019"
+                 maximumTrackTintColor="#e5e7eb"
+                 thumbTintColor="#a52019"
+                 />
+
+                 <View style={styles.sliderLabels}>
+                    <Text style={styles.sliderMin}>50 m</Text>
+                    <Text style={styles.radiusValueText}>
+                     {parsedRadiusMeters ?? FREE_FIXED_RADIUS_M} m
+                    </Text>
+                    <Text style={styles.sliderMax}>1000 m</Text>
                 </View>
-              ) : (
+                </View>             ) : (
                 <View style={styles.lockedBox}>
                   <Ionicons name="lock-closed" size={14} color="#6b7280" />
                   <Text style={styles.lockedText}>Fixed for free plan: 500 m</Text>
@@ -997,5 +989,32 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 5,
   },
+  radiusValueText: {
+    textAlign: 'center',
+    marginTop: 6,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#a52019',
+  },
+  sliderBlock: {
+  marginTop: 10,
+  },
+
+  sliderLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+
+  sliderMin: {
+    fontSize: 11,
+    color: '#9ca3af',
+  },
+
+  sliderMax: {
+    fontSize: 11,
+    color: '#9ca3af',
+  },  
   postBtnText: { fontWeight: '700', fontSize: 15, color: '#fff' },
 });
