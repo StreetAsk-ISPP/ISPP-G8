@@ -13,12 +13,6 @@ on:
         default: '6.0'
   schedule:
     - cron: '0 13 * * 2'
-  push:
-    branches:
-      - feature/workflow-individual-metrics
-  pull_request:
-    branches:
-      - main
 
 permissions:
   contents: write
@@ -32,6 +26,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event_name == 'schedule' && 'trunk' || github.ref_name }}
           fetch-depth: 0
           persist-credentials: true
 
@@ -53,7 +48,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          BRANCH_NAME="${GITHUB_REF_NAME}"
+          if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
+            BRANCH_NAME="trunk"
+          else
+            BRANCH_NAME="${GITHUB_REF_NAME}"
+          fi
           git add metrics/performance-metrics.md
 
           if git diff --cached --quiet; then
