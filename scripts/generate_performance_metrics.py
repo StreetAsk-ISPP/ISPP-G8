@@ -124,6 +124,7 @@ def check_pr_changes_requested(gh: GitHubClient, owner: str, repo: str, issue_nu
     Returns: {
         "has_pr": bool,
         "pr_number": int | None,
+        "pr_url": str | None,
         "admin_reviewers": list[str],
         "changes_requested": bool,
         "requested_by": list[str],
@@ -136,6 +137,7 @@ def check_pr_changes_requested(gh: GitHubClient, owner: str, repo: str, issue_nu
     result = {
         "has_pr": False,
         "pr_number": None,
+        "pr_url": None,
         "admin_reviewers": [],
         "changes_requested": False,
         "requested_by": [],
@@ -162,6 +164,7 @@ def check_pr_changes_requested(gh: GitHubClient, owner: str, repo: str, issue_nu
         if pr.get("pull_request"):
             result["has_pr"] = True
             result["pr_number"] = pr.get("number")
+            result["pr_url"] = pr.get("html_url")
             pr_author = pr.get("user", {}).get("login", "")
             admin_reviewers = set()
             
@@ -325,7 +328,10 @@ def calculate_contributor_metrics(issues_by_sprint: dict, gh: GitHubClient, owne
             "has_contributor_commits_after_review": False,
             "has_admin_commits_after_review": False,
             "changes_requested_by_admin": defaultdict(list),
-            "admins_involved": []
+            "admins_involved": [],
+            "admins_pr_counts": defaultdict(int),
+            "issues": {},
+            "prs": {}
         })
         
         for issue in issues:
@@ -338,6 +344,8 @@ def calculate_contributor_metrics(issues_by_sprint: dict, gh: GitHubClient, owne
             
             # Get PR change info
             pr_info = check_pr_changes_requested(gh, owner, repo, issue.get("number"), issue)
+            issue_number = issue.get("number")
+            issue_url = issue.get("html_url")
             
             for assignee in assignees:
                 login = assignee.get("login", "unknown")
@@ -345,11 +353,17 @@ def calculate_contributor_metrics(issues_by_sprint: dict, gh: GitHubClient, owne
                 contributors_data[login]["total_issues"] += 1
                 contributors_data[login]["by_type"][issue_type] += 1
 
+                if issue_number and issue_url:
+                    contributors_data[login]["issues"][issue_number] = issue_url
+
                 if pr_info["has_pr"]:
                     contributors_data[login]["prs_analyzed"] += 1
+                    if pr_info["pr_number"] and pr_info["pr_url"]:
+                        contributors_data[login]["prs"][pr_info["pr_number"]] = pr_info["pr_url"]
                     for admin in pr_info["admin_reviewers"]:
                         if admin not in contributors_data[login]["admins_involved"]:
                             contributors_data[login]["admins_involved"].append(admin)
+                        contributors_data[login]["admins_pr_counts"][admin] += 1
                 
                 if pr_info["changes_requested"]:
                     contributors_data[login]["prs_with_changes"] += 1
@@ -392,6 +406,15 @@ def build_report(
     target_sprint: int | None = None,
 ) -> str:
     """Build markdown report with performance metrics"""
+
+    def format_numbered_links(items: dict) -> str:
+        if not items:
+            return "-"
+        parts = []
+        for number in sorted(items.keys()):
+            parts.append(f"[#{number}]({items[number]})")
+        return ", ".join(parts)
+
     lines = [
         "# Performance Metrics Report - Individual Contributors",
         "",
@@ -424,8 +447,8 @@ def build_report(
         
         # Create table header
         lines.extend([
-            "| Contributor | Score | Status | Total Issues | 📚 Doc | ✨ Features | 🐛 Fixes | Changes Requested | Commits After Review | Admins |",
-            "|---|---:|---|---:|---:|---:|---:|---:|---|---|",
+            "| Contributor | Score | Status | Total Issues | Issue Links | PR Links | 📚 Doc | ✨ Features | 🐛 Fixes | Changes Requested | Commits After Review | Admins |",
+            "|---|---:|---|---:|---|---|---:|---:|---:|---:|---|---|",
         ])
         
         # Add contributor rows, sorted by score (descending)
@@ -440,6 +463,8 @@ def build_report(
             status = get_score_status(score, threshold)
             
             total = data["total_issues"]
+            issue_links = format_numbered_links(data["issues"])
+            pr_links = format_numbered_links(data["prs"])
             doc_count = data["by_type"]["📚 Documentation"]
             feat_count = data["by_type"]["✨ Feature"]
             fix_count = data["by_type"]["🐛 Fix"]
@@ -449,8 +474,13 @@ def build_report(
             admin_commits = data["commits_by_admin"]
             
             admins_str = ""
-            if data["admins_involved"]:
-                admins_str = ", ".join(sorted(data["admins_involved"]))
+            if data["admins_pr_counts"]:
+                admins_parts = []
+                for admin in sorted(data["admins_pr_counts"].keys()):
+                    prs_count = data["admins_pr_counts"][admin]
+                    label = "PR" if prs_count == 1 else "PRs"
+                    admins_parts.append(f"{admin} ({prs_count} {label})")
+                admins_str = ", ".join(admins_parts)
             else:
                 admins_str = "-"
             
@@ -465,7 +495,7 @@ def build_report(
                     commits_info += f"-{admin_commits}"
             
             lines.append(
-                f"| {contributor} | {score:.1f} | {status} | {total} | {doc_count} | {feat_count} | {fix_count} | {changes_count} | {commits_info} | {admins_str} |"
+                f"| {contributor} | {score:.1f} | {status} | {total} | {issue_links} | {pr_links} | {doc_count} | {feat_count} | {fix_count} | {changes_count} | {commits_info} | {admins_str} |"
             )
         
         lines.extend(["", ""])
@@ -504,12 +534,14 @@ def build_report(
         "| **Score** | Overall performance score (0-10) |",
         "| **Status** | ✅ Acceptable or ⚠️ Below Threshold |",
         "| **Total Issues** | Number of assigned issues in the sprint (unassigned excluded) |",
+        "| **Issue Links** | Links to contributor issues for the sprint |",
+        "| **PR Links** | Links to contributor PRs associated with those issues |",
         "| **Documentation** | Issues labeled as documentation |",
         "| **Features** | Issues labeled as feature |",
         "| **Fixes** | Issues labeled as fix |",
         "| **Changes Requested** | Number of PRs where an admin requested changes |",
         "| **Commits After Review** | +X: commits by contributor / -X: commits by admin after changes requested |",
-        "| **Admins** | Admins who requested changes (javpalgon, santiabregu, manumnzz, Glinbor10) |",
+        "| **Admins** | Admin reviewers involved, with PR count per contributor (e.g., javpalgon (3 PRs)) |",
         "",
     ])
     
