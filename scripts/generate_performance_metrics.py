@@ -27,6 +27,20 @@ ISSUE_WEIGHTS = {
     "❓ Other": 0.7,
 }
 
+# Contributors excluded from individual performance assessment.
+EXCLUDED_CONTRIBUTORS = {"copilot", "github-copilot[bot]"}
+
+# Optional manual bonuses applied by script (per sprint) for presentations/deliverables.
+PRESENTATION_BONUS_BY_SPRINT = {
+    "Sprint 1": {
+        "manortper1": 1.0,
+        "pabloarrabalh": 1.0,
+        "darrodsas": 1.0,
+    },
+}
+
+ADMIN_BONUS_POINTS = 0.5
+
 
 class GitHubClient:
     def __init__(self, token: str):
@@ -267,6 +281,8 @@ def calculate_performance_score(data: dict) -> float:
     """
     total_issues = data["total_issues"]
     weighted_issues = data.get("weighted_issues", 0.0)
+    contributor_login = data.get("contributor_login", "")
+    sprint_name = data.get("sprint_name", "")
 
     # No activity in the sprint means a zero score.
     if total_issues == 0:
@@ -317,6 +333,14 @@ def calculate_performance_score(data: dict) -> float:
         elif has_admin_commits and commits_by_admin > 0 and commits_by_contributor == 0:
             # Admin had to make the fixes (contributor didn't respond)
             score -= 0.3
+
+    # Bonus for contributors with admin responsibilities.
+    if contributor_login in ADMINS:
+        score += ADMIN_BONUS_POINTS
+
+    # Bonus for presentation/deliverable responsibilities configured per sprint.
+    presentation_bonus = PRESENTATION_BONUS_BY_SPRINT.get(sprint_name, {}).get(contributor_login, 0.0)
+    score += presentation_bonus
     
     # Ensure score is between 0 and 10
     return max(0.0, min(10.0, score))
@@ -328,7 +352,10 @@ def calculate_contributor_metrics(issues_by_sprint: dict, gh: GitHubClient, owne
     
     for sprint_num in sorted(issues_by_sprint.keys()):
         issues = issues_by_sprint[sprint_num]
+        sprint_name = f"Sprint {sprint_num}"
         contributors_data = defaultdict(lambda: {
+            "contributor_login": "",
+            "sprint_name": sprint_name,
             "total_issues": 0,
             "weighted_issues": 0.0,
             "by_type": defaultdict(int),
@@ -360,6 +387,8 @@ def calculate_contributor_metrics(issues_by_sprint: dict, gh: GitHubClient, owne
             
             for assignee in assignees:
                 login = assignee.get("login", "unknown")
+
+                contributors_data[login]["contributor_login"] = login
                 
                 contributors_data[login]["total_issues"] += 1
                 contributors_data[login]["by_type"][issue_type] += 1
@@ -371,6 +400,7 @@ def calculate_contributor_metrics(issues_by_sprint: dict, gh: GitHubClient, owne
             # PR-related metrics and links belong exclusively to the PR creator.
             pr_author = pr_info.get("pr_author", "")
             if pr_info["has_pr"] and pr_author:
+                contributors_data[pr_author]["contributor_login"] = pr_author
                 contributors_data[pr_author]["prs_analyzed"] += 1
                 if pr_info["pr_number"] and pr_info["pr_url"]:
                     contributors_data[pr_author]["prs"][pr_info["pr_number"]] = pr_info["pr_url"]
@@ -400,7 +430,7 @@ def calculate_contributor_metrics(issues_by_sprint: dict, gh: GitHubClient, owne
             score = calculate_performance_score(contributors_data[contributor])
             contributors_data[contributor]["performance_score"] = score
         
-        metrics[f"Sprint {sprint_num}"] = dict(contributors_data)
+        metrics[sprint_name] = dict(contributors_data)
     
     return metrics
 
@@ -438,6 +468,16 @@ def build_report(
         f"- Performance Threshold: `{threshold}/10`",
         f"- Target Sprint: `SPRINT {target_sprint}`" if target_sprint is not None else "- Target Sprint: `ALL`",
         "",
+        "## Important Notes",
+        "",
+        "This report is generated automatically by script and is **orientative**. It is not the final grade by itself.",
+        "",
+        "Administrative reviewers may apply **extraordinary manual adjustments** when needed (for example: issue abandonment, exceptional cross-team support, presentation responsibilities, or other relevant context not captured by script).",
+        "",
+        "Additionally:",
+        "- `Copilot` entries are excluded from individual contributor assessment.",
+        f"- Contributors with admin responsibilities can receive an additional admin bonus (+{ADMIN_BONUS_POINTS:.1f}) in final score.",
+        "",
     ]
     
     if not metrics:
@@ -474,6 +514,9 @@ def build_report(
         )
         
         for contributor, data in sorted_contributors:
+            if contributor.lower() in EXCLUDED_CONTRIBUTORS:
+                continue
+
             score = data.get("performance_score", 0.0)
             status = get_score_status(score, threshold)
             
@@ -520,13 +563,15 @@ def build_report(
         "## Scoring System (0-10)",
         "",
         "### Formula:",
-        "- **If total_issues = 0**: score = 0",
+        "- **If total_issues = 0**: score = 0 (unless manually adjusted by admins)",
         "- **Otherwise**:",
-        "  - score = clamp(0, 10, 5.0 + issue_points + quality_points + responsiveness_points)",
+        "  - score = clamp(0, 10, 5.0 + issue_points + quality_points + responsiveness_points + admin_bonus + presentation_bonus)",
         "  - issue_points in {0, 1, 2, 3}",
         "  - weighted_issues = 1.0*(feature + fix) + 0.7*(documentation + other)",
         "  - quality_points in {0, 0.5, 1.0, 1.5, 2.0} (only if PRs are analyzed)",
         "  - responsiveness_points in {-0.3, 0, +0.3}",
+        f"  - admin_bonus in {{0, +{ADMIN_BONUS_POINTS:.1f}}} (for contributors with admin responsibilities)",
+        "  - presentation_bonus in {0, +1.0} (when configured for presentation/deliverable responsibilities)",
         "",
         "### Components:",
         "- **Base Score**: 5.0 points",
@@ -548,6 +593,13 @@ def build_report(
         "  - **+0.3 points**: If contributor made commits to fix issues after admin requested changes",
         "  - **-0.3 points**: If admin had to make commits to fix issues and contributor did not respond",
         "  - *Note: Merge commits are excluded from this calculation*",
+        f"- **Admin Bonus** (+{ADMIN_BONUS_POINTS:.1f} points): Applied to contributors with admin responsibilities",
+        "- **Presentation/Deliverables Bonus** (+1.0 points): Applied when configured for presentation or equivalent deliverables",
+        "",
+        "### Interpretation and Final Decision:",
+        "- This report is guidance, not the final or only criterion.",
+        "- Admins evaluate extraordinary situations (for example: abandoned issues, severe blockers, exceptional contributions) before final decisions.",
+        "- `Copilot` is excluded from individual contributor assessment.",
         "",
         "### Status Indicators:",
         "- **✅ Acceptable** (≥ 6.0): Meets performance threshold",
