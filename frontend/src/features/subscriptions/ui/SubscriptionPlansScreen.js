@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-    Alert,
+    Modal,
     SafeAreaView,
     View,
     Text,
@@ -21,6 +21,8 @@ export default function SubscriptionPlansScreen({ navigation }) {
     const veryShortScreen = height < 700;
     const [currentPlan, setCurrentPlan] = useState('FREE');
     const [loadingPlan, setLoadingPlan] = useState(true);
+    const [showComingSoonModal, setShowComingSoonModal] = useState(false);
+    const [comingSoonMessage, setComingSoonMessage] = useState('Premium upgrade is coming soon.');
 
     useEffect(() => {
         let isMounted = true;
@@ -59,8 +61,14 @@ export default function SubscriptionPlansScreen({ navigation }) {
         };
     }, [user?.id]);
 
-    const onChangePlan = () => {
-        Alert.alert('Coming soon', 'Premium upgrade is coming soon.');
+    const onChangePlan = (targetPlan) => {
+        if (targetPlan === 'FREE') {
+            setComingSoonMessage('Switching back to the Free plan is coming soon.');
+        } else {
+            setComingSoonMessage('Premium upgrade is coming soon.');
+        }
+
+        setShowComingSoonModal(true);
     };
 
     const isFreeCurrent = currentPlan === 'FREE';
@@ -229,7 +237,7 @@ export default function SubscriptionPlansScreen({ navigation }) {
                                 borderRadius: metrics.buttonRadius,
                             },
                         ]}
-                        onPress={isFreeCurrent ? undefined : onChangePlan}
+                        onPress={isFreeCurrent ? undefined : () => onChangePlan('FREE')}
                         activeOpacity={isFreeCurrent ? 1 : 0.85}
                         disabled={isFreeCurrent}
                     >
@@ -301,7 +309,7 @@ export default function SubscriptionPlansScreen({ navigation }) {
                                 borderRadius: metrics.buttonRadius,
                             },
                         ]}
-                        onPress={isPremiumCurrent ? undefined : onChangePlan}
+                        onPress={isPremiumCurrent ? undefined : () => onChangePlan('PREMIUM')}
                         activeOpacity={isPremiumCurrent ? 1 : 0.85}
                         disabled={isPremiumCurrent}
                     >
@@ -317,6 +325,29 @@ export default function SubscriptionPlansScreen({ navigation }) {
                     </TouchableOpacity>
                 </View>
             </View>
+
+            <Modal
+                visible={showComingSoonModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowComingSoonModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalCard}>
+                        <Text style={styles.modalTitle}>Coming soon</Text>
+                        <Text style={styles.modalText}>
+                            {comingSoonMessage}
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.modalButton}
+                            onPress={() => setShowComingSoonModal(false)}
+                            activeOpacity={0.85}
+                        >
+                            <Text style={styles.modalButtonText}>Close</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -486,5 +517,48 @@ const styles = StyleSheet.create({
     },
     disabledPremiumBtnText: {
         color: '#d1d5db',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(17,24,39,0.55)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+    },
+    modalCard: {
+        width: '100%',
+        maxWidth: 360,
+        backgroundColor: '#ffffff',
+        borderRadius: 18,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.2,
+        shadowRadius: 16,
+        elevation: 7,
+    },
+    modalTitle: {
+        fontSize: 22,
+        fontWeight: '900',
+        color: '#111827',
+    },
+    modalText: {
+        marginTop: 10,
+        fontSize: 15,
+        lineHeight: 21,
+        color: '#4b5563',
+    },
+    modalButton: {
+        marginTop: 18,
+        alignSelf: 'flex-end',
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        borderRadius: 10,
+        backgroundColor: '#d90429',
+    },
+    modalButtonText: {
+        color: '#ffffff',
+        fontSize: 14,
+        fontWeight: '800',
     },
 });
