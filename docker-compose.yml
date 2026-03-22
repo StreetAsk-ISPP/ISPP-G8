@@ -48,6 +48,9 @@ services:
       BREVO_SMTP_USERNAME: ${BREVO_SMTP_USERNAME:-}
       BREVO_SMTP_PASSWORD: ${BREVO_SMTP_PASSWORD:-}
       BREVO_MAIL_FROM: ${BREVO_MAIL_FROM:-streetask0@gmail.com}
+      MYSQL_DDL_AUTO: validate
+      MYSQL_SQL_INIT_MODE: never
+      MYSQL_FLYWAY_ENABLED: true
     depends_on:
       # Uncomment when using MySQL
       db:
