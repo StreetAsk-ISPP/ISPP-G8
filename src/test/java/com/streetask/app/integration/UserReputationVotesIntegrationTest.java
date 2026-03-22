@@ -1,4 +1,4 @@
-package com.streetask.app.user;
+package com.streetask.app.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -23,6 +23,12 @@ import com.streetask.app.model.AnswerVote;
 import com.streetask.app.model.Question;
 import com.streetask.app.model.enums.VoteType;
 import com.streetask.app.question.QuestionRepository;
+import com.streetask.app.user.Authorities;
+import com.streetask.app.user.AuthoritiesRepository;
+import com.streetask.app.user.RegularUser;
+import com.streetask.app.user.RegularUserRepository;
+import com.streetask.app.user.User;
+import com.streetask.app.user.UserService;
 
 @SpringBootTest
 @Transactional
