@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -58,6 +59,10 @@ public class User extends BaseEntity {
 	@com.fasterxml.jackson.annotation.JsonIgnore
 	@OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
 	private java.util.List<com.streetask.app.model.UserLocation> locations;
+
+	@com.fasterxml.jackson.annotation.JsonIgnore
+	@OneToMany(mappedBy = "issuedBy", cascade = CascadeType.REMOVE)
+	private List<com.streetask.app.model.Strike> issuedStrikes;
 
 	public Boolean hasAuthority(String auth) {
 		return authority.getAuthority().equals(auth);

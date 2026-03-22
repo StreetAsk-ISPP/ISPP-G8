@@ -82,6 +82,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.sendgrid</groupId>
+            <artifactId>sendgrid-java</artifactId>
+            <version>4.10.2</version>
+        </dependency>
+
         <!-- H2 Database - for development and testing -->
         <dependency>
             <groupId>com.h2database</groupId>
