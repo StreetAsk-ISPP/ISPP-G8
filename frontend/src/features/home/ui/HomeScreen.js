@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import MapComponent from './components/MapComponent';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useNotifications } from '../../../app/providers/NotificationProvider';
+import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import { APP_CONFIG } from '../../../app/config/config';
 import apiClient from '../../../shared/services/http/apiClient';
 import { bootstrapWebPushNotifications } from '../../../shared/services/notifications/webPushBootstrap';
@@ -40,13 +41,22 @@ export default function HomeScreen({ navigation }) {
     const [currentLocation, setCurrentLocation] = useState(null);
     const [isPremium, setIsPremium] = useState(false);
 
+    // null = revisando, true = concedido, false = denegado
+    const [hasLocationPermission, setHasLocationPermission] = useState(null);
+
     const [feedbackVisible, setFeedbackVisible] = useState(false);
     const [feedbackType, setFeedbackType] = useState('SUGGESTION');
     const [feedbackMessage, setFeedbackMessage] = useState('');
     const [sendingFeedback, setSendingFeedback] = useState(false);
     const [feedbackSuccessVisible, setFeedbackSuccessVisible] = useState(false);
     const [feedbackSuccessMessage, setFeedbackSuccessMessage] = useState('');
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+
+    const handleLogoutConfirm = async () => {
+        setShowLogoutModal(false);
+        await logout();
+    };
 
     const pushBootstrappedRef = useRef(false);
     const pushSubscriptionRef = useRef(null);
@@ -333,7 +343,7 @@ export default function HomeScreen({ navigation }) {
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={[styles.iconBtn, styles.logoutBtn]}
-                                        onPress={logout}
+                                        onPress={() => setShowLogoutModal(true)}
                                         activeOpacity={0.7}
                                     >
                                         <Ionicons name="log-out-outline" size={20} color="#ef4444" />
@@ -407,7 +417,7 @@ export default function HomeScreen({ navigation }) {
 
                                 <TouchableOpacity
                                     style={styles.menuItem}
-                                    onPress={() => { logout(); setMenuOpen(false); }}
+                                    onPress={() => { setShowLogoutModal(true); setMenuOpen(false); }}
                                 >
                                     <Ionicons name="log-out-outline" size={18} color="#ef4444" />
                                     <Text style={{ ...styles.menuItemLabel, color: '#ef4444' }}>Logout</Text>
@@ -423,6 +433,7 @@ export default function HomeScreen({ navigation }) {
                                 navigation.navigate('QuestionThread', { questionId: qId })
                             }
                             onLocationChange={setCurrentLocation}
+                            onPermissionChange={setHasLocationPermission}
                         />
                     </View>
 
@@ -435,15 +446,18 @@ export default function HomeScreen({ navigation }) {
                             thumbColor="#fff"
                         />
                     </View>
+                    {hasLocationPermission && (
+                        <TouchableOpacity
+                            style={[styles.fab, isNarrow && { width: 220 }]}
+                            onPress={() => navigation.navigate('CreateQuestion')}
+                            activeOpacity={0.85}
+                        >
+                            <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
+                            <Text style={styles.fabText}>Ask a question</Text>
+                        </TouchableOpacity>
+                    )}
 
-                    <TouchableOpacity
-                        style={[styles.fab, isNarrow && { width: 220 }]}
-                        onPress={() => navigation.navigate('CreateQuestion')}
-                        activeOpacity={0.85}
-                    >
-                        <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
-                        <Text style={styles.fabText}>Ask a question</Text>
-                    </TouchableOpacity>
+
                 </View>
             </SafeAreaView>
 
@@ -629,6 +643,17 @@ export default function HomeScreen({ navigation }) {
                     </Pressable>
                 </Pressable>
             </Modal>
+
+            <ConfirmationModal
+                visible={showLogoutModal}
+                title="Log out?"
+                message="Are you sure you want to log out?"
+                confirmText="Log out"
+                cancelText="Go Back"
+                onConfirm={handleLogoutConfirm}
+                onCancel={() => setShowLogoutModal(false)}
+                confirmButtonColor="danger"
+            />
         </>
     );
 }

@@ -13,6 +13,8 @@ import * as Location from 'expo-location';
 import { locationService } from '../../../../shared/services/location/locationService';
 import { CountdownText } from './CountdownText';
 import { calculateDistanceInKm } from '../../../../shared/utils/helpers';
+import Toast from 'react-native-toast-message';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 // Para web: importar Leaflet y CSS
 let MapContainer, TileLayer, Marker, Popup;
@@ -74,7 +76,7 @@ const getQuestionCoords = (q) => {
     return { lat, lng };
 };
 
-export default function MapComponent({ questions = [], onQuestionPress, onLocationChange }) {
+export default function MapComponent({ questions = [], onQuestionPress, onLocationChange, onPermissionChange }) {
     const [location, setLocation] = useState(null);
     const [publicLocations, setPublicLocations] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -110,7 +112,21 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                 if (status !== 'granted') {
                     setError('Permiso de ubicación denegado');
                     setLoading(false);
+                    if (typeof onPermissionChange === 'function') {
+                        onPermissionChange(false);
+                    }
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Ubicación desactivada',
+                        text2: 'Por favor, activa la ubicación para poder hacer preguntas.',
+                        position: 'top',
+                        visibilityTime: 10000,
+                    });
                     return;
+                }
+
+                if (typeof onPermissionChange === 'function') {
+                    onPermissionChange(true);
                 }
 
                 const initialLocation = await Location.getCurrentPositionAsync({
@@ -144,6 +160,9 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
             } catch (err) {
                 setError('Error al obtener ubicación: ' + err.message);
                 setLoading(false);
+                if (typeof onPermissionChange === 'function') {
+                    onPermissionChange(false);
+                }
             }
         };
 
@@ -154,7 +173,7 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                 locationSubscription.remove();
             }
         };
-    }, [onLocationChange]);
+    }, [onLocationChange, onPermissionChange]);
 
     const loadPublicLocations = async () => {
         try {
@@ -227,6 +246,8 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
     if (error) {
         return (
             <View style={styles.container}>
+                <MaterialIcons name="location-off" size={84} color="darkred" />
+
                 <Text style={styles.errorText}>{error}</Text>
             </View>
         );
@@ -312,17 +333,17 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                                             />
                                         </div>
                                         <span style={{ color: canAnswer ? '#ea580c' : '#6b7280', fontWeight: 700 }}>
-                                            {canAnswer ? 'Puedes responder' : 'Fuera de tu radio'}
+                                            {canAnswer ? 'You can answer' : 'Out of your range'}
                                         </span>
                                         <br />
                                         {Number.isFinite(radiusKm) && radiusKm > 0 && (
                                             <>
                                                 <span style={{ opacity: 0.85 }}>
-                                                    Radio respuesta: {radiusKm.toFixed(2)} km
+                                                    Answer radius: {radiusKm.toFixed(2)} km
                                                 </span>
                                                 <br />
                                                 <span style={{ opacity: 0.85 }}>
-                                                    Tu distancia: {distanceKm.toFixed(2)} km
+                                                    Your distance: {distanceKm.toFixed(2)} km
                                                 </span>
                                                 <br />
                                             </>

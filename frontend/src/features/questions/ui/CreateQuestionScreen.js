@@ -850,11 +850,11 @@ const styles = StyleSheet.create({
   },
   mapOkBtn: {
     flex: 1,
-    backgroundColor: '#667eea',
+    backgroundColor: '#a52019',
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
-    shadowColor: '#667eea',
+    shadowColor: '#a52019',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,

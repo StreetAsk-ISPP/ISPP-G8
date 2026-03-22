@@ -17,7 +17,8 @@ export default function ProfileStats() {
         role: '',
         likes: 0,
         dislikes: 0,
-        reputation: 0
+        reputation: 0,
+        rating: 0
     });
     const [userQuestions, setUserQuestions] = useState([]);
     const [userAnswers, setUserAnswers] = useState([]);
@@ -46,7 +47,8 @@ export default function ProfileStats() {
                         role: data.role === 'ADMIN' ? 'Moderator' : 'Local Expert',
                         likes: data.likesCount || 0,
                         dislikes: data.dislikesCount || 0,
-                        reputation: data.reputation || 0
+                        reputation: data.reputation || 0,
+                        rating: data.rating != null ? data.rating : 0
                     });
                 }
 
@@ -74,10 +76,14 @@ export default function ProfileStats() {
             </View>
             <View style={styles.historyText}>
                 <Text style={styles.itemTitle} numberOfLines={2}>
-                    <Text style={{color: '#d90429', fontWeight: '800'}}>
+                    <Text style={{ color: '#d90429', fontWeight: '800' }}>
                         {type === 'questions' ? 'Q: ' : 'A: '}
                     </Text>
-                    {item.text || item.title || "No content"}
+                    <Text style={{ color: '#d90429', fontWeight: '800' }}></Text>
+                    {type === 'answers'
+                        ? (item.content || item.text || item.title || "No content")
+                        : (item.title || item.text || item.content || "No content")}
+                    </Text>
                 </Text>
                 <View style={styles.itemFooter}>
                     <Ionicons name="calendar-outline" size={12} color="#999" />
@@ -87,7 +93,7 @@ export default function ProfileStats() {
                 </View>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#eee" />
-        </View>
+        </View >
     );
 
     if (loading) {
@@ -133,11 +139,11 @@ export default function ProfileStats() {
                         <Text style={styles.statLabel}>Answered questions</Text>
                     </View>
                     <View style={[styles.statBox, styles.borderGreen]}>
-                        <Text style={[styles.statValue, {color: '#2e7d32'}]}>{serverStats.likes} 👍</Text>
+                        <Text style={[styles.statValue, { color: '#2e7d32' }]}>{serverStats.likes} 👍</Text>
                         <Text style={styles.statLabel}>Likes received</Text>
                     </View>
                     <View style={[styles.statBox, styles.borderRed]}>
-                        <Text style={[styles.statValue, {color: '#c62828'}]}>{serverStats.dislikes} 👎</Text>
+                        <Text style={[styles.statValue, { color: '#c62828' }]}>{serverStats.dislikes} 👎</Text>
                         <Text style={styles.statLabel}>Dislikes received</Text>
                     </View>
                 </View>
@@ -153,8 +159,8 @@ export default function ProfileStats() {
                         <Text style={styles.reputationSub}>Based on community trust</Text>
                     </View>
                     <View style={styles.reputationRight}>
-                        <Text style={styles.reputationValue}>{serverStats.reputation}</Text>
-                        <Text style={styles.reputationPts}>pts</Text>
+                        <Text style={styles.reputationValue}>{parseFloat(serverStats.rating).toFixed(1)}</Text>
+                        <Text style={styles.reputationPts}>/5</Text>
                     </View>
                 </View>
 
