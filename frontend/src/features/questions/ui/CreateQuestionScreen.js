@@ -26,6 +26,8 @@ const FREE_DURATION_HOURS = 2;
 const PREMIUM_MIN_DURATION_HOURS = 1;
 const PREMIUM_MAX_DURATION_HOURS = 24;
 const FAKE_AD_DURATION_SECONDS = 30;
+const DEFAULT_FALLBACK_LAT = 37.3886;
+const DEFAULT_FALLBACK_LNG = -5.9823;
 
 const addHoursISO = (hours) => {
   const nowMs = Date.now();
@@ -86,6 +88,25 @@ export default function CreateQuestionScreen({ navigation }) {
   const [adSecondsLeft, setAdSecondsLeft] = useState(FAKE_AD_DURATION_SECONDS);
   const [queuedPayload, setQueuedPayload] = useState(null);
 
+  const getCurrentPositionWeb = useCallback(() => {
+    if (Platform.OS !== 'web' || !navigator.geolocation) {
+      return Promise.resolve(null);
+    }
+
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          resolve({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        },
+        () => resolve(null),
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      );
+    });
+  }, []);
+
   const submitQuestion = useCallback(async (payload) => {
     setIsSubmitting(true);
     try {
@@ -138,23 +159,28 @@ export default function CreateQuestionScreen({ navigation }) {
   }, [user?.id]);
 
   useEffect(() => {
-    if (Platform.OS === 'web') {
-      if (!navigator.geolocation) return;
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          setUserLat(lat);
-          setUserLng(lng);
-          setLatitude((prev) => (typeof prev === 'number' ? prev : lat));
-          setLongitude((prev) => (typeof prev === 'number' ? prev : lng));
-          setPlace((prev) => (prev?.trim() ? prev : `(${lat.toFixed(5)}, ${lng.toFixed(5)})`));
-        },
-        () => { },
-        { enableHighAccuracy: true, timeout: 8000 }
-      );
-    }
-  }, []);
+    let isMounted = true;
+
+    const preloadCurrentLocation = async () => {
+      const coords = await getCurrentPositionWeb();
+      if (!isMounted || !coords) {
+        return;
+      }
+
+      const { lat, lng } = coords;
+      setUserLat(lat);
+      setUserLng(lng);
+      setLatitude((prev) => (typeof prev === 'number' ? prev : lat));
+      setLongitude((prev) => (typeof prev === 'number' ? prev : lng));
+      setPlace((prev) => (prev?.trim() ? prev : `(${lat.toFixed(5)}, ${lng.toFixed(5)})`));
+    };
+
+    preloadCurrentLocation();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [getCurrentPositionWeb]);
 
   useEffect(() => {
     if (!showFakeAd) {
@@ -254,15 +280,29 @@ export default function CreateQuestionScreen({ navigation }) {
     }
   };
 
-  const openMapPick = () => {
-    setTempLat(
-      typeof latitude === 'number' ? latitude : typeof userLat === 'number' ? userLat : 37.3886
-    );
-    setTempLng(
-      typeof longitude === 'number' ? longitude : typeof userLng === 'number' ? userLng : -5.9823
-    );
+  const openMapPick = useCallback(async () => {
+    let nextLat = typeof latitude === 'number' ? latitude : null;
+    let nextLng = typeof longitude === 'number' ? longitude : null;
+
+    if (typeof nextLat !== 'number' || typeof nextLng !== 'number') {
+      if (typeof userLat === 'number' && typeof userLng === 'number') {
+        nextLat = userLat;
+        nextLng = userLng;
+      } else {
+        const coords = await getCurrentPositionWeb();
+        if (coords) {
+          nextLat = coords.lat;
+          nextLng = coords.lng;
+          setUserLat(coords.lat);
+          setUserLng(coords.lng);
+        }
+      }
+    }
+
+    setTempLat(typeof nextLat === 'number' ? nextLat : DEFAULT_FALLBACK_LAT);
+    setTempLng(typeof nextLng === 'number' ? nextLng : DEFAULT_FALLBACK_LNG);
     setPickMode(true);
-  };
+  }, [latitude, longitude, userLat, userLng, getCurrentPositionWeb]);
 
   const cancelMapPick = () => {
     setPickMode(false);
@@ -456,10 +496,10 @@ export default function CreateQuestionScreen({ navigation }) {
         {/* Map background */}
         <View style={styles.mapBgPreview}>
           <MapPickerWeb
-            latitude={latitude ?? userLat ?? 37.3886}
-            longitude={longitude ?? userLng ?? -5.9823}
-            userLat={userLat ?? 37.3886}
-            userLng={userLng ?? -5.9823}
+            latitude={latitude ?? userLat ?? DEFAULT_FALLBACK_LAT}
+            longitude={longitude ?? userLng ?? DEFAULT_FALLBACK_LNG}
+            userLat={userLat ?? DEFAULT_FALLBACK_LAT}
+            userLng={userLng ?? DEFAULT_FALLBACK_LNG}
             radiusKm={radiusKm}
             pickEnabled={false}
             tempLat={tempLat}
