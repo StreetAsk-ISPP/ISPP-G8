@@ -65,7 +65,7 @@ This backlog consolidates the features necessary for the MVP, ordered by develop
 * **US-08 (Create Question):** Form to submit a question with topic (mandatory), radius, and question text.
 * **US-13 (View Threads):** View question details and the list of existing answers in mini-forum format.
 * **US-09 (Answer Questions):** Users can post answers to questions nearby (validating location) with threaded replies.
-* **US-XX (System):** Logic for automatic question expiration (2 hours for free users).
+* **US-XX (System):** Logic for automatic question expiration (6 hours for free users).
 
 **S1 Deliverable:** A fully functional Q&A loop with user registration. Users must register/login, then can view the map, find red dots (questions), read the thread, and reply.
 

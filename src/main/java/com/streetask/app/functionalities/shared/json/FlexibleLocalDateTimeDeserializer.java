@@ -49,7 +49,7 @@ public class FlexibleLocalDateTimeDeserializer extends JsonDeserializer<LocalDat
 
         try {
             return Instant.parse(value)
-                    .atZone(ZoneId.systemDefault())
+                    .atZone(ZoneId.of("UTC"))
                     .toLocalDateTime();
         } catch (DateTimeParseException ignored) {
         }

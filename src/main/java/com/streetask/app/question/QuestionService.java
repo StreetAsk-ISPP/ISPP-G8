@@ -2,6 +2,7 @@ package com.streetask.app.question;
 
 import java.time.LocalDateTime;
 import java.time.Duration;
+import java.time.ZoneId;
 import java.util.UUID;
 
 import org.springframework.beans.BeanUtils;
@@ -30,7 +31,7 @@ public class QuestionService {
 	private static final float FREE_FIXED_RADIUS_KM = 0.5f;
 	private static final float PREMIUM_MIN_RADIUS_KM = 0.05f;
 	private static final float PREMIUM_MAX_RADIUS_KM = 1.0f;
-	private static final int FREE_DURATION_HOURS = 2;
+	private static final int FREE_DURATION_HOURS = 6;
 	private static final int PREMIUM_MIN_DURATION_HOURS = 1;
 	private static final int PREMIUM_MAX_DURATION_HOURS = 24;
 	private static final long PREMIUM_DURATION_CLOCK_DRIFT_SECONDS = 59L;
@@ -145,7 +146,7 @@ public class QuestionService {
 
 	private void applyDefaults(Question question, boolean isPremium) {
 		if (question.getCreatedAt() == null) {
-			question.setCreatedAt(LocalDateTime.now());
+			question.setCreatedAt(LocalDateTime.now(ZoneId.of("UTC")));
 		}
 		if (question.getActive() == null) {
 			question.setActive(true);

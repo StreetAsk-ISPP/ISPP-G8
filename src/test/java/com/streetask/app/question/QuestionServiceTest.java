@@ -118,7 +118,7 @@ class QuestionServiceTest {
 	}
 
 	@Test
-	void saveQuestion_shouldSetExpiresAtTwoHoursAfterCreatedAt() {
+	void saveQuestion_shouldSetExpiresAtSixHoursAfterCreatedAt() {
 		// Arrange
 		Question newQuestion = new Question();
 		newQuestion.setTitle("New Question");
@@ -130,7 +130,7 @@ class QuestionServiceTest {
 		Question saved = questionService.saveQuestion(newQuestion);
 
 		// Assert
-		assertThat(saved.getExpiresAt()).isEqualTo(saved.getCreatedAt().plusHours(2));
+		assertThat(saved.getExpiresAt()).isEqualTo(saved.getCreatedAt().plusHours(6));
 	}
 
 	@Test

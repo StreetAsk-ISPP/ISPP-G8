@@ -22,7 +22,7 @@ const FREE_FIXED_RADIUS_KM = 0.5;
 const FREE_FIXED_RADIUS_M = 500;
 const PREMIUM_MIN_RADIUS_M = 50;
 const PREMIUM_MAX_RADIUS_M = 1000;
-const FREE_DURATION_HOURS = 2;
+const FREE_DURATION_HOURS = 6;
 const PREMIUM_MIN_DURATION_HOURS = 1;
 const PREMIUM_MAX_DURATION_HOURS = 24;
 const FAKE_AD_DURATION_SECONDS = 30;
@@ -432,29 +432,29 @@ export default function CreateQuestionScreen({ navigation }) {
               </Text>
               <Text style={styles.mapRadiusLabel}>Response radius (m)</Text>
               {isPremium ? (
-                 <View style={styles.sliderBlock}>
-                 <Slider
-                 minimumValue={PREMIUM_MIN_RADIUS_M}
-                 maximumValue={PREMIUM_MAX_RADIUS_M}
-                 step={10}
-                 value={parsedRadiusMeters ?? FREE_FIXED_RADIUS_M}
-                 onValueChange={(value) => {
-                 setRadiusInput(String(Math.round(value)));
-                 setRadiusKm(value / 1000);
-                 }}
-                 minimumTrackTintColor="#a52019"
-                 maximumTrackTintColor="#e5e7eb"
-                 thumbTintColor="#a52019"
-                 />
+                <View style={styles.sliderBlock}>
+                  <Slider
+                    minimumValue={PREMIUM_MIN_RADIUS_M}
+                    maximumValue={PREMIUM_MAX_RADIUS_M}
+                    step={10}
+                    value={parsedRadiusMeters ?? FREE_FIXED_RADIUS_M}
+                    onValueChange={(value) => {
+                      setRadiusInput(String(Math.round(value)));
+                      setRadiusKm(value / 1000);
+                    }}
+                    minimumTrackTintColor="#a52019"
+                    maximumTrackTintColor="#e5e7eb"
+                    thumbTintColor="#a52019"
+                  />
 
-                 <View style={styles.sliderLabels}>
+                  <View style={styles.sliderLabels}>
                     <Text style={styles.sliderMin}>50 m</Text>
                     <Text style={styles.radiusValueText}>
-                     {parsedRadiusMeters ?? FREE_FIXED_RADIUS_M} m
+                      {parsedRadiusMeters ?? FREE_FIXED_RADIUS_M} m
                     </Text>
                     <Text style={styles.sliderMax}>1000 m</Text>
-                </View>
-                </View>             ) : (
+                  </View>
+                </View>) : (
                 <View style={styles.lockedBox}>
                   <Ionicons name="lock-closed" size={14} color="#6b7280" />
                   <Text style={styles.lockedText}>Fixed for free plan: 500 m</Text>
@@ -1037,7 +1037,7 @@ const styles = StyleSheet.create({
     color: '#a52019',
   },
   sliderBlock: {
-  marginTop: 10,
+    marginTop: 10,
   },
 
   sliderLabels: {
@@ -1055,6 +1055,6 @@ const styles = StyleSheet.create({
   sliderMax: {
     fontSize: 11,
     color: '#9ca3af',
-  },  
+  },
   postBtnText: { fontWeight: '700', fontSize: 15, color: '#fff' },
 });
