@@ -36,8 +36,6 @@ export default function HomeScreen({ navigation }) {
 
     const [questions, setQuestions] = useState([]);
     const [showQuestions, setShowQuestions] = useState(true);
-    const [comingSoon, setComingSoon] = useState(false);
-    const [modalType, setModalType] = useState('notifications');
     const [currentLocation, setCurrentLocation] = useState(null);
     const [isPremium, setIsPremium] = useState(false);
 
@@ -327,21 +325,6 @@ export default function HomeScreen({ navigation }) {
                                         <Ionicons name="chatbox-ellipses-outline" size={20} color="#a52019" />
                                     </TouchableOpacity>
                                     <TouchableOpacity
-                                        style={styles.iconBtn}
-                                        activeOpacity={0.7}
-                                        onPress={() => { setModalType('search'); setComingSoon(true); }}
-                                    >
-                                        <Ionicons name="search-outline" size={20} color="#a52019" />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={styles.iconBtn}
-                                        activeOpacity={0.7}
-                                        onPress={() => { setModalType('notifications'); setComingSoon(true); }}
-                                    >
-                                        <Ionicons name="notifications-outline" size={20} color="#a52019" />
-                                        {ephemeralNotification ? <View style={styles.badge} /> : null}
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
                                         style={[styles.iconBtn, styles.logoutBtn]}
                                         onPress={() => setShowLogoutModal(true)}
                                         activeOpacity={0.7}
@@ -396,23 +379,6 @@ export default function HomeScreen({ navigation }) {
                                     <Text style={styles.menuItemLabel}>Feedback</Text>
                                 </TouchableOpacity>
 
-                                <TouchableOpacity
-                                    style={styles.menuItem}
-                                    onPress={() => { setModalType('search'); setComingSoon(true); setMenuOpen(false); }}
-                                >
-                                    <Ionicons name="search-outline" size={18} color="#a52019" />
-                                    <Text style={styles.menuItemLabel}>Search</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    style={styles.menuItem}
-                                    onPress={() => { setModalType('notifications'); setComingSoon(true); setMenuOpen(false); }}
-                                >
-                                    <Ionicons name="notifications-outline" size={18} color="#a52019" />
-                                    <Text style={styles.menuItemLabel}>Notifications</Text>
-                                    {ephemeralNotification ? <View style={styles.menuBadge} /> : null}
-                                </TouchableOpacity>
-
                                 <View style={styles.menuDivider} />
 
                                 <TouchableOpacity
@@ -460,36 +426,6 @@ export default function HomeScreen({ navigation }) {
 
                 </View>
             </SafeAreaView>
-
-            <Modal
-                visible={comingSoon}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setComingSoon(false)}
-            >
-                <Pressable style={styles.modalOverlay} onPress={() => setComingSoon(false)}>
-                    <View style={styles.modalBox}>
-                        <Ionicons
-                            name={modalType === 'search' ? 'search' : 'notifications'}
-                            size={28}
-                            color="#a52019"
-                        />
-                        <Text style={styles.modalTitle}>Coming Soon</Text>
-                        <Text style={styles.modalMsg}>
-                            {modalType === 'search'
-                                ? 'Search is not available yet.'
-                                : 'Notifications are not available yet.'}
-                        </Text>
-                        <TouchableOpacity
-                            style={styles.modalBtn}
-                            onPress={() => setComingSoon(false)}
-                            activeOpacity={0.8}
-                        >
-                            <Text style={styles.modalBtnText}>OK</Text>
-                        </TouchableOpacity>
-                    </View>
-                </Pressable>
-            </Modal>
 
             <Modal
                 visible={feedbackVisible}
@@ -743,15 +679,6 @@ const styles = StyleSheet.create({
     logoutBtn: {
         backgroundColor: '#fef2f2',
     },
-    badge: {
-        position: 'absolute',
-        top: 6,
-        right: 6,
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#a52019',
-    },
     notifBanner: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -819,43 +746,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 20,
-    },
-    modalBox: {
-        backgroundColor: '#fff',
-        borderRadius: 18,
-        paddingVertical: 28,
-        paddingHorizontal: 32,
-        alignItems: 'center',
-        width: 260,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 24,
-        elevation: 12,
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#1f2937',
-        marginTop: 10,
-    },
-    modalMsg: {
-        fontSize: 13,
-        color: '#6b7280',
-        marginTop: 6,
-        textAlign: 'center',
-    },
-    modalBtn: {
-        marginTop: 18,
-        backgroundColor: '#a52019',
-        borderRadius: 10,
-        paddingVertical: 8,
-        paddingHorizontal: 28,
-    },
-    modalBtnText: {
-        color: '#fff',
-        fontWeight: '600',
-        fontSize: 14,
     },
     feedbackModalBox: {
         width: '100%',
@@ -1051,11 +941,5 @@ const styles = StyleSheet.create({
         height: 1,
         backgroundColor: '#e5e7eb',
         marginVertical: 6,
-    },
-    menuBadge: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#a52019',
     },
 });
