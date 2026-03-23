@@ -188,6 +188,8 @@ public class AuthService {
 		// Regular user defaults
 		user.setCoinBalance(0);
 		user.setRating(0.0f);
+		user.setTotalLikesReceived(0);
+		user.setTotalDislikesReceived(0);
 		user.setVerified(false);
 		user.setVisibilityRadiusKm(DEFAULT_VISIBILITY_RADIUS_KM);
 		user.setPremiumActive(false);
