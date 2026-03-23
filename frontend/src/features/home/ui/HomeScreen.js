@@ -257,20 +257,34 @@ export default function HomeScreen({ navigation }) {
         }
     };
 
+    const handleRefresh = async () => {
+        try {
+            await loadQuestions();
+        } catch (e) {
+            console.warn('Error refreshing data', e);
+        }
+    };
+
     return (
         <>
             <SafeAreaView style={styles.screen}>
                 <View style={styles.container}>
                     <View style={[styles.topBar, isNarrow && { paddingHorizontal: 12 }]}>
-                        <View style={styles.topBarLeft}>
+                        <TouchableOpacity
+                            style={styles.topBarLeft}
+                            activeOpacity={0.7}
+                            onPress={handleRefresh}
+                        >
                             <View style={styles.logoBadge}>
                                 <Image
                                     source={require('../../../../assets/logo.png')}
                                     style={{ width: 18, height: 28 }}
                                 />
                             </View>
+
                             <Text style={styles.appName}>StreetAsk</Text>
-                        </View>
+                        </TouchableOpacity>
+
                         <View style={styles.topBarRight}>
                             {isPremium ? (
                                 <TouchableOpacity
