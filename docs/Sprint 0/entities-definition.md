@@ -140,7 +140,7 @@ Represents a question posted by a user related to an event or location.
 - `location` (Point): Geographic coordinates
 - `radius_km` (Float): Radius for notifying users
 - `active` (Boolean): Whether the question is still active
-- `expires_at` (DateTime): Automatic expiration date (2h free, configurable premium)
+- `expires_at` (DateTime): Automatic expiration date (6h free, configurable premium)
 - `created_at` (DateTime): Publication date
 - `answer_count` (Integer): Answer counter
 

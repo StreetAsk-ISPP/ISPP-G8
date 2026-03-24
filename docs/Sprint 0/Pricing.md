@@ -58,7 +58,7 @@ User acquisition and content generation at zero cost for users, while maintainin
 
 ### FREE Limitations
 
-- Default duration: 2h  
+- Default duration: 6h  
 - Standard action radius  
 - Mandatory ad when posting  
 

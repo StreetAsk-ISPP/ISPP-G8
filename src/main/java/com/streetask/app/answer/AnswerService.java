@@ -3,6 +3,7 @@ package com.streetask.app.answer;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,6 +14,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,6 +36,9 @@ import jakarta.validation.Valid;
 
 @Service
 public class AnswerService {
+
+	public static final String SORT_LIKES_DESC = "likes_desc";
+	public static final String SORT_DATE_DESC = "date_desc";
 
 	private final AnswerRepository answerRepository;
 	private final AnswerVoteRepository answerVoteRepository;
@@ -73,6 +79,30 @@ public class AnswerService {
 	@Transactional(readOnly = true)
 	public Iterable<Answer> findByQuestion(UUID questionId) {
 		return answerRepository.findByQuestionId(questionId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<Answer> findByQuestionSorted(UUID questionId, String sort, Integer page, Integer size) {
+		String normalizedSort = normalizeSort(sort);
+
+		if (page == null || size == null) {
+			if (SORT_DATE_DESC.equals(normalizedSort)) {
+				return answerRepository.findByQuestionIdOrderByCreatedAtDesc(questionId);
+			}
+			return answerRepository.findByQuestionIdOrderByUpvotesDescCreatedAtDesc(questionId);
+		}
+
+		if (size <= 0) {
+			return Collections.emptyList();
+		}
+
+		int pageNumber = Math.max(0, page);
+		Pageable pageable = PageRequest.of(pageNumber, size);
+
+		if (SORT_DATE_DESC.equals(normalizedSort)) {
+			return answerRepository.findByQuestionIdOrderByCreatedAtDesc(questionId, pageable);
+		}
+		return answerRepository.findByQuestionIdOrderByUpvotesDescCreatedAtDesc(questionId, pageable);
 	}
 
 	@Transactional(readOnly = true)
@@ -122,6 +152,7 @@ public class AnswerService {
 	@Transactional
 	public Answer updateVotes(UUID answerId, UUID userId, VoteType voteType) {
 		Answer answer = findAnswer(answerId);
+		RegularUser answerOwner = answer.getUser();
 
 		Optional<AnswerVote> existingOpt = answerVoteRepository.findByUserIdAndAnswerId(userId, answerId);
 
@@ -135,9 +166,13 @@ public class AnswerService {
 			if (voteType == VoteType.LIKE) {
 				answer.setUpvotes(answer.getUpvotes() + 1);
 				answer.setDownvotes(Math.max(0, answer.getDownvotes() - 1));
+				decrementDislikes(answerOwner);
+				incrementLikes(answerOwner);
 			} else {
 				answer.setDownvotes(answer.getDownvotes() + 1);
 				answer.setUpvotes(Math.max(0, answer.getUpvotes() - 1));
+				decrementLikes(answerOwner);
+				incrementDislikes(answerOwner);
 			}
 			existing.setVoteType(voteType);
 			existing.setVotedAt(LocalDateTime.now());
@@ -153,8 +188,10 @@ public class AnswerService {
 			answerVoteRepository.save(vote);
 			if (voteType == VoteType.LIKE) {
 				answer.setUpvotes(answer.getUpvotes() + 1);
+				incrementLikes(answerOwner);
 			} else {
 				answer.setDownvotes(answer.getDownvotes() + 1);
+				incrementDislikes(answerOwner);
 			}
 		}
 
@@ -164,12 +201,15 @@ public class AnswerService {
 	@Transactional
 	public Answer removeVote(UUID answerId, UUID userId) {
 		Answer answer = findAnswer(answerId);
+		RegularUser answerOwner = answer.getUser();
 		AnswerVote existing = answerVoteRepository.findByUserIdAndAnswerId(userId, answerId)
 				.orElseThrow(() -> new IllegalArgumentException("No vote found for this user on this answer"));
 		if (existing.getVoteType() == VoteType.LIKE) {
 			answer.setUpvotes(Math.max(0, answer.getUpvotes() - 1));
+			decrementLikes(answerOwner);
 		} else {
 			answer.setDownvotes(Math.max(0, answer.getDownvotes() - 1));
+			decrementDislikes(answerOwner);
 		}
 		answerVoteRepository.delete(existing);
 		return answerRepository.save(answer);
@@ -277,6 +317,33 @@ public class AnswerService {
 				.orElseThrow(() -> new AccessDeniedException("Only regular users can create answers"));
 
 		answer.setUser(regularUser);
+	}
+
+	private String normalizeSort(String sort) {
+		if (SORT_DATE_DESC.equalsIgnoreCase(sort)) {
+			return SORT_DATE_DESC;
+		}
+		return SORT_LIKES_DESC;
+	}
+
+	private void incrementLikes(RegularUser user) {
+		int current = user.getTotalLikesReceived() == null ? 0 : user.getTotalLikesReceived();
+		user.setTotalLikesReceived(current + 1);
+	}
+
+	private void decrementLikes(RegularUser user) {
+		int current = user.getTotalLikesReceived() == null ? 0 : user.getTotalLikesReceived();
+		user.setTotalLikesReceived(Math.max(0, current - 1));
+	}
+
+	private void incrementDislikes(RegularUser user) {
+		int current = user.getTotalDislikesReceived() == null ? 0 : user.getTotalDislikesReceived();
+		user.setTotalDislikesReceived(current + 1);
+	}
+
+	private void decrementDislikes(RegularUser user) {
+		int current = user.getTotalDislikesReceived() == null ? 0 : user.getTotalDislikesReceived();
+		user.setTotalDislikesReceived(Math.max(0, current - 1));
 	}
 
 }

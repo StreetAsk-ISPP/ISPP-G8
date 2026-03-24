@@ -1,32 +1,47 @@
 package com.streetask.app.user;
 
-import com.streetask.app.answer.AnswerRepository;
-import com.streetask.app.exceptions.ResourceNotFoundException;
-import com.streetask.app.question.QuestionRepository;
-import com.streetask.app.model.Question;
-import com.streetask.app.model.Answer;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.AfterEach;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import com.streetask.app.answer.AnswerRepository;
+import com.streetask.app.exceptions.ResourceNotFoundException;
+import com.streetask.app.model.Answer;
+import com.streetask.app.model.Question;
+import com.streetask.app.question.QuestionRepository;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserService Unit Tests")
@@ -40,6 +55,9 @@ class UserServiceTest {
 
     @Mock
     private QuestionRepository questionRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -237,6 +255,92 @@ class UserServiceTest {
         assertEquals(testUserId, updated.getId());
     }
 
+    @Test
+    void updateUser_shouldUpdateEditableFieldsAndKeepOldPassword() {
+        User originalUser = createTestUser(UUID.randomUUID(), "old@example.com", "olduser");
+        originalUser.setPassword("old_encoded_password");
+
+        User incomingUpdate = new User();
+        incomingUpdate.setFirstName("NewFirst");
+        incomingUpdate.setLastName("NewLast");
+        incomingUpdate.setUserName("newuser");
+        incomingUpdate.setEmail("new@example.com");
+        incomingUpdate.setPassword("");
+
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(originalUser));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        User updatedUser = userService.updateUser(incomingUpdate, testUserId);
+
+        assertEquals("NewFirst", updatedUser.getFirstName());
+        assertEquals("NewLast", updatedUser.getLastName());
+        assertEquals("newuser", updatedUser.getUserName());
+        assertEquals("new@example.com", updatedUser.getEmail());
+
+        assertEquals("old_encoded_password", updatedUser.getPassword());
+        verify(passwordEncoder, never()).encode(anyString());
+    }
+
+    @Test
+    @DisplayName("updateUser should encode password when a new one is provided")
+    void updateUser_shouldEncodePasswordWhenProvided() {
+        User originalUser = createTestUser(UUID.randomUUID(), "old@example.com", "olduser");
+
+        User incomingUpdate = new User();
+        incomingUpdate.setFirstName("NewFirst");
+        incomingUpdate.setLastName("NewLast");
+        incomingUpdate.setUserName("newuser");
+        incomingUpdate.setEmail("new@example.com");
+        incomingUpdate.setPassword("new_raw_password");
+
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(originalUser));
+        when(passwordEncoder.encode("new_raw_password")).thenReturn("new_encoded_password");
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        User updatedUser = userService.updateUser(incomingUpdate, testUserId);
+
+        assertEquals("new_encoded_password", updatedUser.getPassword());
+        verify(passwordEncoder).encode("new_raw_password");
+    }
+
+    @Test
+    @DisplayName("updateUser should NOT modify protected fields (authorities, active, createdAt, id)")
+    void updateUser_shouldNotModifyProtectedFields() {
+        LocalDateTime oldDate = LocalDateTime.of(2020, 1, 1, 0, 0);
+        Authorities oldAuth = new Authorities();
+        oldAuth.setAuthority("USER");
+
+        User originalUser = createTestUser(testUserId, "old@example.com", "olduser");
+        originalUser.setCreatedAt(oldDate);
+        originalUser.setAuthority(oldAuth);
+        originalUser.setActive(true);
+
+        User maliciousUpdate = new User();
+        maliciousUpdate.setFirstName("Hacker");
+        maliciousUpdate.setLastName("Man");
+        maliciousUpdate.setUserName("hacker");
+        maliciousUpdate.setEmail("hacker@mail.com");
+
+        maliciousUpdate.setId(UUID.randomUUID());
+        Authorities adminAuth = new Authorities();
+        adminAuth.setAuthority("ADMIN");
+        maliciousUpdate.setAuthority(adminAuth);
+        maliciousUpdate.setActive(false);
+        maliciousUpdate.setCreatedAt(LocalDateTime.now());
+
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(originalUser));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        User updatedUser = userService.updateUser(maliciousUpdate, testUserId);
+
+        assertEquals("Hacker", updatedUser.getFirstName(), "Editable fields should update");
+
+        assertEquals(testUserId, updatedUser.getId(), "ID should not be modified");
+        assertEquals("USER", updatedUser.getAuthority().getAuthority(), "Authority should not be modified");
+        assertTrue(updatedUser.getActive(), "Active status should not be modified");
+        assertEquals(oldDate, updatedUser.getCreatedAt(), "Creation date should not be modified");
+    }
+
     // ================= DELETE =================
 
     @Test
@@ -336,17 +440,75 @@ class UserServiceTest {
         verify(answerRepository).aggregateVotesByUserIds(anyCollection());
     }
 
+    @Test
+    void findUserById_shouldApplyFormulaLikesTimesTwoMinusDislikes() {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        user.setId(userId);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(answerRepository.aggregateVotesByUserIds(eq(List.of(userId))))
+                .thenReturn(Collections.singletonList(new Object[] { userId, 9L, 4L }));
+
+        User result = userService.findUser(userId);
+
+        assertEquals(14, result.getReputation());
+        verify(answerRepository).aggregateVotesByUserIds(eq(List.of(userId)));
+    }
+
+    @Test
+    void findAll_shouldHandlePositiveAndNegativeReputationScenarios() {
+        UUID positiveUserId = UUID.randomUUID();
+        UUID negativeUserId = UUID.randomUUID();
+
+        User positiveUser = new User();
+        positiveUser.setId(positiveUserId);
+
+        User negativeUser = new User();
+        negativeUser.setId(negativeUserId);
+
+        when(userRepository.findAll()).thenReturn(Arrays.asList(positiveUser, negativeUser));
+        when(answerRepository.aggregateVotesByUserIds(anyCollection())).thenReturn(Arrays.asList(
+                new Object[] { positiveUserId, 7L, 1L },
+                new Object[] { negativeUserId, 1L, 6L }));
+
+        List<User> result = (List<User>) userService.findAll();
+
+        assertEquals(13, result.get(0).getReputation());
+        assertEquals(-4, result.get(1).getReputation());
+    }
+
+    @Test
+    void findUserById_shouldRecalculateReputationConsistentlyWhenAggregatesChange() {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        user.setId(userId);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(answerRepository.aggregateVotesByUserIds(eq(List.of(userId))))
+                .thenReturn(Collections.singletonList(new Object[] { userId, 3L, 1L }))
+                .thenReturn(Collections.singletonList(new Object[] { userId, 4L, 2L }));
+
+        User firstRead = userService.findUser(userId);
+        int firstReputation = firstRead.getReputation();
+        User secondRead = userService.findUser(userId);
+
+        assertEquals(5, firstReputation);
+        assertEquals(6, secondRead.getReputation());
+        verify(answerRepository, times(2)).aggregateVotesByUserIds(eq(List.of(userId)));
+    }
+
     // ================= USER STATS =================
 
     @Test
     @DisplayName("getUserStats should return correct stats for a user with activity")
     void getUserStats_shouldReturnCorrectStatsForUserWithActivity() {
-        User user = createTestUserWithAuthority(testUserId, TEST_EMAIL, TEST_USERNAME, "USER");
+        RegularUser user = createTestRegularUserWithAuthority(testUserId, TEST_EMAIL, TEST_USERNAME, "USER");
+        user.setTotalLikesReceived(8);
+        user.setTotalDislikesReceived(2);
         when(userRepository.findById(testUserId)).thenReturn(Optional.of(user));
         when(questionRepository.countByCreatorId(testUserId)).thenReturn(5L);
         when(answerRepository.countByUserId(testUserId)).thenReturn(10L);
-        when(answerRepository.aggregateVotesByUserIds(anyCollection()))
-                .thenReturn(Collections.singletonList(new Object[] { testUserId, 8L, 2L }));
 
         Map<String, Object> stats = userService.getUserStats(testUserId);
 
@@ -358,6 +520,7 @@ class UserServiceTest {
         assertEquals(8, stats.get("likesCount"));
         assertEquals(2, stats.get("dislikesCount"));
         assertNotNull(stats.get("reputation"));
+        assertEquals(4.0, stats.get("rating"));
         verify(questionRepository).countByCreatorId(testUserId);
         verify(answerRepository).countByUserId(testUserId);
     }
@@ -365,12 +528,12 @@ class UserServiceTest {
     @Test
     @DisplayName("getUserStats should return zero counts for user with no activity")
     void getUserStats_shouldReturnZeroCountsForUserWithNoActivity() {
-        User user = createTestUserWithAuthority(testUserId, TEST_EMAIL, TEST_USERNAME, "USER");
+        RegularUser user = createTestRegularUserWithAuthority(testUserId, TEST_EMAIL, TEST_USERNAME, "USER");
+        user.setTotalLikesReceived(0);
+        user.setTotalDislikesReceived(0);
         when(userRepository.findById(testUserId)).thenReturn(Optional.of(user));
         when(questionRepository.countByCreatorId(testUserId)).thenReturn(0L);
         when(answerRepository.countByUserId(testUserId)).thenReturn(0L);
-        when(answerRepository.aggregateVotesByUserIds(anyCollection()))
-                .thenReturn(Collections.emptyList());
 
         Map<String, Object> stats = userService.getUserStats(testUserId);
 
@@ -379,6 +542,7 @@ class UserServiceTest {
         assertEquals(0L, stats.get("answersCount"));
         assertEquals(0, stats.get("likesCount"));
         assertEquals(0, stats.get("dislikesCount"));
+        assertEquals(0.0, stats.get("rating"));
     }
 
     @Test
@@ -388,8 +552,6 @@ class UserServiceTest {
         when(userRepository.findById(testUserId)).thenReturn(Optional.of(user));
         when(questionRepository.countByCreatorId(testUserId)).thenReturn(0L);
         when(answerRepository.countByUserId(testUserId)).thenReturn(0L);
-        when(answerRepository.aggregateVotesByUserIds(anyCollection()))
-                .thenReturn(Collections.emptyList());
 
         Map<String, Object> stats = userService.getUserStats(testUserId);
 
@@ -486,6 +648,23 @@ class UserServiceTest {
 
     private User createTestUserWithAuthority(UUID id, String email, String userName, String authorityName) {
         User user = createTestUser(id, email, userName);
+        Authorities auth = new Authorities();
+        auth.setAuthority(authorityName);
+        user.setAuthority(auth);
+        return user;
+    }
+
+    private RegularUser createTestRegularUserWithAuthority(UUID id, String email, String userName,
+            String authorityName) {
+        RegularUser user = new RegularUser();
+        user.setId(id);
+        user.setEmail(email);
+        user.setUserName(userName);
+        user.setFirstName(TEST_FIRST_NAME);
+        user.setLastName(TEST_LAST_NAME);
+        user.setPassword("password123");
+        user.setActive(true);
+        user.setCreatedAt(LocalDateTime.now());
         Authorities auth = new Authorities();
         auth.setAuthority(authorityName);
         user.setAuthority(auth);

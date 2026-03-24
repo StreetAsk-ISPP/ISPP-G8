@@ -1,4 +1,4 @@
-package com.streetask.app.user;
+package com.streetask.app.integration;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -32,6 +32,10 @@ import com.streetask.app.auth.payload.response.MessageResponse;
 import com.streetask.app.exceptions.ResourceNotFoundException;
 import com.streetask.app.model.Answer;
 import com.streetask.app.model.Question;
+import com.streetask.app.user.Authorities;
+import com.streetask.app.user.User;
+import com.streetask.app.user.UserService;
+import com.streetask.app.user.AuthoritiesService;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -130,6 +134,9 @@ class UserRestControllerIntegrationTest {
         User payload = createUser(null, "after@example.com", "after", "USER");
         User updatedUser = createUser(userId, "after@example.com", "after", "USER");
 
+        User adminUser = createUser(UUID.randomUUID(), "admin@example.com", "admin", "ADMIN");
+        when(userService.findCurrentUser()).thenReturn(adminUser);
+
         when(userService.findUser(userId)).thenReturn(existingUser);
         when(userService.updateUser(any(User.class), eq(userId))).thenReturn(updatedUser);
 
@@ -139,6 +146,77 @@ class UserRestControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("after@example.com"))
                 .andExpect(jsonPath("$.userName").value("after"));
+    }
+
+    @Test
+    @WithMockUser(username = "owner@example.com", authorities = { "USER" })
+    void update_shouldUpdateOwnProfileSuccessfully() throws Exception {
+        UUID userId = UUID.randomUUID();
+        User currentUser = createUser(userId, "owner@example.com", "owner", "USER");
+        User payload = createUser(null, "updated@example.com", "updated", "USER");
+        User updatedUser = createUser(userId, "updated@example.com", "updated", "USER");
+
+        when(userService.findCurrentUser()).thenReturn(currentUser);
+        when(userService.findUser(userId)).thenReturn(currentUser);
+        when(userService.updateUser(any(User.class), eq(userId))).thenReturn(updatedUser);
+
+        mockMvc.perform(put("/api/v1/users/{userId}", userId)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("updated@example.com"))
+                .andExpect(jsonPath("$.userName").value("updated"));
+    }
+
+    @Test
+    @WithMockUser(username = "owner@example.com", authorities = { "USER" })
+    void update_withInvalidPayload_shouldReturnBadRequest() throws Exception {
+        UUID userId = UUID.randomUUID();
+
+        User invalidPayload = new User();
+        invalidPayload.setEmail("");
+        invalidPayload.setUserName("");
+        invalidPayload.setFirstName("");
+        invalidPayload.setLastName("");
+
+        mockMvc.perform(put("/api/v1/users/{userId}", userId)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidPayload)))
+                .andExpect(status().isBadRequest());
+
+        verify(userService, never()).updateUser(any(User.class), eq(userId));
+    }
+
+    @Test
+    @WithMockUser(username = "hacker@example.com", authorities = { "USER" })
+    void update_whenEditingOtherProfile_shouldReturnForbidden() throws Exception {
+        UUID targetUserId = UUID.randomUUID();
+        UUID hackerId = UUID.randomUUID();
+
+        User hackerUser = createUser(hackerId, "hacker@example.com", "hacker", "USER");
+        User targetUser = createUser(targetUserId, "target@example.com", "target", "USER");
+        User payload = createUser(null, "hacked@example.com", "hacked", "USER");
+
+        when(userService.findCurrentUser()).thenReturn(hackerUser);
+        when(userService.findUser(targetUserId)).thenReturn(targetUser);
+
+        mockMvc.perform(put("/api/v1/users/{userId}", targetUserId)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isForbidden());
+
+        verify(userService, never()).updateUser(any(User.class), eq(targetUserId));
+    }
+
+    @Test // No authentication provided
+    void update_whenUnauthenticated_shouldReturnUnauthorized() throws Exception {
+        UUID userId = UUID.randomUUID();
+        User payload = createUser(null, "updated@example.com", "updated", "USER");
+
+        mockMvc.perform(put("/api/v1/users/{userId}", userId)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -154,7 +232,8 @@ class UserRestControllerIntegrationTest {
 
         mockMvc.perform(delete("/api/v1/users/{userId}", targetUserId))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(new MessageResponse("User deleted!"))));
+                .andExpect(content().json(
+                        objectMapper.writeValueAsString(new MessageResponse("User deleted!"))));
 
         verify(userService).deleteUser(targetUserId);
     }
@@ -253,7 +332,8 @@ class UserRestControllerIntegrationTest {
 
         mockMvc.perform(post("/api/v1/users")
                 .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createUser(null, "created@example.com", "created", "USER"))))
+                .content(objectMapper.writeValueAsString(
+                        createUser(null, "created@example.com", "created", "USER"))))
                 .andExpect(status().isForbidden());
     }
 

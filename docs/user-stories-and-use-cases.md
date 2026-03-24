@@ -121,7 +121,7 @@ The stories are organized into three priority levels based on the MoSCoW framewo
 
 **US-02: Choose subscription plan**  
 - **As** a registered user,  
-- **I want** to choose one of two plans: Free (with mandatory ad when publishing questions, 2-hour question duration) or Premium (ad-free, configurable question duration up to 24h),  
+- **I want** to choose one of two plans: Free (with mandatory ad when publishing questions, 6-hour question duration) or Premium (ad-free, configurable question duration up to 24h),  
 - **So that** I can access the benefits of my desired plan. A button to upgrade to Pro appears in the header; if already Pro, the button shows "Already Pro" status instead.
 
 > **Note:** Free users must watch a mandatory advertisement before publishing a question. Business accounts automatically have Pro benefits included without needing a separate subscription.
@@ -382,7 +382,7 @@ The Minimum Viable Product (MVP) will include the following functionalities base
 
 #### Normal User
 - User registration, login, and profile management (US-01, US-03, US-04, US-05, US-06)
-- Subscription plan selection: Free (with ads, 2-hour question duration) or Premium (ad-free, configurable duration) (US-02)
+- Subscription plan selection: Free (with ads, 6-hour question duration) or Premium (ad-free, configurable duration) (US-02)
 - Transaction history view (US-07)
 - Create location-based questions with topic, radius, and question text (US-08)
 - Answer questions (US-09)
@@ -390,7 +390,7 @@ The Minimum Viable Product (MVP) will include the following functionalities base
 - View active questions on map (all questions as red dots) and nearby questions in menu (US-11)
 - Receive notifications for nearby questions, nearby events, and responses to own questions (US-12)
 - View question threads with all answers (US-13)
-- **System Constraint:** Automatic question expiration (2 hours for free users, configurable for premium)
+- **System Constraint:** Automatic question expiration (6 hours for free users, configurable for premium)
 
 ### Important Features - Should Have (P1)
 

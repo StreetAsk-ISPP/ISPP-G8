@@ -15,11 +15,13 @@ import {
     Alert,
     ActivityIndicator,
     Image,
+    Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MapComponent from './components/MapComponent';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useNotifications } from '../../../app/providers/NotificationProvider';
+import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import { APP_CONFIG } from '../../../app/config/config';
 import apiClient from '../../../shared/services/http/apiClient';
 import { bootstrapWebPushNotifications } from '../../../shared/services/notifications/webPushBootstrap';
@@ -34,9 +36,11 @@ export default function HomeScreen({ navigation }) {
 
     const [questions, setQuestions] = useState([]);
     const [showQuestions, setShowQuestions] = useState(true);
-    const [comingSoon, setComingSoon] = useState(false);
-    const [modalType, setModalType] = useState('notifications');
     const [currentLocation, setCurrentLocation] = useState(null);
+    const [isPremium, setIsPremium] = useState(false);
+
+    // null = revisando, true = concedido, false = denegado
+    const [hasLocationPermission, setHasLocationPermission] = useState(null);
 
     const [feedbackVisible, setFeedbackVisible] = useState(false);
     const [feedbackType, setFeedbackType] = useState('SUGGESTION');
@@ -44,9 +48,17 @@ export default function HomeScreen({ navigation }) {
     const [sendingFeedback, setSendingFeedback] = useState(false);
     const [feedbackSuccessVisible, setFeedbackSuccessVisible] = useState(false);
     const [feedbackSuccessMessage, setFeedbackSuccessMessage] = useState('');
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    const handleLogoutConfirm = async () => {
+        setShowLogoutModal(false);
+        await logout();
+    };
 
     const pushBootstrappedRef = useRef(false);
     const pushSubscriptionRef = useRef(null);
+    const menuAnimValue = useRef(new Animated.Value(-350)).current;
     const pushZoneKeyRef = useRef(null);
 
     const isFocused = useIsFocused();
@@ -68,11 +80,22 @@ export default function HomeScreen({ navigation }) {
         }
     }, []);
 
-    useFocusEffect(
-        useCallback(() => {
-            loadQuestions();
-        }, [loadQuestions])
-    );
+    useFocusEffect(useCallback(() => {
+        loadQuestions();
+
+        let isMounted = true;
+        const checkPremium = async () => {
+            if (!user?.id) return;
+            try {
+                const res = await apiClient.get(`/api/v1/users/${user.id}`);
+                if (isMounted) setIsPremium(res?.data?.premiumActive === true);
+            } catch (_) {
+                // silently ignore — stays false
+            }
+        };
+        checkPremium();
+        return () => { isMounted = false; };
+    }, [loadQuestions, user?.id]));
 
     useEffect(() => {
         const unsub = observeNotifications((n) => {
@@ -179,6 +202,22 @@ export default function HomeScreen({ navigation }) {
         syncPushZone();
     }, [token, currentLocation]);
 
+    useEffect(() => {
+        if (menuOpen) {
+            Animated.timing(menuAnimValue, {
+                toValue: 0,
+                duration: 350,
+                useNativeDriver: true,
+            }).start();
+        } else {
+            Animated.timing(menuAnimValue, {
+                toValue: -350,
+                duration: 300,
+                useNativeDriver: true,
+            }).start();
+        }
+    }, [menuOpen, menuAnimValue]);
+
     const resetFeedbackForm = () => {
         setFeedbackType('SUGGESTION');
         setFeedbackMessage('');
@@ -218,77 +257,96 @@ export default function HomeScreen({ navigation }) {
         }
     };
 
+    const handleRefresh = async () => {
+        try {
+            await loadQuestions();
+        } catch (e) {
+            console.warn('Error refreshing data', e);
+        }
+    };
+
     return (
         <>
             <SafeAreaView style={styles.screen}>
                 <View style={styles.container}>
                     <View style={[styles.topBar, isNarrow && { paddingHorizontal: 12 }]}>
-                        <View style={styles.topBarLeft}>
+                        <TouchableOpacity
+                            style={styles.topBarLeft}
+                            activeOpacity={0.7}
+                            onPress={handleRefresh}
+                        >
                             <View style={styles.logoBadge}>
                                 <Image
                                     source={require('../../../../assets/logo.png')}
                                     style={{ width: 18, height: 28 }}
                                 />
                             </View>
-                            <Text style={styles.appName}>StreetAsk</Text>
-                        </View>
-                        <View style={styles.topBarRight}>
-                            <TouchableOpacity
-                                style={styles.iconBtn}
-                                activeOpacity={0.7}
-                                onPress={() => navigation.navigate('Profile')}
-                            >
-                                <Ionicons name="person-outline" size={20} color="#374151" />
-                            </TouchableOpacity>
 
-                            {user?.roles?.includes('ADMIN') && (
+                            <Text style={styles.appName}>StreetAsk</Text>
+                        </TouchableOpacity>
+
+                        <View style={styles.topBarRight}>
+                            {isPremium ? (
                                 <TouchableOpacity
-                                    style={styles.iconBtn}
-                                    activeOpacity={0.7}
-                                    onPress={() => navigation.navigate('AdminDashboard')}
+                                    style={styles.proBadge}
+                                    activeOpacity={0.85}
+                                    onPress={() => navigation.navigate('SubscriptionPlans')}
                                 >
-                                    <Ionicons name="shield-checkmark-outline" size={20} color="#374151" />
+                                    <Text style={styles.proBadgeText}>⭐ PRO</Text>
+                                </TouchableOpacity>
+                            ) : (
+                                <TouchableOpacity
+                                    style={styles.goProBtn}
+                                    activeOpacity={0.85}
+                                    onPress={() => navigation.navigate('SubscriptionPlans')}
+                                >
+                                    <Text style={styles.goProText}>👑 GO PRO</Text>
                                 </TouchableOpacity>
                             )}
 
-                            <TouchableOpacity
-                                style={styles.iconBtn}
-                                activeOpacity={0.7}
-                                onPress={() => setFeedbackVisible(true)}
-                            >
-                                <Ionicons name="chatbox-ellipses-outline" size={20} color="#a52019" />
-                            </TouchableOpacity>
+                            {isNarrow ? (
+                                <TouchableOpacity
+                                    style={styles.iconBtn}
+                                    activeOpacity={0.7}
+                                    onPress={() => setMenuOpen(!menuOpen)}
+                                >
+                                    <Ionicons name="menu" size={24} color="#374151" />
+                                </TouchableOpacity>
+                            ) : (
+                                <>
+                                    {user?.roles?.includes('ADMIN') && (
+                                        <TouchableOpacity
+                                            style={styles.iconBtn}
+                                            activeOpacity={0.7}
+                                            onPress={() => navigation.navigate('AdminDashboard')}
+                                        >
+                                            <Ionicons name="shield-checkmark-outline" size={20} color="#374151" />
+                                        </TouchableOpacity>
+                                    )}
 
-                            <TouchableOpacity
-                                style={styles.iconBtn}
-                                activeOpacity={0.7}
-                                onPress={() => {
-                                    setModalType('search');
-                                    setComingSoon(true);
-                                }}
-                            >
-                                <Ionicons name="search-outline" size={20} color="#a52019" />
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={styles.iconBtn}
-                                activeOpacity={0.7}
-                                onPress={() => {
-                                    setModalType('notifications');
-                                    setComingSoon(true);
-                                }}
-                            >
-                                <Ionicons name="notifications-outline" size={20} color="#a52019" />
-                                {ephemeralNotification ? <View style={styles.badge} /> : null}
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.iconBtn, styles.logoutBtn]}
-                                onPress={logout}
-                                activeOpacity={0.7}
-                            >
-                                <Ionicons name="log-out-outline" size={20} color="#ef4444" />
-                            </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={styles.iconBtn}
+                                        activeOpacity={0.7}
+                                        onPress={() => navigation.navigate('Profile')}
+                                    >
+                                        <Ionicons name="person-outline" size={20} color="#374151" />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={styles.iconBtn}
+                                        activeOpacity={0.7}
+                                        onPress={() => setFeedbackVisible(true)}
+                                    >
+                                        <Ionicons name="chatbox-ellipses-outline" size={20} color="#a52019" />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[styles.iconBtn, styles.logoutBtn]}
+                                        onPress={() => setShowLogoutModal(true)}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Ionicons name="log-out-outline" size={20} color="#ef4444" />
+                                    </TouchableOpacity>
+                                </>
+                            )}
                         </View>
                     </View>
 
@@ -306,6 +364,48 @@ export default function HomeScreen({ navigation }) {
                         </View>
                     ) : null}
 
+                    <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={() => setMenuOpen(false)}>
+                        <Pressable style={styles.menuOverlay} onPress={() => setMenuOpen(false)}>
+                            <Animated.View style={[styles.menuContent, { transform: [{ translateY: menuAnimValue }] }]}>
+                                <TouchableOpacity
+                                    style={styles.menuItem}
+                                    onPress={() => { navigation.navigate('Profile'); setMenuOpen(false); }}
+                                >
+                                    <Ionicons name="person-outline" size={18} color="#374151" />
+                                    <Text style={styles.menuItemLabel}>Profile</Text>
+                                </TouchableOpacity>
+
+                                {user?.roles?.includes('ADMIN') && (
+                                    <TouchableOpacity
+                                        style={styles.menuItem}
+                                        onPress={() => { navigation.navigate('AdminDashboard'); setMenuOpen(false); }}
+                                    >
+                                        <Ionicons name="shield-checkmark-outline" size={18} color="#374151" />
+                                        <Text style={styles.menuItemLabel}>Admin</Text>
+                                    </TouchableOpacity>
+                                )}
+
+                                <TouchableOpacity
+                                    style={styles.menuItem}
+                                    onPress={() => { setFeedbackVisible(true); setMenuOpen(false); }}
+                                >
+                                    <Ionicons name="chatbox-ellipses-outline" size={18} color="#a52019" />
+                                    <Text style={styles.menuItemLabel}>Feedback</Text>
+                                </TouchableOpacity>
+
+                                <View style={styles.menuDivider} />
+
+                                <TouchableOpacity
+                                    style={styles.menuItem}
+                                    onPress={() => { setShowLogoutModal(true); setMenuOpen(false); }}
+                                >
+                                    <Ionicons name="log-out-outline" size={18} color="#ef4444" />
+                                    <Text style={{ ...styles.menuItemLabel, color: '#ef4444' }}>Logout</Text>
+                                </TouchableOpacity>
+                            </Animated.View>
+                        </Pressable>
+                    </Modal>
+
                     <View style={styles.mapWrapper}>
                         <MapComponent
                             questions={showQuestions ? questions : []}
@@ -313,6 +413,7 @@ export default function HomeScreen({ navigation }) {
                                 navigation.navigate('QuestionThread', { questionId: qId })
                             }
                             onLocationChange={setCurrentLocation}
+                            onPermissionChange={setHasLocationPermission}
                         />
                     </View>
 
@@ -325,47 +426,20 @@ export default function HomeScreen({ navigation }) {
                             thumbColor="#fff"
                         />
                     </View>
+                    {hasLocationPermission && (
+                        <TouchableOpacity
+                            style={[styles.fab, isNarrow && { width: 220 }]}
+                            onPress={() => navigation.navigate('CreateQuestion')}
+                            activeOpacity={0.85}
+                        >
+                            <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
+                            <Text style={styles.fabText}>Ask a question</Text>
+                        </TouchableOpacity>
+                    )}
 
-                    <TouchableOpacity
-                        style={[styles.fab, isNarrow && { width: 220 }]}
-                        onPress={() => navigation.navigate('CreateQuestion')}
-                        activeOpacity={0.85}
-                    >
-                        <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
-                        <Text style={styles.fabText}>Ask a question</Text>
-                    </TouchableOpacity>
+
                 </View>
             </SafeAreaView>
-
-            <Modal
-                visible={comingSoon}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setComingSoon(false)}
-            >
-                <Pressable style={styles.modalOverlay} onPress={() => setComingSoon(false)}>
-                    <View style={styles.modalBox}>
-                        <Ionicons
-                            name={modalType === 'search' ? 'search' : 'notifications'}
-                            size={28}
-                            color="#a52019"
-                        />
-                        <Text style={styles.modalTitle}>Coming Soon</Text>
-                        <Text style={styles.modalMsg}>
-                            {modalType === 'search'
-                                ? 'Search is not available yet.'
-                                : 'Notifications are not available yet.'}
-                        </Text>
-                        <TouchableOpacity
-                            style={styles.modalBtn}
-                            onPress={() => setComingSoon(false)}
-                            activeOpacity={0.8}
-                        >
-                            <Text style={styles.modalBtnText}>OK</Text>
-                        </TouchableOpacity>
-                    </View>
-                </Pressable>
-            </Modal>
 
             <Modal
                 visible={feedbackVisible}
@@ -519,6 +593,17 @@ export default function HomeScreen({ navigation }) {
                     </Pressable>
                 </Pressable>
             </Modal>
+
+            <ConfirmationModal
+                visible={showLogoutModal}
+                title="Log out?"
+                message="Are you sure you want to log out?"
+                confirmText="Log out"
+                cancelText="Go Back"
+                onConfirm={handleLogoutConfirm}
+                onCancel={() => setShowLogoutModal(false)}
+                confirmButtonColor="danger"
+            />
         </>
     );
 }
@@ -565,6 +650,38 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 6,
     },
+    goProBtn: {
+        paddingHorizontal: 12,
+        height: 38,
+        borderRadius: 12,
+        backgroundColor: '#1d4ed8',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#1e40af',
+    },
+    goProText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '800',
+        letterSpacing: 0.4,
+    },
+    proBadge: {
+        paddingHorizontal: 12,
+        height: 38,
+        borderRadius: 12,
+        backgroundColor: '#fbbf24',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#f59e0b',
+    },
+    proBadgeText: {
+        color: '#1f2937',
+        fontSize: 12,
+        fontWeight: '800',
+        letterSpacing: 0.4,
+    },
     iconBtn: {
         width: 38,
         height: 38,
@@ -575,15 +692,6 @@ const styles = StyleSheet.create({
     },
     logoutBtn: {
         backgroundColor: '#fef2f2',
-    },
-    badge: {
-        position: 'absolute',
-        top: 6,
-        right: 6,
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#a52019',
     },
     notifBanner: {
         flexDirection: 'row',
@@ -652,43 +760,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 20,
-    },
-    modalBox: {
-        backgroundColor: '#fff',
-        borderRadius: 18,
-        paddingVertical: 28,
-        paddingHorizontal: 32,
-        alignItems: 'center',
-        width: 260,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 24,
-        elevation: 12,
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#1f2937',
-        marginTop: 10,
-    },
-    modalMsg: {
-        fontSize: 13,
-        color: '#6b7280',
-        marginTop: 6,
-        textAlign: 'center',
-    },
-    modalBtn: {
-        marginTop: 18,
-        backgroundColor: '#a52019',
-        borderRadius: 10,
-        paddingVertical: 8,
-        paddingHorizontal: 28,
-    },
-    modalBtnText: {
-        color: '#fff',
-        fontWeight: '600',
-        fontSize: 14,
     },
     feedbackModalBox: {
         width: '100%',
@@ -850,5 +921,39 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 14,
         fontWeight: '700',
+    },
+    menuOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.15)',
+        justifyContent: 'flex-start',
+        paddingTop: 60,
+    },
+    menuContent: {
+        backgroundColor: '#fff',
+        marginHorizontal: 12,
+        borderRadius: 12,
+        paddingVertical: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    menuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        gap: 12,
+    },
+    menuItemLabel: {
+        fontSize: 15,
+        fontWeight: '500',
+        color: '#374151',
+    },
+    menuDivider: {
+        height: 1,
+        backgroundColor: '#e5e7eb',
+        marginVertical: 6,
     },
 });

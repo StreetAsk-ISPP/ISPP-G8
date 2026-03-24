@@ -52,10 +52,29 @@ sidebar_position: 1
 *Anotaciones sobre lo que los profesores han comentado específicamente sobre nuestra presentación y proyecto.*
 
 🟢 **Fortalezas (Qué hemos hecho bien):**
-  - TODO
+ * **Presentación e Impacto:** *Killer opener* muy llamativo que capta la atención desde el inicio y conecta perfectamente con la explicación del MVP.
+* **Diferenciación Clara:** Excelente uso de la **polivalencia** como factor clave para distinguirnos de competidores que están bien alineados con nuestra propuesta.
+* **Demo y Producto:** MVP muy visible y bien explicado por Darío; funcionalidades claras que respaldan el discurso.
+* **Calidad Técnica:** Buen criterio en la medición de calidad de código utilizando **Codacy**.
+* **Métricas de Equipo:** Enfoque profesional al medir el rendimiento mediante la cantidad de *reviews* por cada Pull Request (PR).
+* **Planificación:** *Roadmap* bien estructurado y coherente con el estado del proyecto.
 
 🔴 **Debilidades (Qué tenemos que mejorar/corregir):**
-  - TODO
+* **Gestión de Tiempos en Demo:** El ritmo de la demostración fue demasiado rápido, lo que dificultó seguir el flujo completo de la aplicación.
+* **Métricas de Revisión:** Riesgo de generar desmotivación o "miedo a desarrollar" en el equipo debido a un enfoque punitivo en las métricas de errores/revisión.
+* **Planificación del Sprint 3:** Cronograma poco realista con dependencias en cascada (escalera); falta desacoplamiento entre tareas.
+* **Presentación Financiera:** Información demasiado agregada; falta granularidad en la distinción de costes.
+* **Visualización de Usuarios Piloto:** Lista demasiado extensa y poco legible que dificulta la identificación de perfiles.
+* **Seguimiento de Riesgos:** Flujo de trabajo incompleto en la transición de riesgos a problemas reales.
 
 🛠️ **Acciones Tomadas / A realizar:**
-  - TODO
+* **Optimización de la Demo:** Ralentizar el ritmo de las presentaciones en vivo para asegurar que cada paso del flujo sea comprensible.
+* **Cultura de Desarrollo:** Ajustar las métricas de revisión para que se perciban como apoyo a la calidad y no como una herramienta de control de errores.
+* **Reestructuración del Roadmap:** Desacoplar las tareas del Sprint 3 para evitar cuellos de botella y asegurar un flujo de trabajo paralelo realista.
+* **Desglose Financiero:** Reestructurar la sección económica diferenciando:
+    * Coste de producción vs. otros costes.
+    * Gastos de contratación y equipo.
+    * Costes fijos vs. variables.
+* **Gestión de Usuarios Piloto:** Sustituir la lista masiva por una selección parcial estratificada por tipos de perfil para mayor claridad.
+* **Control de Acuerdos:** Implementar un *checklist* del *Commitment Agreement* para medir la evolución del compromiso del equipo a lo largo de los sprints.
+* **Matriz de Riesgos:** Ajustar el flujo de gestión para trazar claramente cuándo un riesgo se convierte en un problema y cómo se mitiga.

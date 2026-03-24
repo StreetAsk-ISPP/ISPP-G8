@@ -1,4 +1,4 @@
-package com.streetask.app.user;
+package com.streetask.app.integration;
 
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -18,6 +18,10 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.streetask.app.exceptions.ResourceNotFoundException;
+import com.streetask.app.user.Authorities;
+import com.streetask.app.user.User;
+import com.streetask.app.user.UserService;
+import com.streetask.app.user.AuthoritiesService;
 
 @SpringBootTest
 @AutoConfigureMockMvc

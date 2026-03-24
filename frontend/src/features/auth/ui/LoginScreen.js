@@ -15,6 +15,7 @@ export default function LoginScreen({ navigation }) {
 
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [focusedField, setFocusedField] = useState(null);
@@ -97,13 +98,25 @@ export default function LoginScreen({ navigation }) {
                         <TextInput
                             value={password}
                             onChangeText={setPassword}
-                            secureTextEntry
+                            secureTextEntry={!showPassword}
                             placeholder="********"
                             placeholderTextColor="#c0c5ce"
                             style={styles.input}
                             onFocus={() => setFocusedField('pw')}
                             onBlur={() => setFocusedField(null)}
                         />
+                        <TouchableOpacity
+                            onPress={() => setShowPassword((prev) => !prev)}
+                            activeOpacity={0.7}
+                            accessibilityRole="button"
+                            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                        >
+                            <Ionicons
+                                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                                size={20}
+                                color="#6b7280"
+                            />
+                        </TouchableOpacity>
                     </View>
 
                     {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -118,7 +131,11 @@ export default function LoginScreen({ navigation }) {
                         <Text style={styles.primaryBtnText}>{isSubmitting ? 'Signing in...' : 'Sign In'}</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.forgotLink} activeOpacity={0.7}>
+                    <TouchableOpacity
+                        style={styles.forgotLink}
+                        activeOpacity={0.7}
+                        onPress={() => navigation.navigate('ForgotPassword')}
+                    >
                         <Text style={styles.forgotText}>Forgot password?</Text>
                     </TouchableOpacity>
 
