@@ -139,15 +139,15 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                 const { status } = await Location.requestForegroundPermissionsAsync();
 
                 if (status !== 'granted') {
-                    setError('Permiso de ubicación denegado');
+                    setError('Location permission denied');
                     setLoading(false);
                     if (typeof onPermissionChange === 'function') {
                         onPermissionChange(false);
                     }
                     Toast.show({
                         type: 'error',
-                        text1: 'Ubicación desactivada',
-                        text2: 'Por favor, activa la ubicación para poder hacer preguntas.',
+                        text1: 'Location disabled',
+                        text2: 'Please enable location to ask questions.',
                         position: 'top',
                         visibilityTime: 10000,
                     });
@@ -187,7 +187,7 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                     );
                 }
             } catch (err) {
-                setError('Error al obtener ubicación: ' + err.message);
+                setError('Error getting location: ' + err.message);
                 setLoading(false);
                 if (typeof onPermissionChange === 'function') {
                     onPermissionChange(false);
@@ -238,7 +238,7 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
 
     const handlePublishLocation = async () => {
         if (!location) {
-            Alert.alert('Error', 'Ubicación no disponible aún');
+            Alert.alert('Error', 'Location is not available yet');
             return;
         }
 
@@ -250,13 +250,13 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                 location.accuracy,
                 true
             );
-            Alert.alert('Éxito', '¡Ubicación publicada!');
+            Alert.alert('Success', 'Location published!');
             await loadPublicLocations();
         } catch (err) {
             console.error('Error publishing location:', err);
             Alert.alert(
                 'Error',
-                'Error al publicar ubicación: ' + (err.response?.data?.message || err.message)
+                'Error publishing location: ' + (err.response?.data?.message || err.message)
             );
         } finally {
             setPublishing(false);
@@ -267,7 +267,7 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
         return (
             <View style={styles.container}>
                 <ActivityIndicator size="large" color="#007AFF" />
-                <Text style={styles.loadingText}>Obteniendo ubicación...</Text>
+                <Text style={styles.loadingText}>Getting location...</Text>
             </View>
         );
     }
@@ -285,7 +285,7 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
     if (!location) {
         return (
             <View style={styles.container}>
-                <Text style={styles.errorText}>No se pudo obtener la ubicación</Text>
+                <Text style={styles.errorText}>Location could not be retrieved</Text>
             </View>
         );
     }
@@ -296,8 +296,8 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
             // Fallback si Leaflet no se cargó
             return (
                 <div style={{ padding: '20px', textAlign: 'center' }}>
-                    <h2>Error al cargar el mapa</h2>
-                    <p>Leaflet no está disponible. Por favor recarga la página.</p>
+                    <h2>Error loading the map</h2>
+                    <p>Leaflet is not available. Please refresh the page.</p>
                 </div>
             );
         }
@@ -324,7 +324,7 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                                 <br />
                                 {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
                                 <br />
-                                Precisión: {location.accuracy?.toFixed(2) || 'N/A'} m
+                                Accuracy: {location.accuracy?.toFixed(2) || 'N/A'} m
                             </div>
                         </Popup>
                     </Marker>
@@ -398,7 +398,7 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                             >
                                 <Popup>
                                     <div style={{ fontSize: '12px' }}>
-                                        <strong>Usuario {pubLocation.user?.id || 'Desconocido'}</strong>
+                                        <strong>User {pubLocation.user?.id || 'Unknown'}</strong>
                                         <br />
                                         {pubLocation.latitude.toFixed(6)}, {pubLocation.longitude.toFixed(6)}
                                         <br />
@@ -416,12 +416,12 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
     return (
         <ScrollView style={styles.webContainer}>
             <View style={styles.webContent}>
-                <Text style={styles.webTitle}>📍 Tu ubicación</Text>
+                <Text style={styles.webTitle}>📍 Your location</Text>
                 <View style={styles.locationCard}>
-                    <Text style={styles.locationText}>Latitud: {location.latitude.toFixed(6)}</Text>
-                    <Text style={styles.locationText}>Longitud: {location.longitude.toFixed(6)}</Text>
+                    <Text style={styles.locationText}>Latitude: {location.latitude.toFixed(6)}</Text>
+                    <Text style={styles.locationText}>Longitude: {location.longitude.toFixed(6)}</Text>
                     <Text style={styles.locationText}>
-                        Precisión: {location.accuracy?.toFixed(2) || 'N/A'} m
+                        Accuracy: {location.accuracy?.toFixed(2) || 'N/A'} m
                     </Text>
                 </View>
 
@@ -431,20 +431,20 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                     disabled={publishing}
                 >
                     <Text style={styles.publishButtonText}>
-                        {publishing ? 'Publicando...' : 'Publicar ubicación'}
+                        {publishing ? 'Publishing...' : 'Publish location'}
                     </Text>
                 </TouchableOpacity>
 
                 <Text style={[styles.webTitle, { marginTop: 20 }]}>
-                    🔴 Ubicaciones públicas ({publicLocations.length})
+                    🔴 Public locations ({publicLocations.length})
                 </Text>
                 {publicLocations.length === 0 ? (
-                    <Text style={styles.noLocationsText}>No hay ubicaciones públicas visibles</Text>
+                    <Text style={styles.noLocationsText}>No public locations visible</Text>
                 ) : (
                     publicLocations.map((pubLocation) => (
                         <View key={pubLocation.id} style={styles.locationCard}>
                             <Text style={styles.locationText}>
-                                Usuario ID: {pubLocation.user?.id || 'Desconocido'}
+                                User ID: {pubLocation.user?.id || 'Unknown'}
                             </Text>
                             <Text style={styles.locationText}>
                                 Lat: {pubLocation.latitude.toFixed(6)}, Lon: {pubLocation.longitude.toFixed(6)}

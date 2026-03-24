@@ -34,7 +34,7 @@ export default function AdminUsersScreen() {
             }
         } catch (error) {
             console.error("Error fetching users:", error);
-            Alert.alert("Error", "No se pudieron cargar los usuarios");
+            Alert.alert("Error", "Users could not be loaded");
         } finally {
             setLoading(false);
         }
@@ -63,7 +63,7 @@ export default function AdminUsersScreen() {
     const handleSaveUser = async () => {
         try {
             if (!form.email || !form.userName) {
-                Alert.alert('Datos incompletos', 'Email y usuario son obligatorios');
+                Alert.alert('Incomplete data', 'Email and username are required');
                 return;
             }
 
@@ -86,8 +86,8 @@ export default function AdminUsersScreen() {
             } else {
                 // Creación deshabilitada desde el panel admin
                 Alert.alert(
-                    'Acción no disponible',
-                    'La creación de usuarios se debe realizar desde el flujo de registro de la aplicación.',
+                    'Action not available',
+                    'User creation must be done through the app signup flow.',
                 );
                 return;
             }
@@ -99,7 +99,7 @@ export default function AdminUsersScreen() {
             const msg =
                 error?.response?.data?.message ||
                 error?.response?.data?.error ||
-                'No se ha podido guardar el usuario';
+                'The user could not be saved';
             Alert.alert('Error', msg);
         }
     };
@@ -121,8 +121,8 @@ export default function AdminUsersScreen() {
                 error?.response?.data?.message ||
                 error?.response?.data?.error ||
                 (error?.response?.status === 403
-                    ? 'No puedes eliminar este usuario'
-                    : 'No se pudo eliminar el usuario');
+                    ? 'You cannot delete this user'
+                    : 'The user could not be deleted');
             Alert.alert('Error', msg);
         }
     };
@@ -148,7 +148,7 @@ export default function AdminUsersScreen() {
                         <View style={styles.badgesContainer}>
                             <View style={[styles.badge, item.active ? styles.activeBadge : styles.inactiveBadge]}>
                                 <Text style={[styles.badgeText, item.active ? styles.activeText : styles.inactiveText]}>
-                                    {item.active ? 'Activo' : 'Inactivo'}
+                                    {item.active ? 'Active' : 'Inactive'}
                                 </Text>
                             </View>
                             {item.role === 'ADMIN' && (
@@ -183,7 +183,7 @@ export default function AdminUsersScreen() {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color="#333" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Gestionar Usuarios</Text>
+                <Text style={styles.headerTitle}>Manage Users</Text>
                 <View style={{ flexDirection: 'row' }}>
                     <TouchableOpacity onPress={fetchUsers} style={styles.refreshButton}>
                         <Ionicons name="refresh" size={22} color="#007bff" />
@@ -195,7 +195,7 @@ export default function AdminUsersScreen() {
                 <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
                 <TextInput
                     style={styles.searchInput}
-                    placeholder="Buscar por nombre o email..."
+                    placeholder="Search by name or email..."
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                 />
@@ -210,7 +210,7 @@ export default function AdminUsersScreen() {
                     keyExtractor={item => item.id}
                     contentContainerStyle={styles.listContent}
                     ListEmptyComponent={
-                        <Text style={styles.emptyText}>No se encontraron usuarios</Text>
+                        <Text style={styles.emptyText}>No users found</Text>
                     }
                 />
             )}
@@ -224,18 +224,18 @@ export default function AdminUsersScreen() {
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>
-                            {editingUser ? 'Editar usuario' : 'Usuario'}
+                            {editingUser ? 'Edit user' : 'User'}
                         </Text>
 
                         {['email', 'userName', 'firstName', 'lastName'].map((field) => (
                             <View key={field} style={styles.modalField}>
                                 <Text style={styles.inputLabel}>
                                     {field === 'userName'
-                                        ? 'Usuario'
+                                        ? 'Username'
                                         : field === 'firstName'
-                                            ? 'Nombre'
+                                            ? 'First name'
                                             : field === 'lastName'
-                                                ? 'Apellidos'
+                                                ? 'Last name'
                                                 : 'Email'}
                                 </Text>
                                 <TextInput
@@ -253,13 +253,13 @@ export default function AdminUsersScreen() {
                                 style={[styles.modalButton, styles.cancelButton]}
                                 onPress={() => setModalVisible(false)}
                             >
-                                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.modalButton, styles.saveButton]}
                                 onPress={handleSaveUser}
                             >
-                                <Text style={styles.saveButtonText}>Guardar</Text>
+                                <Text style={styles.saveButtonText}>Save</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

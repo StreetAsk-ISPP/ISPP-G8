@@ -312,8 +312,8 @@ export default function QuestionThreadScreen({ route, navigation }) {
                     setDraft(content);
                     Toast.show({
                         type: 'error',
-                        text1: 'Ubicación requerida',
-                        text2: 'Debes activar tu ubicación para responder esta pregunta.',
+                        text1: 'Location required',
+                        text2: 'You must enable location to answer this question.',
                         position: 'top'
                     });
                     return;
@@ -327,8 +327,8 @@ export default function QuestionThreadScreen({ route, navigation }) {
                     setDraft(content);
                     Toast.show({
                         type: 'error',
-                        text1: 'Fuera de radio',
-                        text2: 'No puedes responder esta pregunta porque estás fuera del radio.',
+                        text1: 'Out of range',
+                        text2: 'You cannot answer this question because you are outside the allowed radius.',
                         position: 'top'
                     });
                     return;
@@ -382,7 +382,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
         const cur = myVotes[answerId];
 
         if (cur === type) {
-            // Deseleccionar: quitar el voto
+            // Deselect: remove vote
             setAnswers((pa) => sortAnswersInMemory(pa.map((a) => {
                 if (a.id !== answerId) return a;
                 return {
@@ -395,12 +395,12 @@ export default function QuestionThreadScreen({ route, navigation }) {
             try {
                 await apiClient.delete(`/api/v1/answers/${answerId}/votes?userId=${user.id}`);
             } catch (error) {
-                console.error('Error al quitar voto:', error);
+                console.error('Error removing vote:', error);
             }
             return;
         }
 
-        // Actualización optimista (voto nuevo o cambio)
+        // Optimistic update (new vote or vote change)
         setAnswers((pa) => sortAnswersInMemory(pa.map((a) => {
             if (a.id !== answerId) return a;
             const newLikes = type === 'LIKE'
@@ -418,7 +418,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
                 `/api/v1/answers/${answerId}/votes?userId=${user.id}&voteType=${type}`
             );
         } catch (error) {
-            console.error('Error al votar:', error);
+            console.error('Error voting:', error);
         }
     };
 
@@ -505,8 +505,8 @@ export default function QuestionThreadScreen({ route, navigation }) {
         if (!questionReportReason) {
             Toast.show({
                 type: 'error',
-                text1: 'Motivo requerido',
-                text2: 'Selecciona un motivo para reportar la pregunta.',
+                text1: 'Reason required',
+                text2: 'Select a reason to report the question.',
                 position: 'top',
             });
             return;
@@ -515,8 +515,8 @@ export default function QuestionThreadScreen({ route, navigation }) {
         if (questionReportDescription?.length > 500) {
             Toast.show({
                 type: 'error',
-                text1: 'Descripcion demasiado larga',
-                text2: 'La descripcion no puede superar 500 caracteres.',
+                text1: 'Description too long',
+                text2: 'Description cannot exceed 500 characters.',
                 position: 'top',
             });
             return;
@@ -535,8 +535,8 @@ export default function QuestionThreadScreen({ route, navigation }) {
             setQuestionReportDescription('');
             Toast.show({
                 type: 'success',
-                text1: 'Reporte enviado correctamente',
-                text2: 'Gracias por ayudar a mantener la comunidad segura.',
+                text1: 'Report sent successfully',
+                text2: 'Thanks for helping keep the community safe.',
                 position: 'top',
             });
         } catch (e) {
@@ -547,10 +547,10 @@ export default function QuestionThreadScreen({ route, navigation }) {
 
             Toast.show({
                 type: 'error',
-                text1: status === 409 ? 'Ya has reportado esta pregunta' : 'No se pudo enviar el reporte',
+                text1: status === 409 ? 'You already reported this question' : 'Could not send report',
                 text2: status === 409
-                    ? 'Ya habias reportado esta pregunta antes.'
-                    : e?.response?.data?.message || e?.message || 'Intentalo de nuevo en unos segundos.',
+                    ? 'You already reported this question before.'
+                    : e?.response?.data?.message || e?.message || 'Try again in a few seconds.',
                 position: 'top',
             });
         } finally {
@@ -568,8 +568,8 @@ export default function QuestionThreadScreen({ route, navigation }) {
         if (typeof tempLat !== 'number' || typeof tempLng !== 'number') {
             Toast.show({
                 type: 'info',
-                text1: 'Selecciona un punto',
-                text2: 'Toca en el mapa para elegir tu ubicación.',
+                text1: 'Select a point',
+                text2: 'Tap on the map to choose your location.',
                 position: 'top'
             });
             return;
@@ -773,7 +773,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
                                     )}
                                     {!loadingMore && hasMoreAnswers && answers.length > 0 && (
                                         <Pressable style={styles.loadMoreBtn} onPress={loadMoreAnswers}>
-                                            <Text style={styles.loadMoreText}>Cargar mas</Text>
+                                            <Text style={styles.loadMoreText}>Load more</Text>
                                         </Pressable>
                                     )}
                                 </View>
@@ -794,8 +794,8 @@ export default function QuestionThreadScreen({ route, navigation }) {
                             <Ionicons name="location-outline" size={18} color="#ef4444" />
                             <Text style={styles.outOfRangeText}>
                                 {isWithinRadius === false
-                                    ? 'No estás en la zona de la pregunta, acércate para poder responder.'
-                                    : 'No se pudo validar tu ubicación para responder esta pregunta.'}
+                                    ? 'You are not in the question area. Move closer to answer.'
+                                    : 'Your location could not be validated to answer this question.'}
                             </Text>
                         </View>
                     ) : (
