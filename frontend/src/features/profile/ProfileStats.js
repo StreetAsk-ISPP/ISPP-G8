@@ -17,6 +17,7 @@ export default function ProfileStats() {
         role: '',
         likes: 0,
         dislikes: 0,
+        coinBalance: 0,
         reputation: 0,
         rating: 0
     });
@@ -47,6 +48,7 @@ export default function ProfileStats() {
                         role: data.role === 'ADMIN' ? 'Moderator' : 'Local Expert',
                         likes: data.likesCount || 0,
                         dislikes: data.dislikesCount || 0,
+                        coinBalance: data.coinBalance || 0,
                         reputation: data.reputation || 0,
                         rating: data.rating != null ? data.rating : 0
                     });
@@ -123,7 +125,7 @@ export default function ProfileStats() {
                     <View style={styles.coinsRow}>
                         <View style={styles.coinBadge}>
                             <Ionicons name="star" size={16} color="#FFD700" />
-                            <Text style={styles.coinsText}>{serverStats.likes * 10} StreetCoins</Text>
+                            <Text style={styles.coinsText}>{serverStats.coinBalance} StreetCoins</Text>
                         </View>
                     </View>
                 </View>

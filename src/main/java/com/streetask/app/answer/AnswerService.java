@@ -39,6 +39,7 @@ public class AnswerService {
 
 	public static final String SORT_LIKES_DESC = "likes_desc";
 	public static final String SORT_DATE_DESC = "date_desc";
+	private static final int COINS_PER_LIKE = 10;
 
 	private final AnswerRepository answerRepository;
 	private final AnswerVoteRepository answerVoteRepository;
@@ -329,11 +330,15 @@ public class AnswerService {
 	private void incrementLikes(RegularUser user) {
 		int current = user.getTotalLikesReceived() == null ? 0 : user.getTotalLikesReceived();
 		user.setTotalLikesReceived(current + 1);
+		int currentCoinBalance = user.getCoinBalance() == null ? 0 : user.getCoinBalance();
+		user.setCoinBalance(currentCoinBalance + COINS_PER_LIKE);
 	}
 
 	private void decrementLikes(RegularUser user) {
 		int current = user.getTotalLikesReceived() == null ? 0 : user.getTotalLikesReceived();
 		user.setTotalLikesReceived(Math.max(0, current - 1));
+		int currentCoinBalance = user.getCoinBalance() == null ? 0 : user.getCoinBalance();
+		user.setCoinBalance(Math.max(0, currentCoinBalance - COINS_PER_LIKE));
 	}
 
 	private void incrementDislikes(RegularUser user) {

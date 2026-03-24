@@ -68,6 +68,7 @@ class AnswerServiceTest {
         authenticatedUser.setId(userId);
         authenticatedUser.setEmail("testuser@example.com");
         authenticatedUser.setUserName("testuser");
+        authenticatedUser.setCoinBalance(0);
 
         Authentication authentication = mock(Authentication.class);
         SecurityContext securityContext = mock(SecurityContext.class);
@@ -433,6 +434,7 @@ class AnswerServiceTest {
     void testUpdateVotesNewLikeVote() {
         answer.setUpvotes(2);
         answer.setDownvotes(3);
+        authenticatedUser.setCoinBalance(0);
 
         when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer));
         when(answerVoteRepository.findByUserIdAndAnswerId(userId, answerId)).thenReturn(Optional.empty());
@@ -443,6 +445,7 @@ class AnswerServiceTest {
 
         assertEquals(3, result.getUpvotes());
         assertEquals(3, result.getDownvotes());
+        assertEquals(10, authenticatedUser.getCoinBalance());
         verify(answerVoteRepository, times(1)).save(any(AnswerVote.class));
         verify(answerRepository, times(1)).save(answer);
     }
@@ -451,6 +454,7 @@ class AnswerServiceTest {
     void testUpdateVotesNewDislikeVote() {
         answer.setUpvotes(2);
         answer.setDownvotes(3);
+        authenticatedUser.setCoinBalance(30);
 
         when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer));
         when(answerVoteRepository.findByUserIdAndAnswerId(userId, answerId)).thenReturn(Optional.empty());
@@ -461,6 +465,7 @@ class AnswerServiceTest {
 
         assertEquals(2, result.getUpvotes());
         assertEquals(4, result.getDownvotes());
+        assertEquals(30, authenticatedUser.getCoinBalance());
         verify(answerVoteRepository, times(1)).save(any(AnswerVote.class));
         verify(answerRepository, times(1)).save(answer);
     }
@@ -469,12 +474,14 @@ class AnswerServiceTest {
     void testUpdateVotesSameVoteIsNoOp() {
         AnswerVote existing = new AnswerVote();
         existing.setVoteType(VoteType.LIKE);
+        authenticatedUser.setCoinBalance(20);
 
         when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer));
         when(answerVoteRepository.findByUserIdAndAnswerId(userId, answerId)).thenReturn(Optional.of(existing));
 
         answerService.updateVotes(answerId, userId, VoteType.LIKE);
 
+        assertEquals(20, authenticatedUser.getCoinBalance());
         verify(answerRepository, never()).save(any(Answer.class));
         verify(answerVoteRepository, never()).save(any(AnswerVote.class));
     }
@@ -483,6 +490,7 @@ class AnswerServiceTest {
     void testUpdateVotesChangeLikeToDislike() {
         answer.setUpvotes(2);
         answer.setDownvotes(1);
+        authenticatedUser.setCoinBalance(40);
 
         AnswerVote existing = new AnswerVote();
         existing.setVoteType(VoteType.LIKE);
@@ -495,6 +503,7 @@ class AnswerServiceTest {
 
         assertEquals(1, result.getUpvotes());
         assertEquals(2, result.getDownvotes());
+        assertEquals(30, authenticatedUser.getCoinBalance());
         assertEquals(VoteType.DISLIKE, existing.getVoteType());
         verify(answerVoteRepository, times(1)).save(existing);
         verify(answerRepository, times(1)).save(answer);
@@ -504,6 +513,7 @@ class AnswerServiceTest {
     void testUpdateVotesChangeDislikeToLike() {
         answer.setUpvotes(1);
         answer.setDownvotes(2);
+        authenticatedUser.setCoinBalance(10);
 
         AnswerVote existing = new AnswerVote();
         existing.setVoteType(VoteType.DISLIKE);
@@ -516,6 +526,7 @@ class AnswerServiceTest {
 
         assertEquals(2, result.getUpvotes());
         assertEquals(1, result.getDownvotes());
+        assertEquals(20, authenticatedUser.getCoinBalance());
         assertEquals(VoteType.LIKE, existing.getVoteType());
         verify(answerVoteRepository, times(1)).save(existing);
         verify(answerRepository, times(1)).save(answer);
@@ -536,6 +547,7 @@ class AnswerServiceTest {
     void testRemoveVoteLike() {
         answer.setUpvotes(3);
         answer.setDownvotes(1);
+        authenticatedUser.setCoinBalance(50);
 
         AnswerVote existing = new AnswerVote();
         existing.setAnswer(answer);
@@ -549,6 +561,7 @@ class AnswerServiceTest {
 
         assertEquals(2, result.getUpvotes());
         assertEquals(1, result.getDownvotes());
+        assertEquals(40, authenticatedUser.getCoinBalance());
         verify(answerVoteRepository, times(1)).delete(existing);
         verify(answerRepository, times(1)).save(answer);
     }
@@ -557,6 +570,7 @@ class AnswerServiceTest {
     void testRemoveVoteDislike() {
         answer.setUpvotes(1);
         answer.setDownvotes(3);
+        authenticatedUser.setCoinBalance(25);
 
         AnswerVote existing = new AnswerVote();
         existing.setAnswer(answer);
@@ -570,6 +584,7 @@ class AnswerServiceTest {
 
         assertEquals(1, result.getUpvotes());
         assertEquals(2, result.getDownvotes());
+        assertEquals(25, authenticatedUser.getCoinBalance());
         verify(answerVoteRepository, times(1)).delete(existing);
         verify(answerRepository, times(1)).save(answer);
     }
