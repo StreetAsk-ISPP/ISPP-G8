@@ -152,6 +152,7 @@ public class AnswerService {
 	@Transactional
 	public Answer updateVotes(UUID answerId, UUID userId, VoteType voteType) {
 		Answer answer = findAnswer(answerId);
+		RegularUser answerOwner = answer.getUser();
 
 		Optional<AnswerVote> existingOpt = answerVoteRepository.findByUserIdAndAnswerId(userId, answerId);
 
@@ -165,9 +166,13 @@ public class AnswerService {
 			if (voteType == VoteType.LIKE) {
 				answer.setUpvotes(answer.getUpvotes() + 1);
 				answer.setDownvotes(Math.max(0, answer.getDownvotes() - 1));
+				decrementDislikes(answerOwner);
+				incrementLikes(answerOwner);
 			} else {
 				answer.setDownvotes(answer.getDownvotes() + 1);
 				answer.setUpvotes(Math.max(0, answer.getUpvotes() - 1));
+				decrementLikes(answerOwner);
+				incrementDislikes(answerOwner);
 			}
 			existing.setVoteType(voteType);
 			existing.setVotedAt(LocalDateTime.now());
@@ -183,8 +188,10 @@ public class AnswerService {
 			answerVoteRepository.save(vote);
 			if (voteType == VoteType.LIKE) {
 				answer.setUpvotes(answer.getUpvotes() + 1);
+				incrementLikes(answerOwner);
 			} else {
 				answer.setDownvotes(answer.getDownvotes() + 1);
+				incrementDislikes(answerOwner);
 			}
 		}
 
@@ -194,12 +201,15 @@ public class AnswerService {
 	@Transactional
 	public Answer removeVote(UUID answerId, UUID userId) {
 		Answer answer = findAnswer(answerId);
+		RegularUser answerOwner = answer.getUser();
 		AnswerVote existing = answerVoteRepository.findByUserIdAndAnswerId(userId, answerId)
 				.orElseThrow(() -> new IllegalArgumentException("No vote found for this user on this answer"));
 		if (existing.getVoteType() == VoteType.LIKE) {
 			answer.setUpvotes(Math.max(0, answer.getUpvotes() - 1));
+			decrementLikes(answerOwner);
 		} else {
 			answer.setDownvotes(Math.max(0, answer.getDownvotes() - 1));
+			decrementDislikes(answerOwner);
 		}
 		answerVoteRepository.delete(existing);
 		return answerRepository.save(answer);
@@ -314,6 +324,26 @@ public class AnswerService {
 			return SORT_DATE_DESC;
 		}
 		return SORT_LIKES_DESC;
+	}
+
+	private void incrementLikes(RegularUser user) {
+		int current = user.getTotalLikesReceived() == null ? 0 : user.getTotalLikesReceived();
+		user.setTotalLikesReceived(current + 1);
+	}
+
+	private void decrementLikes(RegularUser user) {
+		int current = user.getTotalLikesReceived() == null ? 0 : user.getTotalLikesReceived();
+		user.setTotalLikesReceived(Math.max(0, current - 1));
+	}
+
+	private void incrementDislikes(RegularUser user) {
+		int current = user.getTotalDislikesReceived() == null ? 0 : user.getTotalDislikesReceived();
+		user.setTotalDislikesReceived(current + 1);
+	}
+
+	private void decrementDislikes(RegularUser user) {
+		int current = user.getTotalDislikesReceived() == null ? 0 : user.getTotalDislikesReceived();
+		user.setTotalDislikesReceived(Math.max(0, current - 1));
 	}
 
 }
