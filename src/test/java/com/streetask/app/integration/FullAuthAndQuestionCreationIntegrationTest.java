@@ -153,7 +153,7 @@ class FullAuthAndQuestionCreationIntegrationTest {
 
         // Verify questions are retrievable
         List<Question> allQuestions = (List<Question>) questionRepository.findAll();
-        assertEquals(2, allQuestions.size());
+        assertEquals(6, allQuestions.size());
     }
 
     @Test

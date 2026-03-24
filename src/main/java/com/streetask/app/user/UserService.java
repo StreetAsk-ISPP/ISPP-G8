@@ -168,16 +168,12 @@ public class UserService {
 		long answersCount = answerRepository.countByUserId(userId);
 
 
-		// Aggregate likes (upvotes) and dislikes (downvotes) for all answers by this
-		// user
-		List<Object[]> aggregates = answerRepository.aggregateVotesByUserIds(List.of(userId));
-		int likesCount = 0;
-		int dislikesCount = 0;
-		if (!aggregates.isEmpty()) {
-			Object[] row = aggregates.get(0);
-			likesCount = ((Number) row[1]).intValue();
-			dislikesCount = ((Number) row[2]).intValue();
-		}
+        int likesCount = 0;
+        int dislikesCount = 0;
+        if (user instanceof RegularUser regularUser) {
+            likesCount = regularUser.getTotalLikesReceived() == null ? 0 : regularUser.getTotalLikesReceived();
+            dislikesCount = regularUser.getTotalDislikesReceived() == null ? 0 : regularUser.getTotalDislikesReceived();
+        }
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("questionsCount", questionsCount);
@@ -190,7 +186,8 @@ public class UserService {
         stats.put("role", user.getAuthority().getAuthority());
         stats.put("likesCount", likesCount);
         stats.put("dislikesCount", dislikesCount);
-        stats.put("reputation", user.getReputation());
+        int reputation = (likesCount * LIKE_WEIGHT) - (dislikesCount * DISLIKE_WEIGHT);
+        stats.put("reputation", reputation);
 
 		// Calculate rating on a 0-5 scale from vote ratio.
 		// Formula: likes / (likes + dislikes) * 5
