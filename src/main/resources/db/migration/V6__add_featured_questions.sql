@@ -1,6 +1,6 @@
 -- Add featured flag to questions and seed 4 permanent featured questions in Seville.
 
-ALTER TABLE questions ADD COLUMN IF NOT EXISTS `featured` bit(1) DEFAULT b'0';
+ALTER TABLE questions ADD COLUMN `featured` bit(1) DEFAULT b'0';
 
 -- Seed user: uses user1 (bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb) as creator
 
