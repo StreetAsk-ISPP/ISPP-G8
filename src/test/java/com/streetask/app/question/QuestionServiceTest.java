@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
@@ -136,8 +137,8 @@ class QuestionServiceTest {
 	@Test
 	void saveQuestion_shouldKeepProvidedCreatedAtActiveAndAnswerCountForFreeUsers() {
 		// Arrange
-		LocalDateTime specificCreatedAt = LocalDateTime.now().minusDays(1);
-		LocalDateTime specificExpiresAt = LocalDateTime.now().plusDays(1);
+		LocalDateTime specificCreatedAt = LocalDateTime.now(ZoneId.of("UTC")).minusDays(1);
+		LocalDateTime specificExpiresAt = LocalDateTime.now(ZoneId.of("UTC")).plusDays(1);
 
 		Question newQuestion = new Question();
 		newQuestion.setTitle("New Question");
