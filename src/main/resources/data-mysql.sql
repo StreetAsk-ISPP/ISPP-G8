@@ -55,9 +55,11 @@ ON DUPLICATE KEY UPDATE
     active = VALUES(active);
 
 -- RegularUser profile for user1
-INSERT INTO regular_users (id, coin_balance, rating, verified, visibility_radius_km, phone, profile_photo)
+INSERT INTO regular_users (id, coin_balance, rating, total_likes_received, total_dislikes_received, verified, visibility_radius_km, phone, profile_photo)
 VALUES (
     UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
+    0,
+    0,
     0,
     0,
     FALSE,
@@ -98,9 +100,11 @@ ON DUPLICATE KEY UPDATE
     active = VALUES(active);
 
 -- RegularUser profile for premium1 (premium_active = TRUE)
-INSERT INTO regular_users (id, coin_balance, rating, verified, visibility_radius_km, phone, profile_photo, premium_active)
+INSERT INTO regular_users (id, coin_balance, rating, total_likes_received, total_dislikes_received, verified, visibility_radius_km, phone, profile_photo, premium_active)
 VALUES (
     UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'),
+    0,
+    0,
     0,
     0,
     FALSE,
