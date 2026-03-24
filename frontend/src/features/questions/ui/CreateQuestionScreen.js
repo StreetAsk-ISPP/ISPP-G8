@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -34,12 +34,30 @@ const addHoursISO = (hours) => {
   return new Date(nowMs + hours * 3600000).toISOString();
 };
 
-const parseRadiusKm = (rawValue) => {
+const parseRadiusMeters = (rawValue) => {
   const normalized = String(rawValue ?? '')
     .replace(',', '.')
     .trim();
   const value = Number(normalized);
   return Number.isFinite(value) && value > 0 ? value : null;
+};
+
+const parseHours = (rawValue) => {
+  const normalized = String(rawValue ?? '').trim();
+  const value = Number(normalized);
+  return Number.isFinite(value) ? Math.floor(value) : null;
+};
+
+const isPremiumRadiusValid = (valueMeters) => {
+  return valueMeters !== null && valueMeters >= PREMIUM_MIN_RADIUS_M && valueMeters <= PREMIUM_MAX_RADIUS_M;
+};
+
+const isPremiumHoursValid = (value) => {
+  return (
+    value !== null &&
+    value >= PREMIUM_MIN_DURATION_HOURS &&
+    value <= PREMIUM_MAX_DURATION_HOURS
+  );
 };
 
 export default function CreateQuestionScreen({ navigation }) {
@@ -50,9 +68,10 @@ export default function CreateQuestionScreen({ navigation }) {
   const [place, setPlace] = useState('');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const hours = 2;
-  const [radiusKm, setRadiusKm] = useState(1);
-  const [radiusInput, setRadiusInput] = useState('1');
+  const [isPremium, setIsPremium] = useState(false);
+  const [hoursInput, setHoursInput] = useState(String(FREE_DURATION_HOURS));
+  const [radiusKm, setRadiusKm] = useState(FREE_FIXED_RADIUS_KM);
+  const [radiusInput, setRadiusInput] = useState(String(FREE_FIXED_RADIUS_M));
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [searching, setSearching] = useState(false);
@@ -114,21 +133,26 @@ export default function CreateQuestionScreen({ navigation }) {
   useEffect(() => {
     let isMounted = true;
 
-    const loadUserAnswerRadius = async () => {
+    const loadUserPlanSettings = async () => {
       if (!user?.id) return;
       try {
         const response = await apiClient.get(`/api/v1/users/${user.id}`);
-        const value = Number(response?.data?.visibilityRadiusKm);
-        if (isMounted && Number.isFinite(value) && value > 0) {
-          setRadiusKm(value);
-          setRadiusInput(String(value));
+        if (!isMounted) return;
+
+        const premiumFlag = response?.data?.premiumActive === true;
+        setIsPremium(premiumFlag);
+
+        if (!premiumFlag) {
+          setRadiusKm(FREE_FIXED_RADIUS_KM);
+          setRadiusInput(String(FREE_FIXED_RADIUS_M));
+          setHoursInput(String(FREE_DURATION_HOURS));
         }
       } catch (e) {
-        console.warn('Unable to load user visibility radius:', e?.message || e);
+        console.warn('Unable to load user plan settings:', e?.message || e);
       }
     };
 
-    loadUserAnswerRadius();
+    loadUserPlanSettings();
     return () => {
       isMounted = false;
     };
@@ -194,8 +218,13 @@ export default function CreateQuestionScreen({ navigation }) {
   const showRadiusRangeError = isPremium && radiusInput.trim().length > 0 && !premiumRadiusValid;
 
   const canPost = useMemo(
-    () => title.trim() && content.trim() && parseRadiusKm(radiusInput) !== null && !isSubmitting,
-    [title, content, radiusInput, isSubmitting]
+    () =>
+      title.trim() &&
+      content.trim() &&
+      premiumRadiusValid &&
+      premiumHoursValid &&
+      !isSubmitting,
+    [title, content, premiumRadiusValid, premiumHoursValid, isSubmitting]
   );
 
   const searchAddress = async () => {
@@ -301,11 +330,21 @@ export default function CreateQuestionScreen({ navigation }) {
   };
 
   const onRadiusInputChange = (text) => {
-    setRadiusInput(text);
-    const parsed = parseRadiusKm(text);
-    if (parsed !== null) {
-      setRadiusKm(parsed);
+    if (!isPremium) {
+      return;
     }
+    setRadiusInput(text);
+    const parsedMeters = parseRadiusMeters(text);
+    if (parsedMeters !== null) {
+      setRadiusKm(parsedMeters / 1000);
+    }
+  };
+
+  const onHoursInputChange = (text) => {
+    if (!isPremium) {
+      return;
+    }
+    setHoursInput(text);
   };
 
   const onPost = async () => {
@@ -569,7 +608,9 @@ export default function CreateQuestionScreen({ navigation }) {
               </Text>
             </View>
             <Text style={styles.helperText}>
-              Radius: {radiusKm} (fixed in free plan)km. You can edit it in Pick on map.
+              {isPremium
+                ? 'Premium radius: choose between 50 m and 1000 m in Pick on map.'
+                : 'Free plan radius is fixed to 500 m.'}
             </Text>
 
             {/* Topic */}
@@ -610,7 +651,28 @@ export default function CreateQuestionScreen({ navigation }) {
             {/* Time info */}
             <View style={styles.timeChip}>
               <Ionicons name="time-outline" size={16} color="#92400e" />
-              <Text style={styles.timeChipText}>Duration: {hours}h (fixed in free plan)</Text>
+              {isPremium ? (
+                <View style={styles.timePremiumRow}>
+                  <Text style={styles.timeChipText}>Duration (1h-24h)</Text>
+                  <TextInput
+                    value={hoursInput}
+                    onChangeText={onHoursInputChange}
+                    keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'numeric'}
+                    placeholder="2"
+                    placeholderTextColor="#a16207"
+                    style={styles.timeInput}
+                    onBlur={() => {
+                      const parsed = parseHours(hoursInput);
+                      if (parsed !== null) {
+                        setHoursInput(String(parsed));
+                      }
+                    }}
+                  />
+                  <Text style={styles.timeChipText}>h</Text>
+                </View>
+              ) : (
+                <Text style={styles.timeChipText}>Duration: 2h (fixed in free plan)</Text>
+              )}
             </View>
             {/* Legacy free-plan helper (disabled):
             {!isPremium ? (
@@ -791,6 +853,23 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontWeight: '600',
   },
+  lockedBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  lockedText: {
+    color: '#4b5563',
+    fontSize: 12,
+    fontWeight: '600',
+  },
   mapBtnRow: { flexDirection: 'row', gap: 12 },
   mapCancelBtn: {
     flex: 1,
@@ -858,8 +937,16 @@ const styles = StyleSheet.create({
     height: 48,
   },
   inputFocused: { borderColor: '#a52019', backgroundColor: '#fff' },
+  inputError: { borderColor: '#dc2626' },
   inputMultiline: { height: 'auto', alignItems: 'flex-start', paddingVertical: 12 },
   input: { flex: 1, fontSize: 14, color: '#1f2937', outlineStyle: 'none' },
+  radiusErrorText: {
+    marginTop: 6,
+    fontSize: 12,
+    color: '#dc2626',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
 
   locationBtnRow: { flexDirection: 'row', gap: 10, marginTop: 10 },
   btnOutline: {
@@ -903,6 +990,26 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   timeChipText: { fontSize: 13, fontWeight: '600', color: '#92400e' },
+  timePremiumRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  timeInput: {
+    minWidth: 52,
+    height: 34,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#f59e0b',
+    backgroundColor: '#fff9db',
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#92400e',
+    fontWeight: '700',
+    paddingHorizontal: 8,
+    outlineStyle: 'none',
+  },
 
   actionRow: { flexDirection: 'row', gap: 12, marginTop: 24 },
   cancelBtn: {

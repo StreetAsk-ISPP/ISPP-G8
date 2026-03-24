@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { setAuthToken } from '../../shared/services/http/apiClient';
 
 const AuthContext = createContext(null);
 const TOKEN_STORAGE_KEY = 'auth_token';
@@ -19,7 +18,6 @@ export function AuthProvider({ children }) {
 
       setToken(storedToken);
       setIsAuthenticated(Boolean(storedToken));
-      setAuthToken(storedToken);
 
       if (userData) {
         try {
@@ -38,7 +36,6 @@ export function AuthProvider({ children }) {
   const login = async (newToken, userData) => {
     await AsyncStorage.setItem(TOKEN_STORAGE_KEY, newToken);
     setToken(newToken);
-    setAuthToken(newToken);
 
     if (userData) {
       await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
@@ -51,7 +48,6 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
     await AsyncStorage.removeItem(USER_STORAGE_KEY);
-    setAuthToken(null);
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
@@ -68,10 +64,6 @@ export function AuthProvider({ children }) {
     }),
     [isAuthenticated, isLoadingAuth, user, token]
   );
-
-  if (isLoadingAuth) {
-    return null;
-  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

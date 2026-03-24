@@ -10,6 +10,7 @@ import ResetPasswordScreen from '../../features/auth/ui/ResetPasswordScreen';
 import PaymentGatewayPlaceholderScreen from '../../features/payments/ui/PaymentGatewayPlaceholderScreen';
 import HomeScreen from '../../features/home/ui/HomeScreen';
 import CreateQuestionScreen from '../../features/questions/ui/CreateQuestionScreen';
+import SubscriptionPlansScreen from '../../features/subscriptions/ui/SubscriptionPlansScreen';
 import QuestionThreadScreen from '../../features/answers/ui/QuestionThreadScreen';
 import ProfileScreen from '../../features/profile/ProfileScreen';
 import ProfileStats from '../../features/profile/ProfileStats';

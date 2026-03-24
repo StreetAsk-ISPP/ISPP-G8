@@ -1,5 +1,8 @@
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { APP_CONFIG } from '../../../app/config/config';
+
+const TOKEN_STORAGE_KEY = 'auth_token';
 
 const apiClient = axios.create({
   baseURL: APP_CONFIG.apiBaseUrl,
@@ -9,17 +12,20 @@ const apiClient = axios.create({
   },
 });
 
-export const setAuthToken = (token) => {
+apiClient.interceptors.request.use(async (config) => {
+  const token = await AsyncStorage.getItem(TOKEN_STORAGE_KEY);
+
   if (token) {
-    apiClient.defaults.headers.Authorization = `Bearer ${token}`;
-  } else {
-    delete apiClient.defaults.headers.Authorization;
+    config.headers.Authorization = `Bearer ${token}`;
   }
-};
+
+  return config;
+});
 
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Preserve the full error structure for proper error handling
     return Promise.reject(error);
   }
 );
