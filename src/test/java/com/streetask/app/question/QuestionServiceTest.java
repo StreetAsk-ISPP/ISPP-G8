@@ -158,7 +158,7 @@ class QuestionServiceTest {
 		assertThat(saved.getActive()).isFalse();
 		assertThat(saved.getAnswerCount()).isEqualTo(5);
 		assertThat(saved.getExpiresAt()).isNotEqualTo(specificExpiresAt);
-		assertThat(saved.getExpiresAt()).isEqualTo(specificCreatedAt.plusHours(2));
+		assertThat(saved.getExpiresAt()).isEqualTo(specificCreatedAt.plusHours(6));
 		assertThat(saved.getCreator()).isEqualTo(testCreator);
 	}
 
