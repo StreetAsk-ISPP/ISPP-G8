@@ -192,7 +192,6 @@ public class AuthService {
 		user.setTotalDislikesReceived(0);
 		user.setVerified(false);
 		user.setVisibilityRadiusKm(DEFAULT_VISIBILITY_RADIUS_KM);
-		user.setPremiumActive(false);
 
 		// Assign USER authority
 		Authorities role = authoritiesService.findByAuthority("USER");

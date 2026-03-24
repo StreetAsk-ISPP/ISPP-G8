@@ -37,7 +37,6 @@ export default function HomeScreen({ navigation }) {
     const [questions, setQuestions] = useState([]);
     const [showQuestions, setShowQuestions] = useState(true);
     const [currentLocation, setCurrentLocation] = useState(null);
-    const [isPremium, setIsPremium] = useState(false);
 
     // null = revisando, true = concedido, false = denegado
     const [hasLocationPermission, setHasLocationPermission] = useState(null);
@@ -649,38 +648,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
-    },
-    goProBtn: {
-        paddingHorizontal: 12,
-        height: 38,
-        borderRadius: 12,
-        backgroundColor: '#1d4ed8',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: '#1e40af',
-    },
-    goProText: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: '800',
-        letterSpacing: 0.4,
-    },
-    proBadge: {
-        paddingHorizontal: 12,
-        height: 38,
-        borderRadius: 12,
-        backgroundColor: '#fbbf24',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: '#f59e0b',
-    },
-    proBadgeText: {
-        color: '#1f2937',
-        fontSize: 12,
-        fontWeight: '800',
-        letterSpacing: 0.4,
     },
     iconBtn: {
         width: 38,

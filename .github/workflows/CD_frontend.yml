@@ -1,6 +1,5 @@
 name: Deploy Frontend Web to EAS
 
-# 1. Cuándo se ejecuta este workflow
 on:
   push:
     branches:
@@ -37,6 +36,7 @@ jobs:
         run: npx expo export --platform web
         env:
           EXPO_PUBLIC_API_BASE_URL: ${{ secrets.EXPO_PUBLIC_API_BASE_URL }}
+          EXPO_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.EXPO_PUBLIC_VAPID_PUBLIC_KEY }}
 
       - name: Desplegar a producción en EAS Hosting
         run: eas deploy --prod --non-interactive
