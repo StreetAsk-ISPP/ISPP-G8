@@ -26,6 +26,18 @@ const PRESET_AVATARS = [
     { id: '6', url: 'https://cdn-icons-png.flaticon.com/512/616/616554.png' },
 ];
 
+const PROFILE_LIMITS = {
+    email: 255,
+    userName: 255,
+    firstName: 255,
+    lastName: 255,
+    bio: 255,
+    passwordMin: 6,
+    passwordMax: 128,
+};
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function EditProfileScreen({ navigation }) {
     const { user, setUser } = useAuth();
 
@@ -129,13 +141,33 @@ export default function EditProfileScreen({ navigation }) {
 
     const validateForm = () => {
         if (!form.email.trim()) { showFeedback('Validación', 'El email es obligatorio.', 'error'); return false; }
-        if (!/\S+@\S+\.\S+/.test(form.email.trim())) { showFeedback('Validación', 'Introduce un email válido.', 'error'); return false; }
+        if (!EMAIL_PATTERN.test(form.email.trim())) { showFeedback('Validación', 'Introduce un email válido.', 'error'); return false; }
+        if (form.email.trim().length > PROFILE_LIMITS.email) {
+            showFeedback('Validación', `El email no puede superar los ${PROFILE_LIMITS.email} caracteres.`, 'error');
+            return false;
+        }
         if (!form.userName.trim()) { showFeedback('Validación', 'El nombre de usuario es obligatorio.', 'error'); return false; }
-        if (form.bio.length > 255) { showFeedback('Validación', 'La biografía no puede superar los 255 caracteres.', 'error'); return false; }
-        
+        if (form.userName.trim().length > PROFILE_LIMITS.userName) {
+            showFeedback('Validación', `El nombre de usuario no puede superar los ${PROFILE_LIMITS.userName} caracteres.`, 'error');
+            return false;
+        }
+        if (form.firstName.trim().length > PROFILE_LIMITS.firstName) {
+            showFeedback('Validación', `El nombre no puede superar los ${PROFILE_LIMITS.firstName} caracteres.`, 'error');
+            return false;
+        }
+        if (form.lastName.trim().length > PROFILE_LIMITS.lastName) {
+            showFeedback('Validación', `Los apellidos no pueden superar los ${PROFILE_LIMITS.lastName} caracteres.`, 'error');
+            return false;
+        }
+        if (form.bio.length > PROFILE_LIMITS.bio) { showFeedback('Validación', `La biografía no puede superar los ${PROFILE_LIMITS.bio} caracteres.`, 'error'); return false; }
+
         if (passwords.newPassword || passwords.confirmPassword) {
-            if (passwords.newPassword.length < 6) {
-                showFeedback('Validación', 'La contraseña debe tener al menos 6 caracteres.', 'error');
+            if (passwords.newPassword.length < PROFILE_LIMITS.passwordMin) {
+                showFeedback('Validación', `La contraseña debe tener al menos ${PROFILE_LIMITS.passwordMin} caracteres.`, 'error');
+                return false;
+            }
+            if (passwords.newPassword.length > PROFILE_LIMITS.passwordMax) {
+                showFeedback('Validación', `La contraseña no puede superar los ${PROFILE_LIMITS.passwordMax} caracteres.`, 'error');
                 return false;
             }
             if (passwords.newPassword !== passwords.confirmPassword) {
@@ -172,7 +204,7 @@ export default function EditProfileScreen({ navigation }) {
             const updatedUser = res.data;
 
             setOriginalUser(updatedUser);
-            
+
             if (setUser) {
                 setUser(prev => ({
                     ...prev,
@@ -216,11 +248,11 @@ export default function EditProfileScreen({ navigation }) {
             </View>
 
             <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} keyboardShouldPersistTaps="handled">
-                
+
                 {/* CARD 1: APARIENCIA */}
                 <View style={styles.card}>
                     <Text style={styles.sectionTitle}>Apariencia</Text>
-                    
+
                     <View style={styles.avatarPickerSection}>
                         <TouchableOpacity onPress={pickImage} style={styles.avatarTouchable}>
                             <View style={styles.avatarCircle}>
@@ -244,8 +276,8 @@ export default function EditProfileScreen({ navigation }) {
                     <Text style={styles.labelSmall}>Avatares rápidos</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.presetRow}>
                         {PRESET_AVATARS.map((avatar) => (
-                            <TouchableOpacity 
-                                key={avatar.id} 
+                            <TouchableOpacity
+                                key={avatar.id}
                                 onPress={() => updateField('profilePictureUrl', avatar.url)}
                                 style={[
                                     styles.presetCircle,
@@ -265,9 +297,8 @@ export default function EditProfileScreen({ navigation }) {
                         placeholder="Cuenta algo sobre ti..."
                         placeholderTextColor="#9ca3af"
                         multiline
-                        maxLength={255}
                     />
-                    <Text style={styles.charCount}>{form.bio.length}/255</Text>
+                    <Text style={styles.charCount}>{form.bio.length}/{PROFILE_LIMITS.bio}</Text>
                 </View>
 
                 {/* CARD 2: DATOS PERSONALES */}
@@ -275,7 +306,7 @@ export default function EditProfileScreen({ navigation }) {
                     <Text style={styles.sectionTitle}>Datos personales</Text>
                     <Text style={styles.label}>Nombre</Text>
                     <TextInput style={styles.input} value={form.firstName} onChangeText={text => updateField('firstName', text)} placeholder="Tu nombre" placeholderTextColor="#9ca3af" />
-                    
+
                     <Text style={styles.label}>Apellidos</Text>
                     <TextInput style={styles.input} value={form.lastName} onChangeText={text => updateField('lastName', text)} placeholder="Tus apellidos" placeholderTextColor="#9ca3af" />
 
@@ -344,7 +375,7 @@ const styles = StyleSheet.create({
     input: { backgroundColor: '#f3f4f6', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: '#111827', borderWidth: 1, borderColor: '#e5e7eb' },
     textArea: { height: 100, textAlignVertical: 'top' },
     charCount: { textAlign: 'right', fontSize: 12, color: '#9ca3af', marginTop: 4 },
-    
+
     avatarPickerSection: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
     avatarTouchable: { position: 'relative' },
     avatarCircle: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', borderWidth: 1, borderColor: '#e5e7eb' },
