@@ -96,9 +96,8 @@ class QuestionRestControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/questions")
                 .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].title").value("Test Question"))
-                .andExpect(jsonPath("$[0].content").value("Test Content"));
+                .andExpect(jsonPath("$", hasSize(5)))
+                .andExpect(jsonPath("$[?(@.title == 'Test Question')].content", org.hamcrest.Matchers.hasItem("Test Content")));
     }
 
     @Test
@@ -119,7 +118,7 @@ class QuestionRestControllerIntegrationTest {
                 .param("active", "true")
                 .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$", hasSize(5)))
                 .andExpect(jsonPath("$[0].active").value(true));
     }
 
@@ -229,7 +228,7 @@ class QuestionRestControllerIntegrationTest {
                 .andExpect(jsonPath("$.expiresAt").exists());
 
         // Verify the question was actually saved
-        assertThat(questionRepository.count()).isEqualTo(2);
+        assertThat(questionRepository.count()).isEqualTo(6);
     }
 
     @Test

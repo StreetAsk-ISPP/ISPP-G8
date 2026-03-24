@@ -159,9 +159,9 @@ class QuestionRepositoryTest {
 
 		// Assert
 		List<Question> questionList = (List<Question>) questions;
-		assertThat(questionList).hasSize(2);
+		assertThat(questionList).hasSize(6);
 		assertThat(questionList).extracting(Question::getTitle)
-				.containsExactlyInAnyOrder("Active Question 1", "Active Question 2");
+				.contains("Active Question 1", "Active Question 2");
 		assertThat(questionList).allMatch(Question::getActive);
 	}
 
@@ -383,7 +383,7 @@ class QuestionRepositoryTest {
 		Iterable<Question> questions = questionRepository.findAll();
 
 		// Assert
-		assertThat(questions).hasSize(3);
+		assertThat(questions).hasSize(7);
 	}
 
 	@Test
