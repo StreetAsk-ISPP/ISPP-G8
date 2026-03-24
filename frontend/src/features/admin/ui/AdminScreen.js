@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import apiClient from '../../../shared/services/http/apiClient';
 
 export default function AdminScreen() {
@@ -11,6 +12,7 @@ export default function AdminScreen() {
     const { logout } = useAuth();
     const [stats, setStats] = useState({ users: 0, questions: 0, answers: 0 });
     const [loading, setLoading] = useState(true);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     useEffect(() => {
         fetchDashboardData();
@@ -40,7 +42,12 @@ export default function AdminScreen() {
             });
     };
 
-    const handleLogout = async () => {
+    const handleLogoutClick = () => {
+        setShowLogoutModal(true);
+    };
+
+    const handleLogoutConfirm = async () => {
+        setShowLogoutModal(false);
         try {
             await logout();
         } catch (error) {
@@ -82,7 +89,7 @@ export default function AdminScreen() {
                     <Text style={styles.headerTitle}>Panel de Administración</Text>
                     <Text style={styles.headerSubtitle}>Bienvenido, Administrador</Text>
                 </View>
-                <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+                <TouchableOpacity onPress={handleLogoutClick} style={styles.logoutButton}>
                     <Ionicons name="log-out-outline" size={24} color="#d90429" />
                 </TouchableOpacity>
             </View>
@@ -110,6 +117,17 @@ export default function AdminScreen() {
                 keyExtractor={item => item.id}
                 contentContainerStyle={styles.menuList}
                 scrollEnabled={false}
+            />
+
+            <ConfirmationModal
+                visible={showLogoutModal}
+                title="Log out?"
+                message="Are you sure you want to log out?"
+                confirmText="Log out"
+                cancelText="Go Back"
+                onConfirm={handleLogoutConfirm}
+                onCancel={() => setShowLogoutModal(false)}
+                confirmButtonColor="danger"
             />
         </SafeAreaView>
     );

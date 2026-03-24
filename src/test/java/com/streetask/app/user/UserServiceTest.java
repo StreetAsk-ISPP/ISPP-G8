@@ -503,12 +503,12 @@ class UserServiceTest {
     @Test
     @DisplayName("getUserStats should return correct stats for a user with activity")
     void getUserStats_shouldReturnCorrectStatsForUserWithActivity() {
-        User user = createTestUserWithAuthority(testUserId, TEST_EMAIL, TEST_USERNAME, "USER");
+        RegularUser user = createTestRegularUserWithAuthority(testUserId, TEST_EMAIL, TEST_USERNAME, "USER");
+        user.setTotalLikesReceived(8);
+        user.setTotalDislikesReceived(2);
         when(userRepository.findById(testUserId)).thenReturn(Optional.of(user));
         when(questionRepository.countByCreatorId(testUserId)).thenReturn(5L);
         when(answerRepository.countByUserId(testUserId)).thenReturn(10L);
-        when(answerRepository.aggregateVotesByUserIds(anyCollection()))
-                .thenReturn(Collections.singletonList(new Object[] { testUserId, 8L, 2L }));
 
         Map<String, Object> stats = userService.getUserStats(testUserId);
 
@@ -520,6 +520,7 @@ class UserServiceTest {
         assertEquals(8, stats.get("likesCount"));
         assertEquals(2, stats.get("dislikesCount"));
         assertNotNull(stats.get("reputation"));
+        assertEquals(4.0, stats.get("rating"));
         verify(questionRepository).countByCreatorId(testUserId);
         verify(answerRepository).countByUserId(testUserId);
     }
@@ -527,12 +528,12 @@ class UserServiceTest {
     @Test
     @DisplayName("getUserStats should return zero counts for user with no activity")
     void getUserStats_shouldReturnZeroCountsForUserWithNoActivity() {
-        User user = createTestUserWithAuthority(testUserId, TEST_EMAIL, TEST_USERNAME, "USER");
+        RegularUser user = createTestRegularUserWithAuthority(testUserId, TEST_EMAIL, TEST_USERNAME, "USER");
+        user.setTotalLikesReceived(0);
+        user.setTotalDislikesReceived(0);
         when(userRepository.findById(testUserId)).thenReturn(Optional.of(user));
         when(questionRepository.countByCreatorId(testUserId)).thenReturn(0L);
         when(answerRepository.countByUserId(testUserId)).thenReturn(0L);
-        when(answerRepository.aggregateVotesByUserIds(anyCollection()))
-                .thenReturn(Collections.emptyList());
 
         Map<String, Object> stats = userService.getUserStats(testUserId);
 
@@ -541,6 +542,7 @@ class UserServiceTest {
         assertEquals(0L, stats.get("answersCount"));
         assertEquals(0, stats.get("likesCount"));
         assertEquals(0, stats.get("dislikesCount"));
+        assertEquals(0.0, stats.get("rating"));
     }
 
     @Test
@@ -550,8 +552,6 @@ class UserServiceTest {
         when(userRepository.findById(testUserId)).thenReturn(Optional.of(user));
         when(questionRepository.countByCreatorId(testUserId)).thenReturn(0L);
         when(answerRepository.countByUserId(testUserId)).thenReturn(0L);
-        when(answerRepository.aggregateVotesByUserIds(anyCollection()))
-                .thenReturn(Collections.emptyList());
 
         Map<String, Object> stats = userService.getUserStats(testUserId);
 
@@ -648,6 +648,23 @@ class UserServiceTest {
 
     private User createTestUserWithAuthority(UUID id, String email, String userName, String authorityName) {
         User user = createTestUser(id, email, userName);
+        Authorities auth = new Authorities();
+        auth.setAuthority(authorityName);
+        user.setAuthority(auth);
+        return user;
+    }
+
+    private RegularUser createTestRegularUserWithAuthority(UUID id, String email, String userName,
+            String authorityName) {
+        RegularUser user = new RegularUser();
+        user.setId(id);
+        user.setEmail(email);
+        user.setUserName(userName);
+        user.setFirstName(TEST_FIRST_NAME);
+        user.setLastName(TEST_LAST_NAME);
+        user.setPassword("password123");
+        user.setActive(true);
+        user.setCreatedAt(LocalDateTime.now());
         Authorities auth = new Authorities();
         auth.setAuthority(authorityName);
         user.setAuthority(auth);

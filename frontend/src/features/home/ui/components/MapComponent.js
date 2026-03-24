@@ -13,6 +13,8 @@ import * as Location from 'expo-location';
 import { locationService } from '../../../../shared/services/location/locationService';
 import { CountdownText } from './CountdownText';
 import { calculateDistanceInKm } from '../../../../shared/utils/helpers';
+import Toast from 'react-native-toast-message';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 // Para web: importar Leaflet y CSS
 let MapContainer, TileLayer, Marker, Popup;
@@ -48,6 +50,35 @@ const createCustomIcon = (color) => {
     });
 };
 
+const createFeaturedIcon = () => {
+    if (!L) return undefined;
+
+    const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="56" viewBox="0 0 44 56">
+        <defs>
+            <radialGradient id="pinGrad" cx="40%" cy="30%" r="70%">
+                <stop offset="0%" stop-color="#FFE566"/>
+                <stop offset="60%" stop-color="#F59E0B"/>
+                <stop offset="100%" stop-color="#B45309"/>
+            </radialGradient>
+            <filter id="shadow" x="-20%" y="-10%" width="140%" height="130%">
+                <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#00000055"/>
+            </filter>
+        </defs>
+        <path filter="url(#shadow)" fill="url(#pinGrad)" stroke="#92400E" stroke-width="1.2"
+              d="M22 1C13.163 1 6 8.163 6 17c0 11 16 38 16 38s16-27 16-38C38 8.163 30.837 1 22 1z"/>
+        <circle fill="white" fill-opacity="0.25" cx="22" cy="16" r="10"/>
+        <polygon fill="white"
+                 points="22,8 24.35,14.2 31,14.2 25.8,18.1 27.9,24.3 22,20.5 16.1,24.3 18.2,18.1 13,14.2 19.65,14.2"/>
+    </svg>`;
+
+    return L.icon({
+        iconUrl: `data:image/svg+xml;base64,${btoa(svgIcon)}`,
+        iconSize: [44, 56],
+        iconAnchor: [22, 56],
+        popupAnchor: [0, -56],
+    });
+};
+
 const toNum = (v) => {
     if (typeof v === 'number') return v;
     if (typeof v === 'string') {
@@ -74,7 +105,7 @@ const getQuestionCoords = (q) => {
     return { lat, lng };
 };
 
-export default function MapComponent({ questions = [], onQuestionPress, onLocationChange }) {
+export default function MapComponent({ questions = [], onQuestionPress, onLocationChange, onPermissionChange }) {
     const [location, setLocation] = useState(null);
     const [publicLocations, setPublicLocations] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -110,7 +141,21 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                 if (status !== 'granted') {
                     setError('Permiso de ubicación denegado');
                     setLoading(false);
+                    if (typeof onPermissionChange === 'function') {
+                        onPermissionChange(false);
+                    }
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Ubicación desactivada',
+                        text2: 'Por favor, activa la ubicación para poder hacer preguntas.',
+                        position: 'top',
+                        visibilityTime: 10000,
+                    });
                     return;
+                }
+
+                if (typeof onPermissionChange === 'function') {
+                    onPermissionChange(true);
                 }
 
                 const initialLocation = await Location.getCurrentPositionAsync({
@@ -144,6 +189,9 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
             } catch (err) {
                 setError('Error al obtener ubicación: ' + err.message);
                 setLoading(false);
+                if (typeof onPermissionChange === 'function') {
+                    onPermissionChange(false);
+                }
             }
         };
 
@@ -154,7 +202,7 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                 locationSubscription.remove();
             }
         };
-    }, [onLocationChange]);
+    }, [onLocationChange, onPermissionChange]);
 
     const loadPublicLocations = async () => {
         try {
@@ -227,6 +275,8 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
     if (error) {
         return (
             <View style={styles.container}>
+                <MaterialIcons name="location-off" size={84} color="darkred" />
+
                 <Text style={styles.errorText}>{error}</Text>
             </View>
         );
@@ -296,14 +346,14 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                             <Marker
                                 key={q.id}
                                 position={[lat, lng]}
-                                icon={createCustomIcon(questionColor)}
+                                icon={q.featured ? createFeaturedIcon() : createCustomIcon(questionColor)}
                                 eventHandlers={{
                                     click: () => onQuestionPress?.(q.id),
                                 }}
                             >
                                 <Popup>
                                     <div style={{ fontSize: '12px' }}>
-                                        <strong>{q.title || 'Question'}</strong>
+                                        <strong>{q.featured ? '⭐ ' : ''}{q.title || 'Question'}</strong>
                                         <br />
                                         <div style={{ marginBottom: '8px' }}>
                                             <CountdownText
@@ -312,17 +362,17 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                                             />
                                         </div>
                                         <span style={{ color: canAnswer ? '#ea580c' : '#6b7280', fontWeight: 700 }}>
-                                            {canAnswer ? 'Puedes responder' : 'Fuera de tu radio'}
+                                            {canAnswer ? 'You can answer' : 'Out of your range'}
                                         </span>
                                         <br />
                                         {Number.isFinite(radiusKm) && radiusKm > 0 && (
                                             <>
                                                 <span style={{ opacity: 0.85 }}>
-                                                    Radio respuesta: {radiusKm.toFixed(2)} km
+                                                    Answer radius: {radiusKm.toFixed(2)} km
                                                 </span>
                                                 <br />
                                                 <span style={{ opacity: 0.85 }}>
-                                                    Tu distancia: {distanceKm.toFixed(2)} km
+                                                    Your distance: {distanceKm.toFixed(2)} km
                                                 </span>
                                                 <br />
                                             </>

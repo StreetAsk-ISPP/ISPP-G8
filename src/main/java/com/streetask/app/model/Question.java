@@ -54,6 +54,8 @@ public class Question extends BaseEntity {
     @JsonDeserialize(using = FlexibleLocalDateTimeDeserializer.class)
     private LocalDateTime createdAt;
 
+    private Boolean featured;
+
     @PositiveOrZero(message = "Answer count must be zero or positive")
     private Integer answerCount;
 

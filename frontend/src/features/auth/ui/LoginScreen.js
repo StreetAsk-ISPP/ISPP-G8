@@ -131,7 +131,11 @@ export default function LoginScreen({ navigation }) {
                         <Text style={styles.primaryBtnText}>{isSubmitting ? 'Signing in...' : 'Sign In'}</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.forgotLink} activeOpacity={0.7}>
+                    <TouchableOpacity
+                        style={styles.forgotLink}
+                        activeOpacity={0.7}
+                        onPress={() => navigation.navigate('ForgotPassword')}
+                    >
                         <Text style={styles.forgotText}>Forgot password?</Text>
                     </TouchableOpacity>
 

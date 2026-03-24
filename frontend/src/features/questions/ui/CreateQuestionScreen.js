@@ -16,6 +16,7 @@ import apiClient from '../../../shared/services/http/apiClient';
 import Toast from 'react-native-toast-message';
 import MapPickerWeb from '../../home/ui/components/MapPickerWeb';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import Slider from '@react-native-community/slider';
 
 const FREE_FIXED_RADIUS_KM = 0.5;
 const FREE_FIXED_RADIUS_M = 500;
@@ -25,6 +26,8 @@ const FREE_DURATION_HOURS = 2;
 const PREMIUM_MIN_DURATION_HOURS = 1;
 const PREMIUM_MAX_DURATION_HOURS = 24;
 const FAKE_AD_DURATION_SECONDS = 30;
+const DEFAULT_FALLBACK_LAT = 37.3886;
+const DEFAULT_FALLBACK_LNG = -5.9823;
 
 const addHoursISO = (hours) => {
   const nowMs = Date.now();
@@ -85,6 +88,25 @@ export default function CreateQuestionScreen({ navigation }) {
   const [adSecondsLeft, setAdSecondsLeft] = useState(FAKE_AD_DURATION_SECONDS);
   const [queuedPayload, setQueuedPayload] = useState(null);
 
+  const getCurrentPositionWeb = useCallback(() => {
+    if (Platform.OS !== 'web' || !navigator.geolocation) {
+      return Promise.resolve(null);
+    }
+
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          resolve({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        },
+        () => resolve(null),
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      );
+    });
+  }, []);
+
   const submitQuestion = useCallback(async (payload) => {
     setIsSubmitting(true);
     try {
@@ -137,23 +159,28 @@ export default function CreateQuestionScreen({ navigation }) {
   }, [user?.id]);
 
   useEffect(() => {
-    if (Platform.OS === 'web') {
-      if (!navigator.geolocation) return;
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          setUserLat(lat);
-          setUserLng(lng);
-          setLatitude((prev) => (typeof prev === 'number' ? prev : lat));
-          setLongitude((prev) => (typeof prev === 'number' ? prev : lng));
-          setPlace((prev) => (prev?.trim() ? prev : `(${lat.toFixed(5)}, ${lng.toFixed(5)})`));
-        },
-        () => { },
-        { enableHighAccuracy: true, timeout: 8000 }
-      );
-    }
-  }, []);
+    let isMounted = true;
+
+    const preloadCurrentLocation = async () => {
+      const coords = await getCurrentPositionWeb();
+      if (!isMounted || !coords) {
+        return;
+      }
+
+      const { lat, lng } = coords;
+      setUserLat(lat);
+      setUserLng(lng);
+      setLatitude((prev) => (typeof prev === 'number' ? prev : lat));
+      setLongitude((prev) => (typeof prev === 'number' ? prev : lng));
+      setPlace((prev) => (prev?.trim() ? prev : `(${lat.toFixed(5)}, ${lng.toFixed(5)})`));
+    };
+
+    preloadCurrentLocation();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [getCurrentPositionWeb]);
 
   useEffect(() => {
     if (!showFakeAd) {
@@ -253,15 +280,29 @@ export default function CreateQuestionScreen({ navigation }) {
     }
   };
 
-  const openMapPick = () => {
-    setTempLat(
-      typeof latitude === 'number' ? latitude : typeof userLat === 'number' ? userLat : 37.3886
-    );
-    setTempLng(
-      typeof longitude === 'number' ? longitude : typeof userLng === 'number' ? userLng : -5.9823
-    );
+  const openMapPick = useCallback(async () => {
+    let nextLat = typeof latitude === 'number' ? latitude : null;
+    let nextLng = typeof longitude === 'number' ? longitude : null;
+
+    if (typeof nextLat !== 'number' || typeof nextLng !== 'number') {
+      if (typeof userLat === 'number' && typeof userLng === 'number') {
+        nextLat = userLat;
+        nextLng = userLng;
+      } else {
+        const coords = await getCurrentPositionWeb();
+        if (coords) {
+          nextLat = coords.lat;
+          nextLng = coords.lng;
+          setUserLat(coords.lat);
+          setUserLng(coords.lng);
+        }
+      }
+    }
+
+    setTempLat(typeof nextLat === 'number' ? nextLat : DEFAULT_FALLBACK_LAT);
+    setTempLng(typeof nextLng === 'number' ? nextLng : DEFAULT_FALLBACK_LNG);
     setPickMode(true);
-  };
+  }, [latitude, longitude, userLat, userLng, getCurrentPositionWeb]);
 
   const cancelMapPick = () => {
     setPickMode(false);
@@ -391,38 +432,29 @@ export default function CreateQuestionScreen({ navigation }) {
               </Text>
               <Text style={styles.mapRadiusLabel}>Response radius (m)</Text>
               {isPremium ? (
-                <View
-                  style={[
-                    styles.mapRadiusInputWrapper,
-                    focusedField === 'radiusMap' && styles.inputFocused,
-                    showRadiusRangeError && styles.inputError,
-                  ]}
-                >
-                  <Ionicons
-                    name="ellipse-outline"
-                    size={18}
-                    color="#9ca3af"
-                    style={{ marginRight: 8 }}
-                  />
-                  <TextInput
-                    value={radiusInput}
-                    onChangeText={onRadiusInputChange}
-                    keyboardType={Platform.OS === 'ios' ? 'decimal-pad' : 'numeric'}
-                    placeholder="500"
-                    placeholderTextColor="#9ca3af"
-                    style={styles.input}
-                    onFocus={() => setFocusedField('radiusMap')}
-                    onBlur={() => {
-                      setFocusedField(null);
-                      const parsedMeters = parseRadiusMeters(radiusInput);
-                      if (parsedMeters !== null) {
-                        setRadiusInput(String(parsedMeters));
-                        setRadiusKm(parsedMeters / 1000);
-                      }
-                    }}
-                  />
+                 <View style={styles.sliderBlock}>
+                 <Slider
+                 minimumValue={PREMIUM_MIN_RADIUS_M}
+                 maximumValue={PREMIUM_MAX_RADIUS_M}
+                 step={10}
+                 value={parsedRadiusMeters ?? FREE_FIXED_RADIUS_M}
+                 onValueChange={(value) => {
+                 setRadiusInput(String(Math.round(value)));
+                 setRadiusKm(value / 1000);
+                 }}
+                 minimumTrackTintColor="#a52019"
+                 maximumTrackTintColor="#e5e7eb"
+                 thumbTintColor="#a52019"
+                 />
+
+                 <View style={styles.sliderLabels}>
+                    <Text style={styles.sliderMin}>50 m</Text>
+                    <Text style={styles.radiusValueText}>
+                     {parsedRadiusMeters ?? FREE_FIXED_RADIUS_M} m
+                    </Text>
+                    <Text style={styles.sliderMax}>1000 m</Text>
                 </View>
-              ) : (
+                </View>             ) : (
                 <View style={styles.lockedBox}>
                   <Ionicons name="lock-closed" size={14} color="#6b7280" />
                   <Text style={styles.lockedText}>Fixed for free plan: 500 m</Text>
@@ -464,10 +496,10 @@ export default function CreateQuestionScreen({ navigation }) {
         {/* Map background */}
         <View style={styles.mapBgPreview}>
           <MapPickerWeb
-            latitude={latitude ?? userLat ?? 37.3886}
-            longitude={longitude ?? userLng ?? -5.9823}
-            userLat={userLat ?? 37.3886}
-            userLng={userLng ?? -5.9823}
+            latitude={latitude ?? userLat ?? DEFAULT_FALLBACK_LAT}
+            longitude={longitude ?? userLng ?? DEFAULT_FALLBACK_LNG}
+            userLat={userLat ?? DEFAULT_FALLBACK_LAT}
+            userLng={userLng ?? DEFAULT_FALLBACK_LNG}
             radiusKm={radiusKm}
             pickEnabled={false}
             tempLat={tempLat}
@@ -850,11 +882,11 @@ const styles = StyleSheet.create({
   },
   mapOkBtn: {
     flex: 1,
-    backgroundColor: '#667eea',
+    backgroundColor: '#a52019',
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
-    shadowColor: '#667eea',
+    shadowColor: '#a52019',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -997,5 +1029,32 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 5,
   },
+  radiusValueText: {
+    textAlign: 'center',
+    marginTop: 6,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#a52019',
+  },
+  sliderBlock: {
+  marginTop: 10,
+  },
+
+  sliderLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+
+  sliderMin: {
+    fontSize: 11,
+    color: '#9ca3af',
+  },
+
+  sliderMax: {
+    fontSize: 11,
+    color: '#9ca3af',
+  },  
   postBtnText: { fontWeight: '700', fontSize: 15, color: '#fff' },
 });

@@ -19,6 +19,9 @@ const formatHms = (t) => {
     return `${Math.floor(s / 3600)}:${pad2(Math.floor((s % 3600) / 60))}:${pad2(s % 60)}`;
 };
 const avatarColors = ['#dbeafe', '#fce7f3', '#fef3c7', '#d1fae5', '#ede9fe', '#e0e7ff'];
+const ANSWERS_PAGE_SIZE = 5;
+const SORT_LIKES_DESC = 'likes_desc';
+const SORT_DATE_DESC = 'date_desc';
 const parsePositiveNumber = (value) => {
     const num = Number(value);
     return Number.isFinite(num) && num > 0 ? num : null;
@@ -39,6 +42,11 @@ export default function QuestionThreadScreen({ route, navigation }) {
     const [question, setQuestion] = useState(null);
     const [answers, setAnswers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [refreshingAnswers, setRefreshingAnswers] = useState(false);
+    const [hasMoreAnswers, setHasMoreAnswers] = useState(true);
+    const [answersPage, setAnswersPage] = useState(0);
+    const [selectedSort, setSelectedSort] = useState(SORT_LIKES_DESC);
     const [error, setError] = useState(null);
     const [myVotes, setMyVotes] = useState({});
     const [draft, setDraft] = useState('');
@@ -70,6 +78,80 @@ export default function QuestionThreadScreen({ route, navigation }) {
         }
         return avatarColors[Math.abs(hash) % avatarColors.length];
     }, []);
+
+    const mapAnswer = useCallback((a) => ({
+        id: a.id,
+        author: a.user?.userName || a.user?.username || 'Anonymous',
+        color: pickColor(a.id),
+        text: a.content || '',
+        likes: Number(a.upvotes) || 0,
+        dislikes: Number(a.downvotes) || 0,
+        minutesAgo: getMinutesAgo(a.createdAt),
+        createdAt: a.createdAt || null,
+        userId: a.user?.id,
+        isVerified: a.isVerified,
+    }), [pickColor]);
+
+    const sortAnswersInMemory = useCallback((items, sort) => {
+        const copy = [...items];
+        if (sort === SORT_DATE_DESC) {
+            copy.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+            return copy;
+        }
+        copy.sort((a, b) => {
+            const likesDiff = (b.likes || 0) - (a.likes || 0);
+            if (likesDiff !== 0) return likesDiff;
+            return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+        });
+        return copy;
+    }, []);
+
+    const fetchAnswers = useCallback(async ({ pageToLoad = 0, replace = false } = {}) => {
+        if (!questionId) return;
+
+        if (replace) {
+            setRefreshingAnswers(true);
+            setError(null);
+        } else {
+            setLoadingMore(true);
+        }
+
+        try {
+            const aRes = await apiClient.get(
+                `/api/v1/answers?questionId=${questionId}&sort=${selectedSort}&page=${pageToLoad}&size=${ANSWERS_PAGE_SIZE}`
+            );
+            const list = Array.isArray(aRes.data) ? aRes.data : Array.from(aRes.data || []);
+
+            // Some environments may ignore page/size and return the full dataset.
+            // In that case, paginate defensively on the client so UX is still correct.
+            const offset = pageToLoad * ANSWERS_PAGE_SIZE;
+            const end = offset + ANSWERS_PAGE_SIZE;
+            const usingClientFallbackPaging = list.length > ANSWERS_PAGE_SIZE;
+            const pageSlice = usingClientFallbackPaging ? list.slice(offset, end) : list;
+            const mapped = pageSlice.map(mapAnswer);
+
+            setAnswers((prev) => {
+                if (replace) {
+                    return sortAnswersInMemory(mapped, selectedSort);
+                }
+
+                const seen = new Set(prev.map((item) => item.id));
+                const merged = [...prev, ...mapped.filter((item) => !seen.has(item.id))];
+                return sortAnswersInMemory(merged, selectedSort);
+            });
+
+            setHasMoreAnswers(usingClientFallbackPaging ? end < list.length : mapped.length === ANSWERS_PAGE_SIZE);
+            setAnswersPage(pageToLoad);
+        } catch (e) {
+            setError(e.message || 'Error loading answers');
+        } finally {
+            if (replace) {
+                setRefreshingAnswers(false);
+            } else {
+                setLoadingMore(false);
+            }
+        }
+    }, [mapAnswer, questionId, selectedSort, sortAnswersInMemory]);
 
     const canSend = useMemo(() => draft.trim().length > 0, [draft]);
     const questionRadiusKm = useMemo(() => parsePositiveNumber(question?.radiusKm), [question?.radiusKm]);
@@ -134,19 +216,6 @@ export default function QuestionThreadScreen({ route, navigation }) {
                 setError(null);
                 const qRes = await apiClient.get(`/api/v1/questions/${questionId}`);
                 setQuestion(qRes.data);
-                const aRes = await apiClient.get(`/api/v1/answers?questionId=${questionId}`);
-                const list = Array.isArray(aRes.data) ? aRes.data : Array.from(aRes.data || []);
-                setAnswers(list.map((a) => ({
-                    id: a.id,
-                    author: a.user?.userName || a.user?.username || 'Anonymous',
-                    color: pickColor(a.id),
-                    text: a.content || '',
-                    likes: a.upvotes || 0,
-                    dislikes: a.downvotes || 0,
-                    minutesAgo: getMinutesAgo(a.createdAt),
-                    userId: a.user?.id,
-                    isVerified: a.isVerified,
-                })));
                 // Cargar los votos previos del usuario para esta pregunta
                 if (user?.id) {
                     try {
@@ -163,7 +232,12 @@ export default function QuestionThreadScreen({ route, navigation }) {
                 setLoading(false);
             }
         })();
-    }, [questionId, pickColor]);
+    }, [questionId, user?.id]);
+
+    useEffect(() => {
+        if (!questionId) return;
+        fetchAnswers({ pageToLoad: 0, replace: true });
+    }, [fetchAnswers, questionId, selectedSort]);
 
     useEffect(() => {
         setQuestionReported(false);
@@ -192,7 +266,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
         if (!content || !question) return;
 
         const optimistic = { id: `tmp-${Date.now()}`, author: '@me', minutesAgo: 0, text: content, likes: 0, dislikes: 0, color: '#47d22b', optimistic: true };
-        setAnswers((p) => [...p, optimistic]);
+        setAnswers((p) => sortAnswersInMemory([...p, optimistic], selectedSort));
         setDraft('');
         inputRef.current?.blur();
         setSendingAnswer(true);
@@ -264,11 +338,22 @@ export default function QuestionThreadScreen({ route, navigation }) {
             const res = await apiClient.post('/api/v1/answers', payload);
 
             const saved = res.data;
-            setAnswers((p) => p.map((a) => a.id === optimistic.id ? {
-                id: saved.id, author: saved.user?.userName || saved.user?.username || 'Anonymous', color: theme.colors.primary,
-                text: saved.content, likes: saved.upvotes || 0, dislikes: saved.downvotes || 0,
-                minutesAgo: 0, userId: saved.user?.id, isVerified: saved.isVerified,
-            } : a));
+            setAnswers((p) => {
+                const updated = p.map((a) => (a.id === optimistic.id ? {
+                    id: saved.id,
+                    author: saved.user?.userName || saved.user?.username || 'Anonymous',
+                    color: theme.colors.primary,
+                    text: saved.content,
+                    likes: saved.upvotes || 0,
+                    dislikes: saved.downvotes || 0,
+                    minutesAgo: 0,
+                    createdAt: saved.createdAt,
+                    userId: saved.user?.id,
+                    isVerified: saved.isVerified,
+                } : a));
+                return sortAnswersInMemory(updated, selectedSort);
+            });
+            await fetchAnswers({ pageToLoad: 0, replace: true });
         } catch (e) {
             setAnswers((p) => p.filter((a) => a.id !== optimistic.id));
             let msg = 'Error sending answer';
@@ -298,14 +383,14 @@ export default function QuestionThreadScreen({ route, navigation }) {
 
         if (cur === type) {
             // Deseleccionar: quitar el voto
-            setAnswers((pa) => pa.map((a) => {
+            setAnswers((pa) => sortAnswersInMemory(pa.map((a) => {
                 if (a.id !== answerId) return a;
                 return {
                     ...a,
                     likes: type === 'LIKE' ? Math.max(0, (a.likes || 0) - 1) : (a.likes || 0),
                     dislikes: type === 'DISLIKE' ? Math.max(0, (a.dislikes || 0) - 1) : (a.dislikes || 0),
                 };
-            }));
+            }), selectedSort));
             setMyVotes((prev) => { const n = { ...prev }; delete n[answerId]; return n; });
             try {
                 await apiClient.delete(`/api/v1/answers/${answerId}/votes?userId=${user.id}`);
@@ -316,7 +401,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
         }
 
         // Actualización optimista (voto nuevo o cambio)
-        setAnswers((pa) => pa.map((a) => {
+        setAnswers((pa) => sortAnswersInMemory(pa.map((a) => {
             if (a.id !== answerId) return a;
             const newLikes = type === 'LIKE'
                 ? (a.likes || 0) + 1
@@ -325,7 +410,7 @@ export default function QuestionThreadScreen({ route, navigation }) {
                 ? (a.dislikes || 0) + 1
                 : cur === 'DISLIKE' ? Math.max(0, (a.dislikes || 0) - 1) : (a.dislikes || 0);
             return { ...a, likes: newLikes, dislikes: newDislikes };
-        }));
+        }), selectedSort));
         setMyVotes((prev) => ({ ...prev, [answerId]: type }));
 
         try {
@@ -542,6 +627,11 @@ export default function QuestionThreadScreen({ route, navigation }) {
         );
     };
 
+    const loadMoreAnswers = () => {
+        if (loading || loadingMore || refreshingAnswers || !hasMoreAnswers) return;
+        fetchAnswers({ pageToLoad: answersPage + 1, replace: false });
+    };
+
     if (pickMode) {
         return (
             <SafeAreaView style={styles.screen}>
@@ -645,11 +735,29 @@ export default function QuestionThreadScreen({ route, navigation }) {
                                             color={questionReported ? '#9ca3af' : '#b91c1c'}
                                         />
                                         <Text style={[styles.questionReportText, questionReported && styles.questionReportTextDisabled]}>
-                                            {questionReported ? 'Reportado' : 'Reportar'}
+                                            {questionReported ? 'Reported' : 'Report'}
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
                             )}
+                        </View>
+
+                        <View style={[styles.answersToolbar, isNarrow && { marginHorizontal: 12 }]}>
+                            <Text style={styles.answersToolbarTitle}>Answers</Text>
+                            <View style={styles.sortSwitch}>
+                                <Pressable
+                                    style={[styles.sortOption, selectedSort === SORT_LIKES_DESC && styles.sortOptionActive]}
+                                    onPress={() => setSelectedSort(SORT_LIKES_DESC)}
+                                >
+                                    <Text style={[styles.sortOptionLabel, selectedSort === SORT_LIKES_DESC && styles.sortOptionLabelActive]}>Top</Text>
+                                </Pressable>
+                                <Pressable
+                                    style={[styles.sortOption, selectedSort === SORT_DATE_DESC && styles.sortOptionActive]}
+                                    onPress={() => setSelectedSort(SORT_DATE_DESC)}
+                                >
+                                    <Text style={[styles.sortOptionLabel, selectedSort === SORT_DATE_DESC && styles.sortOptionLabelActive]}>Newest</Text>
+                                </Pressable>
+                            </View>
                         </View>
 
                         {/* ── Answers ── */}
@@ -658,8 +766,22 @@ export default function QuestionThreadScreen({ route, navigation }) {
                             keyExtractor={(i) => String(i.id)}
                             contentContainerStyle={[styles.listContent, isNarrow && { paddingHorizontal: 12 }]}
                             renderItem={renderAnswer}
+                            ListFooterComponent={
+                                <View style={styles.listFooterWrap}>
+                                    {loadingMore && (
+                                        <ActivityIndicator style={styles.listFooterLoader} size="small" color={theme.colors.accent} />
+                                    )}
+                                    {!loadingMore && hasMoreAnswers && answers.length > 0 && (
+                                        <Pressable style={styles.loadMoreBtn} onPress={loadMoreAnswers}>
+                                            <Text style={styles.loadMoreText}>Cargar mas</Text>
+                                        </Pressable>
+                                    )}
+                                </View>
+                            }
                             ListEmptyComponent={
-                                <Text style={styles.emptyText}>No answers yet. Be the first!</Text>
+                                refreshingAnswers
+                                    ? null
+                                    : <Text style={styles.emptyText}>No answers yet. Be the first!</Text>
                             }
                         />
                     </>
@@ -949,6 +1071,45 @@ const styles = StyleSheet.create({
         color: '#9ca3af',
     },
 
+    answersToolbar: {
+        marginHorizontal: 16,
+        marginTop: 12,
+        marginBottom: 4,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    answersToolbarTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#374151',
+    },
+    sortSwitch: {
+        flexDirection: 'row',
+        backgroundColor: '#e5e7eb',
+        borderRadius: 12,
+        padding: 3,
+        gap: 4,
+    },
+    sortOption: {
+        minWidth: 74,
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 9,
+        alignItems: 'center',
+    },
+    sortOptionActive: {
+        backgroundColor: '#b91c1c',
+    },
+    sortOptionLabel: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#4b5563',
+    },
+    sortOptionLabelActive: {
+        color: '#fff',
+    },
+
     /* ── Answer List (Forum Thread) ── */
     listContent: {
         padding: 16,
@@ -959,6 +1120,26 @@ const styles = StyleSheet.create({
         color: '#9ca3af',
         marginTop: 24,
         fontSize: 14,
+    },
+    listFooterLoader: {
+        marginTop: 8,
+        marginBottom: 12,
+    },
+    listFooterWrap: {
+        paddingBottom: 12,
+    },
+    loadMoreBtn: {
+        alignSelf: 'center',
+        marginTop: 8,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 10,
+        backgroundColor: '#b91c1c',
+    },
+    loadMoreText: {
+        color: '#fff',
+        fontWeight: '700',
+        fontSize: 13,
     },
     threadRow: {
         flexDirection: 'row',

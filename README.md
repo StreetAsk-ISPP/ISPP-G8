@@ -1,23 +1,24 @@
 # ISPP-G10
+
 Aplicación para conocer en tiempo real información relevante sobre eventos en vivo.
 
 ## Tecnologías
 
-| Capa | Tecnología |
-|------|-----------|
-| Frontend | React Native + Expo (JavaScript) |
-| Backend | Spring Boot 3 (Java 21) |
+| Capa          | Tecnología                         |
+| ------------- | ---------------------------------- |
+| Frontend      | React Native + Expo (JavaScript)   |
+| Backend       | Spring Boot 3 (Java 21)            |
 | Base de datos | H2 en memoria (dev) / MySQL (prod) |
-| Autenticación | JWT |
+| Autenticación | JWT                                |
 
 ## ¿Cómo ejecutar?
 
-| Modo | Base de datos | Cuándo usar |
-|------|--------------|-------------|
-| **Sin Docker** | H2 (memoria) | Desarrollo rápido, no requiere setup |
-| **Con Docker** | H2 (memoria) | Desarrollo con hot-reload y contenedores |
-| **Con Docker + MySQL** | MySQL | Probar queries reales antes de producción |
-| **Producción** | MySQL (Azure) | Despliegue real |
+| Modo                   | Base de datos | Cuándo usar                               |
+| ---------------------- | ------------- | ----------------------------------------- |
+| **Sin Docker**         | H2 (memoria)  | Desarrollo rápido, no requiere setup      |
+| **Con Docker**         | H2 (memoria)  | Desarrollo con hot-reload y contenedores  |
+| **Con Docker + MySQL** | MySQL         | Probar queries reales antes de producción |
+| **Producción**         | MySQL (Azure) | Despliegue real                           |
 
 > ⚠️ **IMPORTANTE**: No puedes ejecutar ambas opciones a la vez. Usan los mismos puertos (8080, 8081). Para cambiar de modo, para primero el que esté corriendo.
 
@@ -53,10 +54,10 @@ Escanea el QR con Expo Go o pulsa `w` para abrir en el navegador.
 
 ### URLs útiles
 
-| URL | Descripción |
-|-----|-------------|
-| http://localhost:8080/swagger-ui/index.html | Documentación de la API |
-| http://localhost:8080/h2-console | Consola de base de datos H2 |
+| URL                                         | Descripción                 |
+| ------------------------------------------- | --------------------------- |
+| http://localhost:8080/swagger-ui/index.html | Documentación de la API     |
+| http://localhost:8080/h2-console            | Consola de base de datos H2 |
 
 > **Nota**: Los datos en H2 se pierden al reiniciar. Esto es intencional para desarrollo.
 
@@ -72,42 +73,45 @@ Esta opción levanta **todo** (frontend, backend) con un solo comando. Usa **H2 
 
 #### Preparar el entorno
 
-``` bash
+```bash
 cp frontend/.env.dev frontend/.env
 ```
 
-> 
 > **Primera vez o cambios en dependencias:**
+>
 > ```bash
 > docker-compose up -d --build
 > ```
-> 
+>
 > **Día a día (desarrollo normal):**
+>
 > ```bash
 > docker-compose up -d
 > ```
-> 
+>
 > **Parar todo:**
+>
 > ```bash
 > docker-compose down
 > ```
-> 
+>
 > **¿Algo roto? Reinicio completo:**
+>
 > ```bash
-> docker-compose down -v && docker-compose up -d --build
+> docker-compose down -v && docker-compose up -d --build 
 > ```
-
 
 ### URLs
 
-| URL | Servicio |
-|-----|----------|
-| http://localhost:8081 | Frontend (Web) |
-| http://localhost:8080/swagger-ui/index.html | API Docs |
-| http://localhost:8080/h2-console | Consola H2 |
-| http://localhost:8080/api/v1/* | Backend API |
+| URL                                         | Servicio       |
+| ------------------------------------------- | -------------- |
+| http://localhost:8081                       | Frontend (Web) |
+| http://localhost:8080/swagger-ui/index.html | API Docs       |
+| http://localhost:8080/h2-console            | Consola H2     |
+| http://localhost:8080/api/v1/\*             | Backend API    |
 
 **Acceso a H2 Console:**
+
 - JDBC URL: `jdbc:h2:mem:streetask`
 - Usuario: `sa`
 - Password: _(dejar vacío)_
@@ -119,8 +123,8 @@ Durante el desarrollo, los cambios se reflejan **automáticamente**:
 ✅ **Backend** (Java): Spring DevTools recarga al detectar cambios  
 ✅ **Frontend** (React): Hot reload habilitado con `CHOKIDAR_USEPOLLING`
 
-
 > **⚠️ Cuándo usar `--build`:**
+>
 > - Primera vez que ejecutas el proyecto
 > - Cambias `pom.xml` (nuevas dependencias Maven)
 > - Cambias `package.json` (nuevas dependencias npm)
@@ -162,10 +166,45 @@ Si necesitas probar con MySQL (ej: queries específicas de producción):
 cp frontend/.env.example frontend/.env  # Windows: copy frontend\.env.example frontend\.env
 ```
 
-| Variable | Valor por defecto | Descripción |
-|----------|-------------------|-------------|
-| `EXPO_PUBLIC_API_BASE_URL` | `http://localhost:8080` | URL del backend |
-| `EXPO_PUBLIC_API_TIMEOUT_MS` | `10000` | Timeout de las peticiones (ms) |
+| Variable                     | Valor por defecto       | Descripción                    |
+| ---------------------------- | ----------------------- | ------------------------------ |
+| `EXPO_PUBLIC_API_BASE_URL`   | `http://localhost:8080` | URL del backend                |
+| `EXPO_PUBLIC_API_TIMEOUT_MS` | `10000`                 | Timeout de las peticiones (ms) |
+
+### Backend (.env en la raíz)
+
+```bash
+cp .env.example .env  # Windows: copy .env.example .env
+```
+
+| Variable              | Ejemplo                   | Descripción                         |
+| --------------------- | ------------------------- | ----------------------------------- |
+| `MYSQL_ROOT_PASSWORD` | `rootpassword`            | Password root MySQL local (Docker)  |
+| `MYSQL_DATABASE`      | `streetask`               | Nombre de base de datos             |
+| `MYSQL_USER`          | `streetask`               | Usuario MySQL                       |
+| `MYSQL_PASSWORD`      | `streetask`               | Password MySQL                      |
+| `BREVO_SMTP_HOST`     | `smtp-relay.brevo.com`    | Host SMTP Brevo                     |
+| `BREVO_SMTP_PORT`     | `587`                     | Puerto SMTP Brevo                   |
+| `BREVO_SMTP_USERNAME` | `tu-login@smtp-brevo.com` | Login SMTP Brevo                    |
+| `BREVO_SMTP_PASSWORD` | `tu-smtp-key`             | Clave SMTP Brevo                    |
+| `BREVO_MAIL_FROM`     | `streetask0@gmail.com`    | Remitente de emails transaccionales |
+
+### Matriz de configuración por entorno
+
+| Entorno                | Frontend API URL                                                             | SMTP Brevo                                                | Dónde se configura               |
+| ---------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------- |
+| Local (sin Docker)     | `frontend/.env` con backend local o remoto                                   | `.env` raíz                                               | Archivos `.env` locales          |
+| Local (Docker Compose) | Definido en `docker-compose.yml` (servicio frontend)                         | Variables `BREVO_*` en `.env` raíz, inyectadas al backend | `.env` + `docker-compose.yml`    |
+| Expo (dev en móvil)    | `EXPO_PUBLIC_API_BASE_URL` debe ser URL accesible (no `localhost` del móvil) | No aplica en app cliente (se envía desde backend)         | `frontend/.env` o variables EAS  |
+| Render / Azure (cloud) | Variable de entorno del frontend en plataforma                               | Variables `BREVO_*` en backend cloud                      | Panel de variables del proveedor |
+
+### Estado actual del proyecto
+
+- ✅ SMTP Brevo configurado y validado en local.
+- ✅ Backend preparado para leer `BREVO_*` por variables de entorno.
+- ✅ Docker Compose preparado para propagar variables SMTP al backend.
+- ✅ Documentación base en `.env.example` actualizada.
+- ⚠️ Cada entorno cloud (Render/Azure/EAS) necesita cargar sus propias variables en su panel.
 
 ---
 
@@ -188,6 +227,7 @@ Si VS Code muestra cientos de errores de imports pero Maven compila bien (`./mvn
 **¿Por qué pasa esto?** El Java Language Server de VS Code genera archivos de caché (`.classpath`, `bin/`, etc.) que a veces se corrompen al hacer pull, cambiar de rama, o editar el `pom.xml`. La configuración del proyecto ya está optimizada para minimizar esto, pero si ocurre:
 
 **Opción 1 - Sin cerrar VS Code (recomendada):**
+
 1. Presiona `Ctrl+Shift+P` (Windows/Linux) o `Cmd+Shift+P` (macOS)
 2. Escribe `Java: Clean Java Language Server Workspace`
 3. Selecciona "Reload and delete"
@@ -211,6 +251,7 @@ chmod +x scripts/clean-java-cache.sh
 Después de ejecutar el script, abre VS Code de nuevo.
 
 **Consejos para evitar que vuelva a pasar:**
+
 - Después de hacer `git pull`, espera que el Java LS termine de indexar (barra de carga abajo)
 - Si cambias de rama, haz `Ctrl+Shift+P` → `Java: Clean Java Language Server Workspace`
 - Nunca commits archivos `.classpath`, `.project`, `bin/`, `.settings/` (ya están en `.gitignore`)
@@ -220,5 +261,3 @@ Después de ejecutar el script, abre VS Code de nuevo.
 1. Verifica que Docker Desktop esté ejecutándose
 2. Espera a que el healthcheck de MySQL pase (~30 segundos)
 3. Revisa los logs: `docker-compose logs db`
-
-

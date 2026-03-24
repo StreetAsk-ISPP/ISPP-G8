@@ -43,6 +43,14 @@ services:
       MYSQL_URL: jdbc:mysql://db:3306/streetask?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true&serverTimezone=UTC
       MYSQL_USER: streetask
       MYSQL_PASSWORD: streetask
+      BREVO_SMTP_HOST: ${BREVO_SMTP_HOST:-smtp-relay.brevo.com}
+      BREVO_SMTP_PORT: ${BREVO_SMTP_PORT:-587}
+      BREVO_SMTP_USERNAME: ${BREVO_SMTP_USERNAME:-}
+      BREVO_SMTP_PASSWORD: ${BREVO_SMTP_PASSWORD:-}
+      BREVO_MAIL_FROM: ${BREVO_MAIL_FROM:-streetask0@gmail.com}
+      MYSQL_DDL_AUTO: validate
+      MYSQL_SQL_INIT_MODE: never
+      MYSQL_FLYWAY_ENABLED: true
     depends_on:
       # Uncomment when using MySQL
       db:
@@ -55,6 +63,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.dev
     container_name: streetask-frontend
+    command: sh -c "npm install && npm run start"
     ports:
       - "8081:8081"
     volumes:

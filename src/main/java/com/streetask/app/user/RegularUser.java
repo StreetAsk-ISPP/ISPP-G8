@@ -32,6 +32,10 @@ public class RegularUser extends User {
 
     private Float rating;
 
+    private Integer totalLikesReceived;
+
+    private Integer totalDislikesReceived;
+
     private Float visibilityRadiusKm;
 
     private Boolean premiumActive;
