@@ -8,10 +8,8 @@ import com.streetask.app.model.CoinTransaction;
 import com.streetask.app.model.EventAttendance;
 import com.streetask.app.model.Question;
 import com.streetask.app.model.Report;
-import com.streetask.app.model.Strike;
 import com.streetask.app.functionalities.notifications.model.Notification;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -65,8 +63,4 @@ public class RegularUser extends User {
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = jakarta.persistence.CascadeType.REMOVE)
     private java.util.List<com.streetask.app.functionalities.notifications.push.model.PushDevice> pushDevices;
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
-    private List<Strike> strikes;
 }

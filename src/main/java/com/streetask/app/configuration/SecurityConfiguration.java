@@ -109,9 +109,6 @@ public class SecurityConfiguration {
 						// Push devices require auth
 						.requestMatchers("/api/push-devices/**").authenticated()
 
-						// Moderation endpoints require ADMIN authority
-						.requestMatchers("/api/v1/moderation/**").hasAuthority(ADMIN)
-
 						.anyRequest().denyAll())
 
 				.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
