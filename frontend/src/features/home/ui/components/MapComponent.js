@@ -50,6 +50,35 @@ const createCustomIcon = (color) => {
     });
 };
 
+const createFeaturedIcon = () => {
+    if (!L) return undefined;
+
+    const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="56" viewBox="0 0 44 56">
+        <defs>
+            <radialGradient id="pinGrad" cx="40%" cy="30%" r="70%">
+                <stop offset="0%" stop-color="#FFE566"/>
+                <stop offset="60%" stop-color="#F59E0B"/>
+                <stop offset="100%" stop-color="#B45309"/>
+            </radialGradient>
+            <filter id="shadow" x="-20%" y="-10%" width="140%" height="130%">
+                <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#00000055"/>
+            </filter>
+        </defs>
+        <path filter="url(#shadow)" fill="url(#pinGrad)" stroke="#92400E" stroke-width="1.2"
+              d="M22 1C13.163 1 6 8.163 6 17c0 11 16 38 16 38s16-27 16-38C38 8.163 30.837 1 22 1z"/>
+        <circle fill="white" fill-opacity="0.25" cx="22" cy="16" r="10"/>
+        <polygon fill="white"
+                 points="22,8 24.35,14.2 31,14.2 25.8,18.1 27.9,24.3 22,20.5 16.1,24.3 18.2,18.1 13,14.2 19.65,14.2"/>
+    </svg>`;
+
+    return L.icon({
+        iconUrl: `data:image/svg+xml;base64,${btoa(svgIcon)}`,
+        iconSize: [44, 56],
+        iconAnchor: [22, 56],
+        popupAnchor: [0, -56],
+    });
+};
+
 const toNum = (v) => {
     if (typeof v === 'number') return v;
     if (typeof v === 'string') {
@@ -317,14 +346,14 @@ export default function MapComponent({ questions = [], onQuestionPress, onLocati
                             <Marker
                                 key={q.id}
                                 position={[lat, lng]}
-                                icon={createCustomIcon(questionColor)}
+                                icon={q.featured ? createFeaturedIcon() : createCustomIcon(questionColor)}
                                 eventHandlers={{
                                     click: () => onQuestionPress?.(q.id),
                                 }}
                             >
                                 <Popup>
                                     <div style={{ fontSize: '12px' }}>
-                                        <strong>{q.title || 'Question'}</strong>
+                                        <strong>{q.featured ? '⭐ ' : ''}{q.title || 'Question'}</strong>
                                         <br />
                                         <div style={{ marginBottom: '8px' }}>
                                             <CountdownText

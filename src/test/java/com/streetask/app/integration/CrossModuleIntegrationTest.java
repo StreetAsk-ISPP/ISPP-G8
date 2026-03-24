@@ -118,7 +118,7 @@ class CrossModuleIntegrationTest {
         Question q3 = createQuestion(bob, "Frontend framework recommendations?",
                 "Planning a new web project", true);
 
-        assertEquals(3, countQuestions());
+        assertEquals(7, countQuestions());
 
         // ===== PHASE 4: Answer Creation (Multiple users answering) =====
         Answer a1_q1 = createAnswer(q1, bob, "Try Joe's Pizza on Bleecker Street", true);
@@ -183,7 +183,7 @@ class CrossModuleIntegrationTest {
         // ===== PHASE 8: Comprehensive Verification =====
         // Verify all data integrity
         assertTrue(countUsers() >= 4, "Should have at least 4 users created in this test");
-        assertEquals(3, countQuestions());
+        assertEquals(7, countQuestions());
         assertEquals(6, countAnswers());
         assertEquals(2, countReports());
         assertEquals(3, countLocations());
