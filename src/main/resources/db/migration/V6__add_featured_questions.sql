@@ -10,8 +10,8 @@ VALUES (
     UUID_TO_BIN('dd000000-0000-0000-0000-000000000001'),
     UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
     NULL,
-    '¿Cuál es el mejor plan de noche en Sevilla? 🍻',
-    'Bares de copas, terrazas, tablao flamenco... ¿cómo se vive la noche sevillana de verdad?',
+    'What is the best night plan in Seville? 🍻',
+    'Cocktail bars, terraces, flamenco shows... what is the real Seville nightlife like?',
     37.3891, -5.9847, 50.0, TRUE, TRUE, '2099-12-31 23:59:59', CURRENT_TIMESTAMP, 0
 )
 AS incoming
@@ -23,8 +23,8 @@ VALUES (
     UUID_TO_BIN('dd000000-0000-0000-0000-000000000002'),
     UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
     NULL,
-    '¿Betis o Sevilla? 😏',
-    'Estás delante del Villamarín. Aquí no hay término medio. ¿De quién eres?',
+    'Betis or Sevilla? 😏',
+    'You are in front of Villamarin. There is no middle ground here. Which side are you on?',
     37.3564, -5.9812, 50.0, TRUE, TRUE, '2099-12-31 23:59:59', CURRENT_TIMESTAMP, 0
 )
 AS incoming
@@ -36,8 +36,8 @@ VALUES (
     UUID_TO_BIN('dd000000-0000-0000-0000-000000000003'),
     UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
     NULL,
-    '¿Hay alguien en Reina que te guste? 😳',
-    'Venga, confiesa... ¿hay alguien en el campus que te pone nervioso/a cada vez que lo/la ves? 👀',
+    'Do you like someone at Reina? 😳',
+    'Come on, confess... is there someone on campus that makes you nervous every time you see them? 👀',
     37.3580, -5.9866, 50.0, TRUE, TRUE, '2099-12-31 23:59:59', CURRENT_TIMESTAMP, 0
 )
 AS incoming
@@ -49,8 +49,8 @@ VALUES (
     UUID_TO_BIN('dd000000-0000-0000-0000-000000000004'),
     UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
     NULL,
-    '¿Quién se va de fiesta hoy? 🎉',
-    '¿Tienes planes esta noche o te quedas en casa? Anímate y cuéntanos...',
+    'Who is going out partying tonight? 🎉',
+    'Do you have plans tonight or are you staying home? Come on and tell us...',
     37.3840, -6.0028, 50.0, TRUE, TRUE, '2099-12-31 23:59:59', CURRENT_TIMESTAMP, 0
 )
 AS incoming

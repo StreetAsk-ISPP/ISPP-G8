@@ -232,8 +232,8 @@ export default function CreateQuestionScreen({ navigation }) {
     if (!q) {
       Toast.show({
         type: 'info',
-        text1: 'Falta la dirección',
-        text2: 'Ingresa una calle o lugar para buscar.',
+        text1: 'Address missing',
+        text2: 'Enter a street or place to search.',
         position: 'top'
       });
       return;
@@ -256,8 +256,8 @@ export default function CreateQuestionScreen({ navigation }) {
       if (items.length === 0) {
         Toast.show({
           type: 'info',
-          text1: 'Sin resultados',
-          text2: 'No se encontraron direcciones. Intenta ser más específico.',
+          text1: 'No results',
+          text2: 'No addresses were found. Try being more specific.',
           position: 'top'
         });
 
@@ -272,8 +272,8 @@ export default function CreateQuestionScreen({ navigation }) {
       console.error('Nominatim search error:', e);
       Toast.show({
         type: 'error',
-        text1: 'Error en la búsqueda',
-        text2: 'No se pudo encontrar la dirección. Por favor, inténtalo de nuevo.',
+        text1: 'Search error',
+        text2: 'The address could not be found. Please try again.',
         position: 'top'
       });
     } finally {
@@ -315,8 +315,8 @@ export default function CreateQuestionScreen({ navigation }) {
     if (typeof tempLat !== 'number' || typeof tempLng !== 'number') {
       Toast.show({
         type: 'info',
-        text1: 'Selecciona un punto',
-        text2: 'Toca en el mapa para elegir una ubicación.',
+        text1: 'Select a point',
+        text2: 'Tap on the map to choose a location.',
         position: 'top'
       });
       return;

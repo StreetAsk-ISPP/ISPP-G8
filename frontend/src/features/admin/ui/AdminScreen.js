@@ -35,7 +35,7 @@ export default function AdminScreen() {
             })
             .catch((error) => {
                 console.error('Error fetching admin data:', error);
-                Alert.alert('Error', 'No se pudieron cargar los datos del panel');
+                Alert.alert('Error', 'Dashboard data could not be loaded');
             })
             .finally(() => {
                 setLoading(false);
@@ -56,9 +56,9 @@ export default function AdminScreen() {
     };
 
     const menuItems = [
-        { id: 'users', title: 'Gestionar Usuarios', icon: 'people', route: 'AdminUsers' },
-        { id: 'feedback', title: 'Feedback Recibido', icon: 'chatbox-ellipses', route: 'AdminFeedback' },
-        { id: 'app', title: 'Ir a la App', icon: 'phone-portrait', route: 'Home' },
+        { id: 'users', title: 'Manage Users', icon: 'people', route: 'AdminUsers' },
+        { id: 'feedback', title: 'Received Feedback', icon: 'chatbox-ellipses', route: 'AdminFeedback' },
+        { id: 'app', title: 'Go to App', icon: 'phone-portrait', route: 'Home' },
     ];
 
     const renderMenuItem = ({ item }) => (
@@ -86,8 +86,8 @@ export default function AdminScreen() {
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <View>
-                    <Text style={styles.headerTitle}>Panel de Administración</Text>
-                    <Text style={styles.headerSubtitle}>Bienvenido, Administrador</Text>
+                    <Text style={styles.headerTitle}>Admin Dashboard</Text>
+                    <Text style={styles.headerSubtitle}>Welcome, Admin</Text>
                 </View>
                 <TouchableOpacity onPress={handleLogoutClick} style={styles.logoutButton}>
                     <Ionicons name="log-out-outline" size={24} color="#d90429" />
@@ -97,19 +97,19 @@ export default function AdminScreen() {
             <View style={styles.statsContainer}>
                 <View style={styles.statCard}>
                     <Text style={styles.statValue}>{stats.users}</Text>
-                    <Text style={styles.statLabel}>Usuarios</Text>
+                    <Text style={styles.statLabel}>Users</Text>
                 </View>
                 <View style={styles.statCard}>
                     <Text style={styles.statValue}>{stats.questions}</Text>
-                    <Text style={styles.statLabel}>Preguntas</Text>
+                    <Text style={styles.statLabel}>Questions</Text>
                 </View>
                 <View style={styles.statCard}>
                     <Text style={styles.statValue}>{stats.answers}</Text>
-                    <Text style={styles.statLabel}>Respuestas</Text>
+                    <Text style={styles.statLabel}>Answers</Text>
                 </View>
             </View>
 
-            <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
+            <Text style={styles.sectionTitle}>Quick Actions</Text>
 
             <FlatList
                 data={menuItems}
