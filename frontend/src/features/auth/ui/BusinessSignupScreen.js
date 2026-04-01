@@ -20,13 +20,33 @@ export default function BusinessSignupScreen({ navigation, route }) {
 	const [website, setWebsite] = useState('');
 	const [description, setDescription] = useState('');
 	const [error, setError] = useState('');
+	const [taxIdError, setTaxIdError] = useState('');
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [focusedField, setFocusedField] = useState(null);
 
+	// Tax ID format validation: 1 letter + 7 digits + 1 alphanumeric character
+	const TAX_ID_REGEX = /^[A-Za-z]\d{7}[A-Za-z0-9]$/;
+
+	const handleTaxIdChange = (text) => {
+		const upper = text.toUpperCase();
+		setTaxId(upper);
+		// Provide real-time feedback on tax ID format
+		if (upper.length > 0 && !TAX_ID_REGEX.test(upper)) {
+			setTaxIdError('Format: 1 letter + 7 digits + 1 character (e.g., A1234567B)');
+		} else {
+			setTaxIdError('');
+		}
+	};
+
 	const handleProceedToPayment = async () => {
 		setError('');
+		setTaxIdError('');
 		if (!taxId.trim()) { setError('Tax ID is required.'); return; }
 		if (!companyName.trim()) { setError('Company Name is required.'); return; }
+		if (!TAX_ID_REGEX.test(taxId)) {
+			setError('Tax ID must be: 1 letter + 7 digits + 1 control character (e.g., A1234567B).');
+			return;
+		}
 
 		try {
 			setIsSubmitting(true);
@@ -131,7 +151,8 @@ export default function BusinessSignupScreen({ navigation, route }) {
 					<Text style={styles.subtitle}>Complete your business profile</Text>
 
 					{/* Fields */}
-					{renderInput('Tax ID *', taxId, setTaxId, 'tax', { icon: 'pricetag-outline', autoCapitalize: 'characters', placeholder: 'A1234567B' })}
+					{renderInput('Tax ID *', taxId, handleTaxIdChange, 'tax', { icon: 'pricetag-outline', autoCapitalize: 'characters', placeholder: 'A1234567B' })}
+					{taxIdError ? <Text style={styles.warningText}>{taxIdError}</Text> : (taxId && TAX_ID_REGEX.test(taxId) ? <Text style={styles.successText}>✓ Valid format</Text> : null)}
 					{renderInput('Company Name *', companyName, setCompanyName, 'company', { icon: 'business-outline', placeholder: 'Acme Inc.' })}
 					{renderInput('Address', address, setAddress, 'addr', { icon: 'location-outline', placeholder: '123 Main St.' })}
 					{renderInput('Website', website, setWebsite, 'web', { icon: 'globe-outline', autoCapitalize: 'none', placeholder: 'https://...' })}
@@ -272,6 +293,18 @@ const styles = StyleSheet.create({
 		fontSize: 13,
 		textAlign: 'center',
 		marginTop: 14,
+	},
+	warningText: {
+		color: '#f59e0b',
+		fontSize: 12,
+		marginTop: 6,
+		marginBottom: 4,
+	},
+	successText: {
+		color: '#10b981',
+		fontSize: 12,
+		marginTop: 6,
+		marginBottom: 4,
 	},
 	benefitsCard: {
 		backgroundColor: '#f9fafb',

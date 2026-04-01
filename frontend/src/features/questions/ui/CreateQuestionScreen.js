@@ -9,7 +9,7 @@ import {
   Platform,
   ScrollView,
   useWindowDimensions,
-  Modal,
+  // Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import apiClient from '../../../shared/services/http/apiClient';
@@ -22,10 +22,10 @@ const FREE_FIXED_RADIUS_KM = 0.5;
 const FREE_FIXED_RADIUS_M = 500;
 const PREMIUM_MIN_RADIUS_M = 50;
 const PREMIUM_MAX_RADIUS_M = 1000;
-const FREE_DURATION_HOURS = 2;
+const FREE_DURATION_HOURS = 6;
 const PREMIUM_MIN_DURATION_HOURS = 1;
 const PREMIUM_MAX_DURATION_HOURS = 24;
-const FAKE_AD_DURATION_SECONDS = 30;
+// const FAKE_AD_DURATION_SECONDS = 30;
 const DEFAULT_FALLBACK_LAT = 37.3886;
 const DEFAULT_FALLBACK_LNG = -5.9823;
 
@@ -84,9 +84,9 @@ export default function CreateQuestionScreen({ navigation }) {
   const [userLng, setUserLng] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
-  const [showFakeAd, setShowFakeAd] = useState(false);
-  const [adSecondsLeft, setAdSecondsLeft] = useState(FAKE_AD_DURATION_SECONDS);
-  const [queuedPayload, setQueuedPayload] = useState(null);
+  // const [showFakeAd, setShowFakeAd] = useState(false);
+  // const [adSecondsLeft, setAdSecondsLeft] = useState(FAKE_AD_DURATION_SECONDS);
+  // const [queuedPayload, setQueuedPayload] = useState(null);
 
   const getCurrentPositionWeb = useCallback(() => {
     if (Platform.OS !== 'web' || !navigator.geolocation) {
@@ -182,33 +182,34 @@ export default function CreateQuestionScreen({ navigation }) {
     };
   }, [getCurrentPositionWeb]);
 
-  useEffect(() => {
-    if (!showFakeAd) {
-      return undefined;
-    }
-
-    if (adSecondsLeft <= 0) {
-      return undefined;
-    }
-
-    const timerId = setTimeout(() => {
-      setAdSecondsLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearTimeout(timerId);
-  }, [showFakeAd, adSecondsLeft]);
-
-  useEffect(() => {
-    if (!showFakeAd || adSecondsLeft > 0 || !queuedPayload) {
-      return;
-    }
-
-    setShowFakeAd(false);
-    setAdSecondsLeft(FAKE_AD_DURATION_SECONDS);
-    const payloadToSubmit = queuedPayload;
-    setQueuedPayload(null);
-    submitQuestion(payloadToSubmit);
-  }, [showFakeAd, adSecondsLeft, queuedPayload, submitQuestion]);
+  // Legacy fake-ad countdown flow (disabled):
+  // useEffect(() => {
+  //   if (!showFakeAd) {
+  //     return undefined;
+  //   }
+  //
+  //   if (adSecondsLeft <= 0) {
+  //     return undefined;
+  //   }
+  //
+  //   const timerId = setTimeout(() => {
+  //     setAdSecondsLeft((prev) => prev - 1);
+  //   }, 1000);
+  //
+  //   return () => clearTimeout(timerId);
+  // }, [showFakeAd, adSecondsLeft]);
+  //
+  // useEffect(() => {
+  //   if (!showFakeAd || adSecondsLeft > 0 || !queuedPayload) {
+  //     return;
+  //   }
+  //
+  //   setShowFakeAd(false);
+  //   setAdSecondsLeft(FAKE_AD_DURATION_SECONDS);
+  //   const payloadToSubmit = queuedPayload;
+  //   setQueuedPayload(null);
+  //   submitQuestion(payloadToSubmit);
+  // }, [showFakeAd, adSecondsLeft, queuedPayload, submitQuestion]);
 
   const parsedRadiusMeters = parseRadiusMeters(radiusInput);
   const parsedHours = parseHours(hoursInput);
@@ -231,8 +232,8 @@ export default function CreateQuestionScreen({ navigation }) {
     if (!q) {
       Toast.show({
         type: 'info',
-        text1: 'Falta la dirección',
-        text2: 'Ingresa una calle o lugar para buscar.',
+        text1: 'Address missing',
+        text2: 'Enter a street or place to search.',
         position: 'top'
       });
       return;
@@ -255,8 +256,8 @@ export default function CreateQuestionScreen({ navigation }) {
       if (items.length === 0) {
         Toast.show({
           type: 'info',
-          text1: 'Sin resultados',
-          text2: 'No se encontraron direcciones. Intenta ser más específico.',
+          text1: 'No results',
+          text2: 'No addresses were found. Try being more specific.',
           position: 'top'
         });
 
@@ -271,8 +272,8 @@ export default function CreateQuestionScreen({ navigation }) {
       console.error('Nominatim search error:', e);
       Toast.show({
         type: 'error',
-        text1: 'Error en la búsqueda',
-        text2: 'No se pudo encontrar la dirección. Por favor, inténtalo de nuevo.',
+        text1: 'Search error',
+        text2: 'The address could not be found. Please try again.',
         position: 'top'
       });
     } finally {
@@ -314,8 +315,8 @@ export default function CreateQuestionScreen({ navigation }) {
     if (typeof tempLat !== 'number' || typeof tempLng !== 'number') {
       Toast.show({
         type: 'info',
-        text1: 'Selecciona un punto',
-        text2: 'Toca en el mapa para elegir una ubicación.',
+        text1: 'Select a point',
+        text2: 'Tap on the map to choose a location.',
         position: 'top'
       });
       return;
@@ -387,12 +388,13 @@ export default function CreateQuestionScreen({ navigation }) {
       location: { latitude, longitude },
     };
 
-    if (!isPremium) {
-      setQueuedPayload(payload);
-      setAdSecondsLeft(FAKE_AD_DURATION_SECONDS);
-      setShowFakeAd(true);
-      return;
-    }
+    // Legacy free-plan ad gate (disabled):
+    // if (!isPremium) {
+    //   setQueuedPayload(payload);
+    //   setAdSecondsLeft(FAKE_AD_DURATION_SECONDS);
+    //   setShowFakeAd(true);
+    //   return;
+    // }
 
     submitQuestion(payload);
   };
@@ -432,29 +434,29 @@ export default function CreateQuestionScreen({ navigation }) {
               </Text>
               <Text style={styles.mapRadiusLabel}>Response radius (m)</Text>
               {isPremium ? (
-                 <View style={styles.sliderBlock}>
-                 <Slider
-                 minimumValue={PREMIUM_MIN_RADIUS_M}
-                 maximumValue={PREMIUM_MAX_RADIUS_M}
-                 step={10}
-                 value={parsedRadiusMeters ?? FREE_FIXED_RADIUS_M}
-                 onValueChange={(value) => {
-                 setRadiusInput(String(Math.round(value)));
-                 setRadiusKm(value / 1000);
-                 }}
-                 minimumTrackTintColor="#a52019"
-                 maximumTrackTintColor="#e5e7eb"
-                 thumbTintColor="#a52019"
-                 />
+                <View style={styles.sliderBlock}>
+                  <Slider
+                    minimumValue={PREMIUM_MIN_RADIUS_M}
+                    maximumValue={PREMIUM_MAX_RADIUS_M}
+                    step={10}
+                    value={parsedRadiusMeters ?? FREE_FIXED_RADIUS_M}
+                    onValueChange={(value) => {
+                      setRadiusInput(String(Math.round(value)));
+                      setRadiusKm(value / 1000);
+                    }}
+                    minimumTrackTintColor="#a52019"
+                    maximumTrackTintColor="#e5e7eb"
+                    thumbTintColor="#a52019"
+                  />
 
-                 <View style={styles.sliderLabels}>
+                  <View style={styles.sliderLabels}>
                     <Text style={styles.sliderMin}>50 m</Text>
                     <Text style={styles.radiusValueText}>
-                     {parsedRadiusMeters ?? FREE_FIXED_RADIUS_M} m
+                      {parsedRadiusMeters ?? FREE_FIXED_RADIUS_M} m
                     </Text>
                     <Text style={styles.sliderMax}>1000 m</Text>
-                </View>
-                </View>             ) : (
+                  </View>
+                </View>) : (
                 <View style={styles.lockedBox}>
                   <Ionicons name="lock-closed" size={14} color="#6b7280" />
                   <Text style={styles.lockedText}>Fixed for free plan: 500 m</Text>
@@ -672,12 +674,13 @@ export default function CreateQuestionScreen({ navigation }) {
                 <Text style={styles.timeChipText}>Duration: 2h (fixed in free plan)</Text>
               )}
             </View>
+            {/* Legacy free-plan helper (disabled):
             {!isPremium ? (
               <Text style={styles.helperText}>
                 When you tap the final &quot;Post Question&quot; button, a short ad will be shown before publishing.
               </Text>
             ) : null}
-
+            */}
             {/* Buttons */}
             <View style={styles.actionRow}>
               <TouchableOpacity
@@ -701,7 +704,7 @@ export default function CreateQuestionScreen({ navigation }) {
           </View>
         </ScrollView>
       </View>
-
+      {/*
       <Modal visible={showFakeAd} transparent animationType="fade" onRequestClose={() => { }}>
         <View style={styles.adOverlay}>
           <View style={styles.adCard}>
@@ -717,86 +720,88 @@ export default function CreateQuestionScreen({ navigation }) {
           </View>
         </View>
       </Modal>
+      */}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#f3f4f6' },
-  adOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(17,24,39,0.72)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  adCard: {
-    width: '100%',
-    maxWidth: 360,
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 24,
-    elevation: 8,
-  },
-  adBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: '#fee2e2',
-    color: '#b91c1c',
-    fontSize: 11,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  adTitle: {
-    marginTop: 16,
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#111827',
-  },
-  adText: {
-    marginTop: 8,
-    fontSize: 14,
-    color: '#4b5563',
-    lineHeight: 20,
-  },
-  adVisual: {
-    marginTop: 18,
-    borderRadius: 18,
-    padding: 18,
-    backgroundColor: '#1d4ed8',
-  },
-  adVisualTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#fff',
-  },
-  adVisualText: {
-    marginTop: 8,
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#dbeafe',
-  },
-  adHelperText: {
-    marginTop: 16,
-    textAlign: 'center',
-    fontSize: 13,
-    lineHeight: 18,
-    color: '#4b5563',
-  },
-  adCountdown: {
-    marginTop: 18,
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#92400e',
-  },
+  // Legacy ad modal styles (disabled):
+  // adOverlay: {
+  //   flex: 1,
+  //   backgroundColor: 'rgba(17,24,39,0.72)',
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  //   padding: 24,
+  // },
+  // adCard: {
+  //   width: '100%',
+  //   maxWidth: 360,
+  //   backgroundColor: '#fff',
+  //   borderRadius: 24,
+  //   padding: 24,
+  //   shadowColor: '#000',
+  //   shadowOffset: { width: 0, height: 10 },
+  //   shadowOpacity: 0.2,
+  //   shadowRadius: 24,
+  //   elevation: 8,
+  // },
+  // adBadge: {
+  //   alignSelf: 'flex-start',
+  //   paddingHorizontal: 10,
+  //   paddingVertical: 6,
+  //   borderRadius: 999,
+  //   backgroundColor: '#fee2e2',
+  //   color: '#b91c1c',
+  //   fontSize: 11,
+  //   fontWeight: '800',
+  //   textTransform: 'uppercase',
+  //   letterSpacing: 0.6,
+  // },
+  // adTitle: {
+  //   marginTop: 16,
+  //   fontSize: 24,
+  //   fontWeight: '800',
+  //   color: '#111827',
+  // },
+  // adText: {
+  //   marginTop: 8,
+  //   fontSize: 14,
+  //   color: '#4b5563',
+  //   lineHeight: 20,
+  // },
+  // adVisual: {
+  //   marginTop: 18,
+  //   borderRadius: 18,
+  //   padding: 18,
+  //   backgroundColor: '#1d4ed8',
+  // },
+  // adVisualTitle: {
+  //   fontSize: 18,
+  //   fontWeight: '800',
+  //   color: '#fff',
+  // },
+  // adVisualText: {
+  //   marginTop: 8,
+  //   fontSize: 14,
+  //   lineHeight: 20,
+  //   color: '#dbeafe',
+  // },
+  // adHelperText: {
+  //   marginTop: 16,
+  //   textAlign: 'center',
+  //   fontSize: 13,
+  //   lineHeight: 18,
+  //   color: '#4b5563',
+  // },
+  // adCountdown: {
+  //   marginTop: 18,
+  //   textAlign: 'center',
+  //   fontSize: 14,
+  //   fontWeight: '700',
+  //   color: '#92400e',
+  // },
 
   /* ── Map backgrounds ── */
   mapFull: { flex: 1, width: '100%', height: '100%' },
@@ -1037,7 +1042,7 @@ const styles = StyleSheet.create({
     color: '#a52019',
   },
   sliderBlock: {
-  marginTop: 10,
+    marginTop: 10,
   },
 
   sliderLabels: {
@@ -1055,6 +1060,6 @@ const styles = StyleSheet.create({
   sliderMax: {
     fontSize: 11,
     color: '#9ca3af',
-  },  
+  },
   postBtnText: { fontWeight: '700', fontSize: 15, color: '#fff' },
 });

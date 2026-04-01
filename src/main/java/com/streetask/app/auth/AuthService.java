@@ -121,28 +121,28 @@ public class AuthService {
 	}
 
 	private void sendPasswordResetEmail(String to, String token) {
-		String subject = "StreetAsk - Recuperar contraseña";
-		String plainText = "Hola,\n\nHemos recibido una solicitud para restablecer tu contraseña.\n"
-				+ "Copia y pega este token en la app para continuar:\n" + token + "\n\n"
-				+ "Si no solicitaste este cambio, ignora este mensaje.\n\n"
-				+ "Este token caduca en " + PASSWORD_RESET_TOKEN_MINUTES + " minutos.";
+		String subject = "StreetAsk - Password reset";
+		String plainText = "Hello,\n\nWe received a request to reset your password.\n"
+				+ "Copy and paste this token in the app to continue:\n" + token + "\n\n"
+				+ "If you did not request this change, ignore this message.\n\n"
+				+ "This token expires in " + PASSWORD_RESET_TOKEN_MINUTES + " minutes.";
 
 		String html = """
 				<html>
 				  <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;color:#1f2937;">
 				    <div style="max-width:560px;margin:24px auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">
 				      <div style="background:#dc2626;color:#ffffff;padding:16px 20px;font-size:18px;font-weight:700;">
-				        StreetAsk · Recuperar contraseña
+				        StreetAsk · Password reset
 				      </div>
 				      <div style="padding:20px;line-height:1.5;font-size:14px;">
-				        <p style="margin:0 0 12px;">Hola,</p>
-				        <p style="margin:0 0 14px;">Hemos recibido una solicitud para restablecer tu contraseña.</p>
-				        <p style="margin:0 0 8px;"><strong>Copia y pega este token en la app:</strong></p>
+				        <p style="margin:0 0 12px;">Hello,</p>
+				        <p style="margin:0 0 14px;">We received a request to reset your password.</p>
+				        <p style="margin:0 0 8px;"><strong>Copy and paste this token in the app:</strong></p>
 				        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center;">
 				          <span style="font-family:Consolas,Monaco,monospace;font-size:18px;letter-spacing:1px;font-weight:700;color:#111827;">%s</span>
 				        </div>
-				        <p style="margin:14px 0 0;">Este token caduca en <strong>%d minutos</strong>.</p>
-				        <p style="margin:10px 0 0;color:#6b7280;">Si no solicitaste este cambio, ignora este mensaje.</p>
+				        <p style="margin:14px 0 0;">This token expires in <strong>%d minutes</strong>.</p>
+				        <p style="margin:10px 0 0;color:#6b7280;">If you did not request this change, ignore this message.</p>
 				      </div>
 				    </div>
 				  </body>

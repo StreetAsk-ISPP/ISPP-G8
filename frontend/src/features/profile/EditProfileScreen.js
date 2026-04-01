@@ -26,6 +26,18 @@ const PRESET_AVATARS = [
     { id: '6', url: 'https://cdn-icons-png.flaticon.com/512/616/616554.png' },
 ];
 
+const PROFILE_LIMITS = {
+    email: 255,
+    userName: 255,
+    firstName: 255,
+    lastName: 255,
+    bio: 255,
+    passwordMin: 6,
+    passwordMax: 128,
+};
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function EditProfileScreen({ navigation }) {
     const { user, setUser } = useAuth();
 
@@ -63,7 +75,7 @@ export default function EditProfileScreen({ navigation }) {
     const pickImage = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-            showFeedback('Permisos', 'Necesitamos acceso a tus fotos para cambiar el perfil.', 'error');
+            showFeedback('Permissions', 'We need access to your photos to change your profile image.', 'error');
             return;
         }
 
@@ -113,7 +125,7 @@ export default function EditProfileScreen({ navigation }) {
                     profilePictureUrl: currentUser?.profilePictureUrl || '',
                 });
             } catch (error) {
-                showFeedback('Error', 'No se pudieron cargar tus datos.', 'error');
+                showFeedback('Error', 'Your data could not be loaded.', 'error');
             } finally { setLoading(false); }
         };
         loadProfile();
@@ -128,18 +140,38 @@ export default function EditProfileScreen({ navigation }) {
     };
 
     const validateForm = () => {
-        if (!form.email.trim()) { showFeedback('Validación', 'El email es obligatorio.', 'error'); return false; }
-        if (!/\S+@\S+\.\S+/.test(form.email.trim())) { showFeedback('Validación', 'Introduce un email válido.', 'error'); return false; }
-        if (!form.userName.trim()) { showFeedback('Validación', 'El nombre de usuario es obligatorio.', 'error'); return false; }
-        if (form.bio.length > 255) { showFeedback('Validación', 'La biografía no puede superar los 255 caracteres.', 'error'); return false; }
-        
+        if (!form.email.trim()) { showFeedback('Validation', 'Email is required.', 'error'); return false; }
+        if (!EMAIL_PATTERN.test(form.email.trim())) { showFeedback('Validation', 'Enter a valid email address.', 'error'); return false; }
+        if (form.email.trim().length > PROFILE_LIMITS.email) {
+            showFeedback('Validation', `Email cannot exceed ${PROFILE_LIMITS.email} characters.`, 'error');
+            return false;
+        }
+        if (!form.userName.trim()) { showFeedback('Validation', 'Username is required.', 'error'); return false; }
+        if (form.userName.trim().length > PROFILE_LIMITS.userName) {
+            showFeedback('Validation', `Username cannot exceed ${PROFILE_LIMITS.userName} characters.`, 'error');
+            return false;
+        }
+        if (form.firstName.trim().length > PROFILE_LIMITS.firstName) {
+            showFeedback('Validation', `First name cannot exceed ${PROFILE_LIMITS.firstName} characters.`, 'error');
+            return false;
+        }
+        if (form.lastName.trim().length > PROFILE_LIMITS.lastName) {
+            showFeedback('Validation', `Last name cannot exceed ${PROFILE_LIMITS.lastName} characters.`, 'error');
+            return false;
+        }
+        if (form.bio.length > PROFILE_LIMITS.bio) { showFeedback('Validation', `Bio cannot exceed ${PROFILE_LIMITS.bio} characters.`, 'error'); return false; }
+
         if (passwords.newPassword || passwords.confirmPassword) {
-            if (passwords.newPassword.length < 6) {
-                showFeedback('Validación', 'La contraseña debe tener al menos 6 caracteres.', 'error');
+            if (passwords.newPassword.length < PROFILE_LIMITS.passwordMin) {
+                showFeedback('Validation', `Password must be at least ${PROFILE_LIMITS.passwordMin} characters.`, 'error');
+                return false;
+            }
+            if (passwords.newPassword.length > PROFILE_LIMITS.passwordMax) {
+                showFeedback('Validation', `Password cannot exceed ${PROFILE_LIMITS.passwordMax} characters.`, 'error');
                 return false;
             }
             if (passwords.newPassword !== passwords.confirmPassword) {
-                showFeedback('Validación', 'Las contraseñas no coinciden.', 'error');
+                showFeedback('Validation', 'Passwords do not match.', 'error');
                 return false;
             }
         }
@@ -172,7 +204,7 @@ export default function EditProfileScreen({ navigation }) {
             const updatedUser = res.data;
 
             setOriginalUser(updatedUser);
-            
+
             if (setUser) {
                 setUser(prev => ({
                     ...prev,
@@ -187,9 +219,9 @@ export default function EditProfileScreen({ navigation }) {
                 }));
             }
 
-            showFeedback('Perfil actualizado', 'Tus datos se han guardado correctamente.', 'success', true);
+            showFeedback('Profile updated', 'Your changes were saved successfully.', 'success', true);
         } catch (error) {
-            const message = error?.response?.data?.message || 'Error al guardar.';
+            const message = error?.response?.data?.message || 'Error while saving.';
             showFeedback('Error', message, 'error');
         } finally { setSaving(false); }
     };
@@ -199,7 +231,7 @@ export default function EditProfileScreen({ navigation }) {
             <SafeAreaView style={styles.screen}>
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color="#d90429" />
-                    <Text style={styles.loadingText}>Cargando perfil...</Text>
+                    <Text style={styles.loadingText}>Loading profile...</Text>
                 </View>
             </SafeAreaView>
         );
@@ -212,15 +244,15 @@ export default function EditProfileScreen({ navigation }) {
                     <Ionicons name="arrow-back" size={24} color="#fff" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>EDIT PROFILE</Text>
-                <Text style={styles.headerSubtitle}>Personaliza tu presencia en la plataforma.</Text>
+                <Text style={styles.headerSubtitle}>Customize your presence on the platform.</Text>
             </View>
 
             <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} keyboardShouldPersistTaps="handled">
-                
+
                 {/* CARD 1: APARIENCIA */}
                 <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Apariencia</Text>
-                    
+                    <Text style={styles.sectionTitle}>Appearance</Text>
+
                     <View style={styles.avatarPickerSection}>
                         <TouchableOpacity onPress={pickImage} style={styles.avatarTouchable}>
                             <View style={styles.avatarCircle}>
@@ -235,17 +267,17 @@ export default function EditProfileScreen({ navigation }) {
                             </View>
                         </TouchableOpacity>
                         <View style={styles.avatarTextInfo}>
-                            <Text style={styles.avatarTitle}>Foto de perfil</Text>
-                            <Text style={styles.avatarSub}>Sube una foto o elige un avatar</Text>
+                            <Text style={styles.avatarTitle}>Profile picture</Text>
+                            <Text style={styles.avatarSub}>Upload a photo or choose an avatar</Text>
                         </View>
                     </View>
 
                     {/* --- NUEVA FILA DE AVATARES PREDETERMINADOS --- */}
-                    <Text style={styles.labelSmall}>Avatares rápidos</Text>
+                    <Text style={styles.labelSmall}>Quick avatars</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.presetRow}>
                         {PRESET_AVATARS.map((avatar) => (
-                            <TouchableOpacity 
-                                key={avatar.id} 
+                            <TouchableOpacity
+                                key={avatar.id}
                                 onPress={() => updateField('profilePictureUrl', avatar.url)}
                                 style={[
                                     styles.presetCircle,
@@ -257,30 +289,29 @@ export default function EditProfileScreen({ navigation }) {
                         ))}
                     </ScrollView>
 
-                    <Text style={styles.label}>Biografía</Text>
+                    <Text style={styles.label}>Bio</Text>
                     <TextInput
                         style={[styles.input, styles.textArea]}
                         value={form.bio}
                         onChangeText={text => updateField('bio', text)}
-                        placeholder="Cuenta algo sobre ti..."
+                        placeholder="Tell us about yourself..."
                         placeholderTextColor="#9ca3af"
                         multiline
-                        maxLength={255}
                     />
-                    <Text style={styles.charCount}>{form.bio.length}/255</Text>
+                    <Text style={styles.charCount}>{form.bio.length}/{PROFILE_LIMITS.bio}</Text>
                 </View>
 
                 {/* CARD 2: DATOS PERSONALES */}
                 <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Datos personales</Text>
-                    <Text style={styles.label}>Nombre</Text>
-                    <TextInput style={styles.input} value={form.firstName} onChangeText={text => updateField('firstName', text)} placeholder="Tu nombre" placeholderTextColor="#9ca3af" />
-                    
-                    <Text style={styles.label}>Apellidos</Text>
-                    <TextInput style={styles.input} value={form.lastName} onChangeText={text => updateField('lastName', text)} placeholder="Tus apellidos" placeholderTextColor="#9ca3af" />
+                    <Text style={styles.sectionTitle}>Personal information</Text>
+                    <Text style={styles.label}>First name</Text>
+                    <TextInput style={styles.input} value={form.firstName} onChangeText={text => updateField('firstName', text)} placeholder="Your first name" placeholderTextColor="#9ca3af" />
 
-                    <Text style={styles.label}>Nombre de usuario</Text>
-                    <TextInput style={styles.input} value={form.userName} onChangeText={text => updateField('userName', text)} placeholder="Tu nombre de usuario" autoCapitalize="none" placeholderTextColor="#9ca3af" />
+                    <Text style={styles.label}>Last name</Text>
+                    <TextInput style={styles.input} value={form.lastName} onChangeText={text => updateField('lastName', text)} placeholder="Your last name" placeholderTextColor="#9ca3af" />
+
+                    <Text style={styles.label}>Username</Text>
+                    <TextInput style={styles.input} value={form.userName} onChangeText={text => updateField('userName', text)} placeholder="Your username" autoCapitalize="none" placeholderTextColor="#9ca3af" />
 
                     <Text style={styles.label}>Email</Text>
                     <TextInput style={styles.input} value={form.email} onChangeText={text => updateField('email', text)} placeholder="tu@email.com" autoCapitalize="none" keyboardType="email-address" placeholderTextColor="#9ca3af" />
@@ -288,18 +319,18 @@ export default function EditProfileScreen({ navigation }) {
 
                 {/* CARD 3: SEGURIDAD */}
                 <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Seguridad</Text>
-                    <Text style={styles.label}>Nueva contraseña</Text>
+                    <Text style={styles.sectionTitle}>Security</Text>
+                    <Text style={styles.label}>New password</Text>
                     <View style={styles.passwordWrapper}>
-                        <TextInput style={styles.passwordInput} value={passwords.newPassword} onChangeText={text => updatePasswordField('newPassword', text)} placeholder="Nueva contraseña" secureTextEntry={!showPassword} autoCapitalize="none" placeholderTextColor="#9ca3af" />
+                        <TextInput style={styles.passwordInput} value={passwords.newPassword} onChangeText={text => updatePasswordField('newPassword', text)} placeholder="New password" secureTextEntry={!showPassword} autoCapitalize="none" placeholderTextColor="#9ca3af" />
                         <TouchableOpacity onPress={() => setShowPassword(prev => !prev)}>
                             <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color="#6b7280" />
                         </TouchableOpacity>
                     </View>
 
-                    <Text style={styles.label}>Confirmar nueva contraseña</Text>
+                    <Text style={styles.label}>Confirm new password</Text>
                     <View style={styles.passwordWrapper}>
-                        <TextInput style={styles.passwordInput} value={passwords.confirmPassword} onChangeText={text => updatePasswordField('confirmPassword', text)} placeholder="Repite la nueva contraseña" secureTextEntry={!showConfirmPassword} autoCapitalize="none" placeholderTextColor="#9ca3af" />
+                        <TextInput style={styles.passwordInput} value={passwords.confirmPassword} onChangeText={text => updatePasswordField('confirmPassword', text)} placeholder="Repeat new password" secureTextEntry={!showConfirmPassword} autoCapitalize="none" placeholderTextColor="#9ca3af" />
                         <TouchableOpacity onPress={() => setShowConfirmPassword(prev => !prev)}>
                             <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color="#6b7280" />
                         </TouchableOpacity>
@@ -320,7 +351,7 @@ export default function EditProfileScreen({ navigation }) {
                         <Text style={styles.modalTitle}>{feedback.title}</Text>
                         <Text style={styles.modalMessage}>{feedback.message}</Text>
                         <TouchableOpacity style={[styles.modalButton, feedback.type === 'success' ? styles.modalButtonSuccess : styles.modalButtonError]} onPress={closeFeedback}>
-                            <Text style={styles.modalButtonText}>Aceptar</Text>
+                            <Text style={styles.modalButtonText}>Accept</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -344,7 +375,7 @@ const styles = StyleSheet.create({
     input: { backgroundColor: '#f3f4f6', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: '#111827', borderWidth: 1, borderColor: '#e5e7eb' },
     textArea: { height: 100, textAlignVertical: 'top' },
     charCount: { textAlign: 'right', fontSize: 12, color: '#9ca3af', marginTop: 4 },
-    
+
     avatarPickerSection: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
     avatarTouchable: { position: 'relative' },
     avatarCircle: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', borderWidth: 1, borderColor: '#e5e7eb' },

@@ -119,11 +119,18 @@ public class AuthController {
 	@PostMapping("/signup/business")
 	public ResponseEntity<MessageResponse> completeBusinessUser(
 			@Valid @RequestBody BusinessSignupRequest signUpRequest) {
+		// Validate email exists and is a basic user
+		if (!userService.existsUser(signUpRequest.getEmail())) {
+			return ResponseEntity.badRequest()
+					.body(new MessageResponse(
+							"Error: Basic user registration not found. Please complete the basic signup first."));
+		}
+
 		String normalizedTaxId = signUpRequest.getTaxId().trim().toUpperCase().replace(" ", "").replace("-", "");
 		signUpRequest.setTaxId(normalizedTaxId);
 
 		// Check whether tax ID already exists
-		if (businessAccountRepository.existsByTaxId(signUpRequest.getTaxId()).equals(true)) {
+		if (businessAccountRepository.existsByTaxId(signUpRequest.getTaxId())) {
 			return ResponseEntity.badRequest().body(new MessageResponse("Error: Tax ID is already registered!"));
 		}
 		// Complete business account data

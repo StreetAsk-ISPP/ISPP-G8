@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
@@ -118,7 +119,7 @@ class QuestionServiceTest {
 	}
 
 	@Test
-	void saveQuestion_shouldSetExpiresAtTwoHoursAfterCreatedAt() {
+	void saveQuestion_shouldSetExpiresAtSixHoursAfterCreatedAt() {
 		// Arrange
 		Question newQuestion = new Question();
 		newQuestion.setTitle("New Question");
@@ -130,14 +131,14 @@ class QuestionServiceTest {
 		Question saved = questionService.saveQuestion(newQuestion);
 
 		// Assert
-		assertThat(saved.getExpiresAt()).isEqualTo(saved.getCreatedAt().plusHours(2));
+		assertThat(saved.getExpiresAt()).isEqualTo(saved.getCreatedAt().plusHours(6));
 	}
 
 	@Test
 	void saveQuestion_shouldKeepProvidedCreatedAtActiveAndAnswerCountForFreeUsers() {
 		// Arrange
-		LocalDateTime specificCreatedAt = LocalDateTime.now().minusDays(1);
-		LocalDateTime specificExpiresAt = LocalDateTime.now().plusDays(1);
+		LocalDateTime specificCreatedAt = LocalDateTime.now(ZoneId.of("UTC")).minusDays(1);
+		LocalDateTime specificExpiresAt = LocalDateTime.now(ZoneId.of("UTC")).plusDays(1);
 
 		Question newQuestion = new Question();
 		newQuestion.setTitle("New Question");
@@ -157,7 +158,7 @@ class QuestionServiceTest {
 		assertThat(saved.getActive()).isFalse();
 		assertThat(saved.getAnswerCount()).isEqualTo(5);
 		assertThat(saved.getExpiresAt()).isNotEqualTo(specificExpiresAt);
-		assertThat(saved.getExpiresAt()).isEqualTo(specificCreatedAt.plusHours(2));
+		assertThat(saved.getExpiresAt()).isEqualTo(specificCreatedAt.plusHours(6));
 		assertThat(saved.getCreator()).isEqualTo(testCreator);
 	}
 
