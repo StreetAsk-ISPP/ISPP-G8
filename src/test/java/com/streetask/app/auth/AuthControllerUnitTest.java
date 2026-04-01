@@ -26,9 +26,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.streetask.app.auth.payload.request.LoginRequest;
 import com.streetask.app.auth.payload.response.JwtResponse;
 import com.streetask.app.auth.payload.response.MessageResponse;
+import com.streetask.app.business.BusinessAccountRepository;
 import com.streetask.app.configuration.jwt.JwtUtils;
 import com.streetask.app.configuration.services.UserDetailsImpl;
-import com.streetask.app.user.BusinessAccountRepository;
 import com.streetask.app.user.UserService;
 
 @ExtendWith(MockitoExtension.class)
